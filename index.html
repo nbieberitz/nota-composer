@@ -37,6 +37,53 @@
   --bar-line: rgba(76,201,240,0.32);
 }
 
+body.day-mode {
+  --bg: #f0f2f8;
+  --surface: #e4e7f2;
+  --surface2: #d8dced;
+  --surface3: #cdd2e8;
+  --border: #b0b8d8;
+  --border2: #9aa4cc;
+  --cyan: #0099aa;
+  --cyan-dim: rgba(0,153,170,0.15);
+  --pink: #d4006a;
+  --pink-dim: rgba(212,0,106,0.12);
+  --purple: #6c3db5;
+  --purple-dim: rgba(108,61,181,0.13);
+  --blue: #1a7fb5;
+  --blue-dim: rgba(26,127,181,0.12);
+  --green: #1e8a4a;
+  --green-dim: rgba(30,138,74,0.12);
+  --yellow: #a07800;
+  --text: #1a1e36;
+  --text-dim: #4a5278;
+  --text-muted: #8890b0;
+  --note-bg: #dde2f5;
+  --rest-bg: #d8ede2;
+  --beat-line: rgba(26,127,181,0.12);
+  --bar-line: rgba(26,127,181,0.35);
+}
+
+/* Theme toggle button */
+.theme-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .2s;
+  flex-shrink: 0;
+}
+.theme-btn:hover {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  box-shadow: 0 0 8px var(--cyan-dim);
+}
+
 *{box-sizing:border-box;margin:0;padding:0;}
 
 body {
@@ -1863,6 +1910,7 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     <button class="zoom-btn" onclick="stepZoom(-12)" title="Zoom out">−</button>
     <span id="zoomLbl">120</span>
     <button class="zoom-btn" onclick="stepZoom(+12)" title="Zoom in">+</button>
+    <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="Toggle day/night mode">☀️</button>
   </div>
 
   <!-- User area -->
@@ -1920,7 +1968,7 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
 
 <script>
 /* ╔══════════════════════════════════════════════════════════════════════════════════╗
-   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2025-06-XX            ║
+   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2025-03-30            ║
    ║  PURPOSE: Single source of truth for all AI tools reading/editing this file.   ║
    ║  FORMAT: dense structured notation > English prose. Symbols defined below.     ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝
@@ -1941,13 +1989,27 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   ◆ THIS FILE IS A SINGLE-FILE HTML APP. No build system. No bundler. No npm.
     All CSS/JS/HTML lives here. Firebase loaded via CDN compat scripts in <head>.
 
-  ◆ RULE: After completing ANY change to this file, you MUST:
-      1. Update §CHANGELOG with a new entry (date, session ref, what changed)
-      2. Update §TRIED_FAILED if anything failed during the session
-      3. Update §FUTURE_GOALS if the user mentioned new desires
-      4. Update §SESSION_LOG with a 1-3 line summary of the conversation
-      5. Update LAST_UPDATED in the top banner to today's date
-    Skipping this breaks continuity for future sessions. Do not skip it.
+  ╔══════════════════════════════════════════════════════════════════════════════╗
+  ║  MANDATORY MANIFEST UPDATE RULE — NO EXCEPTIONS                             ║
+  ║                                                                              ║
+  ║  After completing ANY change to this file — no matter how small — you MUST  ║
+  ║  update this manifest in the SAME file delivery. This is not optional.      ║
+  ║  tb (the owner) relies on this manifest as the ONLY memory across sessions. ║
+  ║  A Claude that skips this update is actively breaking the project for the   ║
+  ║  next Claude. Do not be that Claude.                                         ║
+  ║                                                                              ║
+  ║  REQUIRED UPDATES AFTER EVERY SESSION:                                      ║
+  ║    1. §15 CHANGELOG  — add entry: [date | SESSION:n | model] + what changed ║
+  ║    2. §16 SESSION_LOG — 1-3 line summary of what was discussed/built        ║
+  ║    3. §11 TRIED_FAILED — log anything attempted that didn't work            ║
+  ║    4. §10 FUTURE_GOALS — add any new desires tb mentioned                   ║
+  ║    5. §2  ARCHITECTURE — update if any new state vars, overlays, or panels  ║
+  ║    6. §3  MUSIC ENGINE — update if generation logic changed                 ║
+  ║    7. LAST_UPDATED in the top banner — set to today's date                  ║
+  ║                                                                              ║
+  ║  HOW TO KNOW WHAT SESSION NUMBER TO USE:                                    ║
+  ║    Count the existing entries in §16 SESSION_LOG and increment by 1.        ║
+  ╚══════════════════════════════════════════════════════════════════════════════╝
 
   ◆ CONTEXT: The user (tb) builds this incrementally across multiple chat sessions,
     sometimes from different accounts. This manifest IS the memory. When tb starts
@@ -1955,10 +2017,20 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     seamlessly. The manifest must always be complete enough to reconstruct full
     context with zero prior conversation.
 
+  ◆ HOW TO START A NEW SESSION CORRECTLY:
+    1. tb will upload this file. Read the ENTIRE manifest before doing anything.
+    2. Check §15 CHANGELOG to know what was last built.
+    3. Check §16 SESSION_LOG for context on tb's working style and recent goals.
+    4. Check §10 FUTURE_GOALS to anticipate what tb might want next.
+    5. Only then respond to tb's request.
+    If tb does not explicitly say "read the manifest", read it anyway. Always.
+
   ◆ COMMUNICATION STYLE WITH TB: Direct, technical, no hand-holding. tb is
     comfortable with implementation-level detail, prefers iterative phases,
     likes dark sci-fi aesthetic, gives specific feedback at each step.
     Do not add unrequested features. Ask before large architectural changes.
+    tb gives short, clipped feedback ("yes", "do it", "fix x") — this is normal,
+    not a sign of displeasure. Proceed efficiently.
 
   ◆ NOTATION EFFICIENCY: When updating this manifest, prefer structured notation
     over prose. Reuse existing symbol/section conventions. Compact > verbose.
@@ -1981,11 +2053,11 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   ══════════════════════════════════════════════════════════════════════════════════
 
   UI PANELS:
-    HEADER          — time sig, key sig, generate btn, zoom, project controls,
+    HEADER          — time sig, BPM input, key sig, generate btn, zoom, project controls,
                       friends btn (👥), chat btn (💬), user avatar + sign-out
     RULER (42px)    — left strip, beat/bar labels, scrolls with workspace
     WORKSPACE       — scrollable canvas, beat-lines overlay, columns of note blocks
-    OUTPUT (310px)  — right panel, generated Desmos expressions + copy buttons
+    OUTPUT (310px)  — right panel: ticker setup card, reset/tone/graph/fn sections + copy buttons
 
   OVERLAY STACK (z-index):
     authOverlay     10000   (login gate — blocks all interaction until signed in)
@@ -1999,9 +2071,14 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     kbdOverlay       9000
 
   GLOBAL STATE OBJECT S:
-    { tsNum, tsDenom, keySig, zoom, columns[][], output[], expanded:Set }
+    { tsNum, tsDenom, keySig, zoom, columns[][], output[], extraLines[], expanded:Set }
     columns[0]    → timeline track (f(x)) — sequential, no beatOffset
     columns[i>0]  → free-float tracks (g,h,j,k,l,m,n,p,q → v11,v12...) — beatOffset required
+
+  GUEST MODE: _guestMode bool. @continueAsGuest() sets true, hides authOverlay, hides
+    projControls + friendsBtnWrap, shows guest banner in #userArea with "Sign In" link.
+    onAuthStateChanged skips re-showing authOverlay when _guestMode=true.
+    Guest can compose fully; cloud save, friends, chat all unavailable.
 
   RENDER PIPELINE:  render() → syncSettings() → renderColumns() → bindNoteEvents()
                     → renderBeatLines() → renderRuler() → renderSelectionHighlights()
@@ -2066,6 +2143,28 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     SAME-PITCH BREAK: consecutive same-pitch back-to-back → e trimmed -0.1 beats
     Rests skipped. Only cols with ≥1 pitched note emitted.
     latex vs code: latex uses \left\{ \right\} for Desmos paste. code uses literal {}.
+
+  BPM + TICKER VARIABLES (computed at generate time, not stored in S):
+    a   = BPM input (#bpmInput, default 120)
+    b   = shortest note/rest duration in beats across ALL tracks (scanned via getBeats)
+    c   = (60000 * b) / a   → ticker interval in ms
+    d   = b                 → t increment per tick (t\to t+d)
+    All displayed as decimals. No fractions.
+
+  OUTPUT PANEL SECTIONS (rendered by @renderOutput, stored in S.extraLines[]):
+    TICKER SETUP CARD  — not copyable as a block; shows "Run t → t+d [copy] every c [copy] ms"
+                         copy for t step = "t\to t+{d}" (LaTeX). copy for ms = "{c}" (number)
+    TICKER RESET       — extraLines group:'reset'
+                         { copy:"t\to0",  show:"t → 0" }
+                         { copy:"t=0",    show:"t = 0" }
+    TONE EXPRESSIONS   — extraLines group:'tone', one per track with output
+                         copy: \operatorname{tone}\left(440\cdot2^{\frac{n}{12}}\right)\operatorname{with}n=f\left(t\right)
+                         show: tone(440·2^(n/12)) with n = f(t)
+    GRAPH POINTS       — extraLines group:'graph', one per track with output
+                         copy: \left(t,f\left(t\right)\right)   show: (t, f(t))
+    FUNCTION DEFS      — the existing fn(x)={…} lines (S.output[])
+    COPY ALL           — copies extraLines (reset+tone+graph) + S.output latex, joined by \n
+    @copyExtra(idx,btn), @copyText(text,btn) — per-item copy helpers
 
   ZOOM: S.zoom (36–200). pxBeat()=zoom*1.2. stepZoom(±12). render() on change.
 
@@ -2455,6 +2554,31 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     ADDED: NOTA_MANIFEST (this document) — §0-§15 — replaces old feature reference comment
     Manifest format: AI-primary, structured notation, self-updating instructions
 
+  [2025-03-30 | SESSION:4 | Claude-Sonnet-4.6]
+    ADDED: Guest mode — "Continue as Guest" button on auth screen
+           @continueAsGuest(), _guestMode bool, guest banner in #userArea
+           onAuthStateChanged patched to respect _guestMode
+           CSS: .auth-btn.guest, .auth-guest-divider, .auth-guest-note, .guest-banner
+    ADDED: BPM input (#bpmInput, default 120) in header between Time Sig and Key Sig
+    ADDED: Ticker setup card in output panel — shows computed t-step and ms interval
+           with individual copy buttons. t-step copies as LaTeX "t\to t+{d}"
+    ADDED: Output panel sections — Ticker Reset, Tone Expressions, Graph Points
+           all with per-item copy buttons and correct copy vs display text split
+    ADDED: S.extraLines[] — stores reset/tone/graph extra lines alongside S.output
+    ADDED: @copyExtra(idx,btn), @copyText(text,btn) helper functions
+    ADDED: CSS — .out-setup, .out-setup-hdr, .out-setup-desc, .out-ticker-row,
+           .out-ticker-kw, .out-ticker-arrow, .out-ticker-val, .out-ticker-sep,
+           .out-section, .out-extra, .out-extra-code
+    ADDED: Day/night mode toggle — ☀️/🌙 button beside zoom controls
+           _dayMode bool, @toggleTheme(), body.day-mode CSS overrides all --vars
+           CSS: .theme-btn
+    CHANGED: copyAll() now includes extraLines + S.output joined by \n
+    CHANGED: b variable — was tsNum (beats per measure); now = shortest note/rest
+             duration in beats across all tracks, scanned via getBeats() at generate time
+    CHANGED: c = (60000 * b) / BPM  (ms per tick)
+    CHANGED: d = b  (t increment per tick, was 1/b)
+    CHANGED: §0 manifest — boxed MANDATORY UPDATE warning, session-start guide
+
   ══════════════════════════════════════════════════════════════════════════════════
   §16  SESSION LOG
   ══════════════════════════════════════════════════════════════════════════════════
@@ -2470,6 +2594,18 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     Specifications: every feature, future goals, chat history, tried/failed,
     instruction to always update manifest, AI-optimized communication format.
     Result: this document (§0-§16).
+
+  [SESSION:4] tb uploaded file from new chat. Four features added iteratively:
+    1. Guest mode (Continue as Guest on sign-in screen, guest banner in header)
+    2. BPM input in header
+    3. Output panel overhaul — ticker setup card, reset/tone/graph/fn sections,
+       correct copy-vs-display text split for all lines
+    4. b variable redefined: shortest note/rest duration in beats (was tsNum).
+       c and d formulas updated accordingly.
+    5. Day/night mode toggle (☀️/🌙) beside zoom controls.
+    tb also noticed manifest had not been updated and explicitly instructed that
+    Claude must always update the manifest in every session — manifest §0 reinforced
+    with a prominent boxed warning and step-by-step "how to start a session" guide.
 
 */ /* ── end of NOTA_MANIFEST ── */
 
@@ -3077,6 +3213,14 @@ function setZoom(val) {
 
 function stepZoom(delta) {
   setZoom(S.zoom + delta);
+}
+
+let _dayMode = false;
+function toggleTheme() {
+  _dayMode = !_dayMode;
+  document.body.classList.toggle('day-mode', _dayMode);
+  document.getElementById('themeBtn').textContent = _dayMode ? '🌙' : '☀️';
+  document.getElementById('themeBtn').title = _dayMode ? 'Switch to night mode' : 'Switch to day mode';
 }
 
 /* ═══════════════════════════════════════════════════════════
