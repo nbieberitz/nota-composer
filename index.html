@@ -6,7 +6,6 @@
 <title>NOTA — Desmos Music Composer</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
 <!-- Firebase SDKs (compat) -->
-<script src="https://www.desmos.com/api/v1.10/calculator.js?apiKey=dcb31709b452b1cf9dc26972add0fda6"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -2613,6 +2612,13 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     ADDED: NOTA_MANIFEST (this document) — §0-§15 — replaces old feature reference comment
     Manifest format: AI-primary, structured notation, self-updating instructions
 
+  [2026-03-30 | SESSION:9 | Claude-Sonnet-4.6]
+    FIXED: Desmos script was loaded eagerly in <head>, registering global event listeners
+           that blocked all login screen button clicks before the page was interactive.
+           Fix: removed <script> from <head>; now lazy-loaded via document.createElement('script')
+           on first toggleDesmosOverlay() call. _initDesmosCalc now takes a callback.
+           Also added style="display:none" inline to #desmosOverlay as belt-and-suspenders.
+
   [2026-03-30 | SESSION:8 | Claude-Sonnet-4.6]
     ADDED: Desmos Embed API integration (v1.10, public demo key)
            #desmosOverlay — fullscreen modal with live Desmos GraphingCalculator
@@ -2686,6 +2692,10 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     instruction to always update manifest, AI-optimized communication format.
     Result: this document (§0-§16).
 
+  [SESSION:9] Login screen buttons broken after SESSION:8. Root cause: Desmos
+    calculator.js loaded eagerly in <head>, intercepting global events before page
+    was ready. Fixed by lazy-loading the script on first Graph button click.
+
   [SESSION:8] tb requested Desmos embed integration. Used Desmos public Embed API v1.10.
     Fullscreen overlay with live GraphingCalculator. 📈 Graph button placed next to
     ▶ Generate. Auto-syncs t=0 + fn defs + graph point traces on Generate click.
@@ -2723,17 +2733,27 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
 let _desmosCalc = null;
 let _desmosOpen = false;
 
-function _initDesmosCalc() {
-  if (_desmosCalc) return;
-  const container = document.getElementById('desmosCalcContainer');
-  _desmosCalc = Desmos.GraphingCalculator(container, {
-    keypad: false,
-    expressions: true,
-    settingsMenu: true,
-    zoomButtons: true,
-    border: false,
-    backgroundColor: '#141428',  // matches --surface
-  });
+function _initDesmosCalc(callback) {
+  if (_desmosCalc) { callback(); return; }
+  // Lazy-load the Desmos script only on first use
+  if (!document.getElementById('desmosScript')) {
+    const s = document.createElement('script');
+    s.id  = 'desmosScript';
+    s.src = 'https://www.desmos.com/api/v1.10/calculator.js?apiKey=dcb31709b452b1cf9dc26972add0fda6';
+    s.onload = () => {
+      const container = document.getElementById('desmosCalcContainer');
+      _desmosCalc = Desmos.GraphingCalculator(container, {
+        keypad: false,
+        expressions: true,
+        settingsMenu: true,
+        zoomButtons: true,
+        border: false,
+        backgroundColor: '#141428',
+      });
+      callback();
+    };
+    document.head.appendChild(s);
+  }
 }
 
 function toggleDesmosOverlay() {
@@ -2743,9 +2763,7 @@ function toggleDesmosOverlay() {
   if (_desmosOpen) {
     ov.classList.add('open');
     btn.classList.add('active');
-    _initDesmosCalc();
-    // Sync current output if it exists
-    _syncToDesmos();
+    _initDesmosCalc(() => _syncToDesmos());
   } else {
     ov.classList.remove('open');
     btn.classList.remove('active');
@@ -6232,7 +6250,7 @@ toggleChatModal = function() {
 
 
 <!-- ════════ DESMOS OVERLAY ════════ -->
-<div id="desmosOverlay">
+<div id="desmosOverlay" style="display:none">
   <div class="desmos-modal">
     <div class="desmos-modal-hdr">
       <div style="display:flex;align-items:baseline;gap:0">
