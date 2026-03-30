@@ -988,6 +988,318 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
 .find-result {
   padding: 10px; display: flex; flex-direction: column; gap: 6px;
 }
+
+/* ─── Chat overlay ─── */
+.chat-overlay {
+  position: fixed; inset: 0; z-index: 9300;
+  background: rgba(4,4,14,0.78); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity .18s;
+}
+.chat-overlay.open { opacity: 1; pointer-events: all; }
+.chat-modal {
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 14px; box-shadow: 0 8px 60px rgba(0,0,0,.7);
+  width: 700px; max-width: 97vw; height: 560px; max-height: 88vh;
+  display: flex; overflow: hidden;
+}
+.chat-left {
+  width: 220px; flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  background: var(--surface2);
+}
+.chat-left-hdr {
+  padding: 14px 16px 10px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.chat-left-title {
+  font-family: 'Orbitron', sans-serif; font-size: 10px;
+  color: var(--cyan); letter-spacing: 2.5px;
+  text-shadow: 0 0 10px rgba(0,245,212,.4);
+}
+.chat-conv-list { flex: 1; overflow-y: auto; }
+.chat-conv-list::-webkit-scrollbar { width: 4px; }
+.chat-conv-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+.conv-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 12px; cursor: pointer;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  transition: background .12s;
+  border-left: 2px solid transparent;
+}
+.conv-item:hover { background: var(--surface3); }
+.conv-item.active { background: var(--surface3); border-left-color: var(--cyan); }
+.conv-info { flex: 1; min-width: 0; }
+.conv-name { font-size: 11px; color: var(--text); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.conv-preview { font-size: 9px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+.conv-unread {
+  background: var(--pink); color: #fff; font-size: 8px; font-weight: 700;
+  min-width: 16px; height: 16px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center; padding: 0 3px;
+  flex-shrink: 0;
+}
+.chat-empty {
+  text-align: center; padding: 30px 16px;
+  color: var(--text-muted); font-size: 11px; line-height: 2;
+}
+/* Chat right panel */
+.chat-right {
+  flex: 1; display: flex; flex-direction: column; min-width: 0;
+}
+.chat-right-hdr {
+  padding: 12px 16px; border-bottom: 1px solid var(--border);
+  background: var(--surface2); flex-shrink: 0;
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 12px; font-weight: 600; color: var(--cyan);
+}
+.msgs-area {
+  flex: 1; overflow-y: auto; padding: 12px 14px;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.msgs-area::-webkit-scrollbar { width: 5px; }
+.msgs-area::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+.msg-row { display: flex; margin-bottom: 3px; }
+.msg-row.sent { justify-content: flex-end; }
+.msg-bubble {
+  max-width: 68%; padding: 7px 11px; border-radius: 12px;
+  font-size: 12px; line-height: 1.5; word-break: break-word;
+}
+.msg-bubble.sent {
+  background: var(--purple-dim); border: 1px solid rgba(155,93,229,.5);
+  color: var(--text); border-radius: 12px 12px 3px 12px;
+}
+.msg-bubble.recv {
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text); border-radius: 12px 12px 12px 3px;
+}
+.msg-meta {
+  font-size: 8px; color: var(--text-muted); margin-top: 2px;
+  padding: 0 2px; letter-spacing: .3px;
+}
+.msg-meta.right { text-align: right; }
+.chat-input-row {
+  display: flex; gap: 8px; padding: 10px 14px;
+  border-top: 1px solid var(--border); flex-shrink: 0;
+  background: var(--surface2);
+}
+.chat-input {
+  flex: 1; background: var(--surface3); border: 1px solid var(--border);
+  color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 12px;
+  padding: 8px 11px; border-radius: 8px; outline: none;
+  transition: border-color .15s;
+}
+.chat-input:focus { border-color: var(--cyan); }
+.chat-send-btn {
+  background: var(--purple-dim); border: 1px solid var(--purple);
+  color: var(--purple); font-size: 14px; width: 36px; height: 36px;
+  border-radius: 8px; cursor: pointer; display: flex;
+  align-items: center; justify-content: center;
+  transition: all .15s;
+}
+.chat-send-btn:hover { background: rgba(155,93,229,.3); box-shadow: 0 0 8px rgba(155,93,229,.3); }
+
+/* ─── Chat placeholder (no conv selected) ─── */
+.chat-placeholder {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  color: var(--text-muted); font-size: 12px; text-align: center;
+  gap: 10px; padding: 30px;
+}
+.chat-placeholder .placeholder-icon { font-size: 36px; opacity: .3; }
+
+/* ─── Report modal ─── */
+.report-overlay {
+  position: fixed; inset: 0; z-index: 11000;
+  background: rgba(4,4,14,0.88); backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity .15s;
+}
+.report-overlay.open { opacity: 1; pointer-events: all; }
+.report-modal {
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 14px; box-shadow: 0 8px 60px rgba(0,0,0,.8);
+  width: 380px; max-width: 96vw; padding: 28px 26px 24px;
+}
+.report-title {
+  font-family: 'Orbitron', sans-serif; font-size: 12px; color: var(--pink);
+  letter-spacing: 2px; margin-bottom: 14px;
+  text-shadow: 0 0 10px rgba(247,37,133,.4);
+}
+.report-target {
+  font-size: 11px; color: var(--text-dim); margin-bottom: 18px;
+  padding: 8px 12px; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.report-label {
+  display: block; font-size: 9px; color: var(--text-dim);
+  text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;
+}
+.report-select, .report-textarea {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 12px;
+  padding: 8px 10px; border-radius: 6px; outline: none; margin-bottom: 14px;
+  transition: border-color .15s; box-sizing: border-box;
+}
+.report-select:focus, .report-textarea:focus { border-color: var(--pink); }
+.report-textarea { resize: vertical; min-height: 70px; max-height: 150px; }
+.report-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+.report-success-msg {
+  text-align: center; padding: 20px; color: var(--green);
+  font-size: 12px; line-height: 2;
+}
+
+/* ─── Toast ─── */
+.nota-toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--surface2); border: 1px solid var(--cyan); color: var(--cyan);
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .8px;
+  padding: 8px 18px; border-radius: 20px; z-index: 99999;
+  box-shadow: 0 0 18px rgba(0,245,212,.2);
+  opacity: 0; transition: all .25s; pointer-events: none;
+}
+.nota-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ─── Block badge in friend items ─── */
+.blocked-badge {
+  font-size: 8px; color: var(--pink); border: 1px solid var(--pink);
+  padding: 1px 5px; border-radius: 3px; letter-spacing: .5px;
+  background: var(--pink-dim); flex-shrink: 0;
+}
+
+/* ─── Chat left-panel tabs (DMs / Groups) ─── */
+.chat-ltabs {
+  display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.chat-ltab {
+  flex: 1; background: none; border: none; cursor: pointer;
+  font-family: 'JetBrains Mono', monospace; font-size: 9px;
+  font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--text-muted); padding: 8px 0;
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+  transition: all .15s; position: relative;
+}
+.chat-ltab.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+.chat-ltab:hover:not(.active) { color: var(--text); }
+.chat-ltab-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--pink); color: #fff; font-size: 7px; font-weight: 700;
+  min-width: 13px; height: 13px; border-radius: 7px; padding: 0 2px;
+  margin-left: 3px; vertical-align: middle;
+}
+
+/* ─── Chat tab toolbar ─── */
+.chat-tab-toolbar {
+  display: flex; gap: 5px; padding: 7px 10px;
+  border-bottom: 1px solid var(--border); flex-shrink: 0;
+  background: var(--surface);
+}
+.chat-tab-toolbar .btn-sm { font-size: 9px; padding: 4px 8px; }
+
+/* ─── Group tag in conv list ─── */
+.conv-group-badge {
+  font-size: 7px; color: var(--purple); border: 1px solid var(--purple);
+  padding: 1px 4px; border-radius: 3px; letter-spacing: .5px;
+  background: var(--purple-dim); flex-shrink: 0; align-self: center;
+}
+
+/* ─── Group members sidebar ─── */
+.chat-members-sidebar {
+  width: 160px; flex-shrink: 0;
+  border-left: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  background: var(--surface2);
+  overflow: hidden;
+}
+.chat-members-hdr {
+  padding: 10px 12px; border-bottom: 1px solid var(--border);
+  font-size: 9px; font-weight: 600; color: var(--purple);
+  text-transform: uppercase; letter-spacing: 1.5px; flex-shrink: 0;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.chat-member-list { flex: 1; overflow-y: auto; padding: 6px; }
+.chat-member-list::-webkit-scrollbar { width: 3px; }
+.chat-member-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+.chat-member-item {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 7px; border-radius: 6px;
+  transition: background .12s;
+}
+.chat-member-item:hover { background: var(--surface3); }
+.chat-member-name {
+  flex: 1; font-size: 10px; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.member-role {
+  font-size: 7px; color: var(--yellow); border: 1px solid var(--yellow);
+  padding: 0 3px; border-radius: 2px; background: rgba(255,214,10,.1);
+  letter-spacing: .5px; flex-shrink: 0;
+}
+.member-actions-btn {
+  background: none; border: none; color: var(--text-muted);
+  cursor: pointer; font-size: 12px; padding: 0 2px;
+  transition: color .12s; line-height: 1;
+}
+.member-actions-btn:hover { color: var(--pink); }
+
+/* ─── Group code pill ─── */
+.group-code-pill {
+  font-size: 9px; color: var(--yellow); border: 1px solid var(--yellow);
+  padding: 2px 8px; border-radius: 10px; letter-spacing: 2px;
+  background: rgba(255,214,10,.08); cursor: pointer; transition: all .15s;
+  font-family: 'Orbitron', sans-serif;
+}
+.group-code-pill:hover { background: rgba(255,214,10,.18); box-shadow: 0 0 8px rgba(255,214,10,.3); }
+
+/* ─── Create/Join group modal ─── */
+.group-modal-overlay {
+  position: fixed; inset: 0; z-index: 11000;
+  background: rgba(4,4,14,0.88); backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity .15s;
+}
+.group-modal-overlay.open { opacity: 1; pointer-events: all; }
+.group-modal {
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 14px; box-shadow: 0 8px 60px rgba(0,0,0,.8);
+  width: 400px; max-width: 96vw; padding: 28px 26px 24px;
+}
+.group-modal-title {
+  font-family: 'Orbitron', sans-serif; font-size: 12px; color: var(--purple);
+  letter-spacing: 2px; margin-bottom: 18px;
+  text-shadow: 0 0 10px rgba(155,93,229,.4);
+}
+.group-code-display {
+  text-align: center; font-family: 'Orbitron', sans-serif;
+  font-size: 26px; letter-spacing: 6px; color: var(--yellow);
+  padding: 16px; background: var(--surface2); border: 1px solid var(--yellow);
+  border-radius: 8px; margin: 12px 0 4px;
+  text-shadow: 0 0 12px rgba(255,214,10,.4);
+  cursor: pointer; transition: all .15s;
+}
+.group-code-display:hover { background: rgba(255,214,10,.06); }
+.group-code-hint { font-size: 9px; color: var(--text-muted); text-align: center; margin-bottom: 16px; letter-spacing: .5px; }
+
+/* ─── Group invite row inside chat ─── */
+.group-invite-row {
+  display: flex; gap: 6px; padding: 8px 14px;
+  border-top: 1px solid rgba(155,93,229,.2); flex-shrink: 0;
+  background: rgba(155,93,229,.04);
+}
+.group-invite-input {
+  flex: 1; background: var(--surface3); border: 1px solid var(--border);
+  color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  padding: 6px 10px; border-radius: 6px; outline: none; transition: border-color .15s;
+}
+.group-invite-input:focus { border-color: var(--purple); }
+
+/* ─── Chat right layout ─── */
+.chat-right-content {
+  flex: 1; display: flex; min-height: 0;
+}
+.chat-msgs-col {
+  flex: 1; display: flex; flex-direction: column; min-width: 0;
+}
 </style>
 </head>
 <body>
@@ -1162,7 +1474,120 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   </div>
 </div>
 
-<!-- ════════ AUTH MODAL ════════ -->
+<!-- ════════ CHAT OVERLAY ════════ -->
+<div class="chat-overlay" id="chatOverlay" onclick="closeChatOverlay(event)">
+  <div class="chat-modal">
+    <!-- Left: conversation/group list -->
+    <div class="chat-left">
+      <div class="chat-left-hdr">
+        <span class="chat-left-title">MESSAGES</span>
+        <button class="kbd-close" onclick="document.getElementById('chatOverlay').classList.remove('open')">×</button>
+      </div>
+      <!-- DM / Groups tabs -->
+      <div class="chat-ltabs">
+        <button class="chat-ltab active" id="cltabDMs"     onclick="switchChatLeftTab('dms')">💬 DMs</button>
+        <button class="chat-ltab"        id="cltabGroups"  onclick="switchChatLeftTab('groups')">👥 Groups</button>
+      </div>
+      <!-- DM tab toolbar -->
+      <div class="chat-tab-toolbar" id="chatDmToolbar" style="display:flex">
+        <span style="font-size:9px;color:var(--text-muted);flex:1;display:flex;align-items:center">Select a friend to message</span>
+      </div>
+      <!-- Group tab toolbar -->
+      <div class="chat-tab-toolbar" id="chatGroupToolbar" style="display:none">
+        <button class="btn-sm accent" onclick="openCreateGroupModal()" style="font-size:9px">+ New</button>
+        <button class="btn-sm"        onclick="openJoinGroupModal()"   style="font-size:9px"># Join</button>
+      </div>
+      <!-- DM list -->
+      <div class="chat-conv-list" id="chatConvList" style="display:flex;flex-direction:column">
+        <div class="chat-empty">Loading…</div>
+      </div>
+      <!-- Group list -->
+      <div class="chat-conv-list" id="chatGroupList" style="display:none;flex-direction:column">
+        <div class="chat-empty">No groups yet.</div>
+      </div>
+    </div>
+    <!-- Right: active conversation -->
+    <div class="chat-right" id="chatRight">
+      <div class="chat-placeholder">
+        <div class="placeholder-icon">💬</div>
+        <div>Select a conversation<br><span style="font-size:10px;color:var(--text-muted)">or message a friend from the<br><strong style="color:var(--cyan)">Friends</strong> panel</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ CREATE GROUP MODAL ════════ -->
+<div class="group-modal-overlay" id="createGroupOverlay" onclick="if(event.target===this)closeCreateGroupModal()">
+  <div class="group-modal">
+    <div class="group-modal-title">✦ CREATE GROUP</div>
+    <div id="createGroupForm">
+      <label class="report-label">Group Name</label>
+      <input class="auth-input" id="newGroupName" type="text" placeholder="e.g. Song Collab #1" maxlength="40"
+        onkeydown="if(event.key==='Enter')doCreateGroup()" style="margin-bottom:14px">
+      <div class="auth-error" id="createGroupError"></div>
+      <div class="report-actions">
+        <button class="btn-sm" onclick="closeCreateGroupModal()">Cancel</button>
+        <button class="btn-sm accent" id="createGroupBtn" onclick="doCreateGroup()">Create</button>
+      </div>
+    </div>
+    <div id="createGroupSuccess" style="display:none">
+      <div style="font-size:11px;color:var(--text-dim);margin-bottom:6px;text-align:center">Group created! Share this code:</div>
+      <div class="group-code-display" id="newGroupCodeDisplay" onclick="copyGroupCode(this.textContent)">——————</div>
+      <div class="group-code-hint">Click to copy · Share this 6-digit code to invite others</div>
+      <div class="report-actions">
+        <button class="btn-sm accent" onclick="closeCreateGroupModal()">Done</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ JOIN GROUP MODAL ════════ -->
+<div class="group-modal-overlay" id="joinGroupOverlay" onclick="if(event.target===this)closeJoinGroupModal()">
+  <div class="group-modal">
+    <div class="group-modal-title"># JOIN GROUP</div>
+    <label class="report-label">Enter 6-Digit Invite Code</label>
+    <input class="auth-input" id="joinGroupCodeInput" type="text" placeholder="ABC123"
+      maxlength="6" style="text-transform:uppercase;letter-spacing:4px;text-align:center;font-family:'Orbitron',sans-serif;margin-bottom:14px"
+      oninput="this.value=this.value.toUpperCase()"
+      onkeydown="if(event.key==='Enter')doJoinGroup()">
+    <div class="auth-error"   id="joinGroupError"></div>
+    <div class="auth-success" id="joinGroupSuccess"></div>
+    <div class="report-actions">
+      <button class="btn-sm" onclick="closeJoinGroupModal()">Cancel</button>
+      <button class="btn-sm accent" id="joinGroupBtn" onclick="doJoinGroup()">Join</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ REPORT MODAL ════════ -->
+<div class="report-overlay" id="reportOverlay" onclick="if(event.target===this)closeReportModal()">
+  <div class="report-modal">
+    <div class="report-title">⚠ REPORT USER</div>
+    <input type="hidden" id="reportTargetUid">
+    <div class="report-target">Reporting: <strong id="reportTargetUsername" style="color:var(--pink)"></strong></div>
+    <div id="reportForm">
+      <label class="report-label">Reason</label>
+      <select class="report-select" id="reportReason">
+        <option value="harassment">Harassment or bullying</option>
+        <option value="spam">Spam or bot behavior</option>
+        <option value="inappropriate">Inappropriate content</option>
+        <option value="hate">Hate speech</option>
+        <option value="impersonation">Impersonation</option>
+        <option value="other">Other</option>
+      </select>
+      <label class="report-label">Additional details (optional)</label>
+      <textarea class="report-textarea" id="reportDetails" placeholder="Describe what happened…" maxlength="500"></textarea>
+      <div class="auth-error" id="reportError"></div>
+      <div class="report-actions">
+        <button class="btn-sm" onclick="closeReportModal()">Cancel</button>
+        <button class="btn-sm danger" id="reportSubmitBtn" onclick="submitReport()">Submit Report</button>
+      </div>
+    </div>
+    <div class="report-success-msg" id="reportSuccess" style="display:none">
+      ✓ Report submitted.<br><span style="font-size:10px;color:var(--text-muted)">Thank you — we'll review it shortly.</span>
+    </div>
+  </div>
+</div>
 <div class="auth-overlay" id="authOverlay">
   <div class="auth-box">
     <div class="auth-logo">NOTA</div>
@@ -1322,9 +1747,15 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   <!-- User area -->
   <div class="sep"></div>
   <div id="friendsBtnWrap" style="display:none">
-    <div class="friends-btn-wrap">
-      <button class="btn-sm" onclick="toggleFriendsModal()" title="Friends">👥 Friends</button>
-      <span class="notif-badge" id="friendsNotifBadge" style="display:none"></span>
+    <div style="display:flex;gap:6px;align-items:center">
+      <div class="friends-btn-wrap">
+        <button class="btn-sm" onclick="toggleFriendsModal()" title="Friends">👥 Friends</button>
+        <span class="notif-badge" id="friendsNotifBadge" style="display:none"></span>
+      </div>
+      <div class="friends-btn-wrap">
+        <button class="btn-sm" onclick="toggleChatModal()" title="Direct Messages">💬 Chat</button>
+        <span class="notif-badge" id="chatNotifBadge" style="display:none"></span>
+      </div>
     </div>
   </div>
   <div class="user-area" id="userArea">
@@ -1367,339 +1798,561 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
 </div>
 
 <script>
-/* ╔═══════════════════════════════════════════════════════════════════════════╗
-   ║                  NOTA — DESMOS MUSIC COMPOSER                             ║
-   ║              Complete Feature & Architecture Reference                    ║
-   ║        (Written for AI tools and future human maintainers)                ║
-   ╚═══════════════════════════════════════════════════════════════════════════╝
+/* ╔══════════════════════════════════════════════════════════════════════════════════╗
+   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2025-06-XX            ║
+   ║  PURPOSE: Single source of truth for all AI tools reading/editing this file.   ║
+   ║  FORMAT: dense structured notation > English prose. Symbols defined below.     ║
+   ╚══════════════════════════════════════════════════════════════════════════════════╝
 
-  OVERVIEW
-  ────────
-  NOTA is a single-file HTML music composition tool. The user arranges musical
-  notes and rests on a vertical timeline, then clicks "▶ Generate" to export
-  piecewise Desmos function expressions (e.g. f(x) = {0 < x <= 1:5, 1 < x <= 2:7})
-  that can be pasted directly into Desmos to play pitched audio.
+  ┌─ SYMBOL KEY ──────────────────────────────────────────────────────────────────┐
+  │ ✓  confirmed working      ✗  confirmed broken/abandoned    ?  uncertain/untested
+  │ →  produces/leads to      ←  triggered by                  ↔  bidirectional
+  │ ◆  critical note          ◈  requires Firebase rule update  ⚑  owner-only action
+  │ [Pn] phase number         @fn function name                #col Firestore collection
+  │ [TODO] not yet built      [GOAL] user-stated desire        [FAIL] tried+abandoned
+  │ [SESSION:n] chat session  [NEXT] suggested next action     [WARN] footgun/edge case
+  └───────────────────────────────────────────────────────────────────────────────┘
 
-  The UI consists of three panels:
-    1. HEADER BAR     — time signature inputs, range inputs, Generate button, zoom slider
-    2. WORKSPACE      — scrollable canvas with a ruler on the left and note columns
-    3. OUTPUT PANEL   — displays the generated Desmos expressions with Copy buttons
+  ══════════════════════════════════════════════════════════════════════════════════
+  §0  PRIME DIRECTIVE — FUTURE CLAUDE: READ THIS SECTION FIRST, EVERY TIME
+  ══════════════════════════════════════════════════════════════════════════════════
 
-  ─────────────────────────────────────────────────────────────────────────────
-  DATA MODEL  (the global state object `S`)
-  ─────────────────────────────────────────────────────────────────────────────
-  S = {
-    tsNum:    number   — beats per measure (time signature numerator, e.g. 4)
-    tsDenom:  number   — note value that gets one beat (denominator, e.g. 4 = quarter note)
-    keySig:   string   — current key signature (e.g. "C", "A", "Bb")
-    zoom:     number   — pixels per beat (controlled by the zoom slider, 36–200)
-    columns:  array[]  — array of columns (tracks); see COLUMN SYSTEM below
-    output:   array    — last generated Desmos lines [{fn, code, latex}, ...]
-    expanded: Set      — set of note IDs that are manually expanded past their natural height
-  }
+  ◆ THIS FILE IS A SINGLE-FILE HTML APP. No build system. No bundler. No npm.
+    All CSS/JS/HTML lives here. Firebase loaded via CDN compat scripts in <head>.
 
-  PITCH ENCODING
-  ──────────────
-  Pitches are stored as integers relative to A4=0. Middle A (A4) = 0, A#4/Bb4 = 1,
-  B4 = 2, C5 = 3, etc. Going down: G#4/Ab4 = -1, G4 = -2, etc.
-  - noteNameToY(name)  converts a string like "C5" to its integer Y value
-  - yToNoteName(y)     converts an integer Y back to a note name string
-  - The pitch dropdown in each note box covers C3–B6 (48 chromatic pitches, fixed range)
-  - When the user presses A–G on the keyboard, letterPitch() picks the pitch in the
-    current key signature, choosing the octave closest to _lastPitch (default A4=0)
+  ◆ RULE: After completing ANY change to this file, you MUST:
+      1. Update §CHANGELOG with a new entry (date, session ref, what changed)
+      2. Update §TRIED_FAILED if anything failed during the session
+      3. Update §FUTURE_GOALS if the user mentioned new desires
+      4. Update §SESSION_LOG with a 1-3 line summary of the conversation
+      5. Update LAST_UPDATED in the top banner to today's date
+    Skipping this breaks continuity for future sessions. Do not skip it.
 
-  DURATION ENCODING
-  ─────────────────
-  Durations are stored as string keys (e.g. "quarter", "eighth", "dothalf").
-  The DURATIONS constant maps each key to a fraction of a whole note (frac).
-  getBeats(durVal, denom) converts a duration key to an actual beat count by
-  multiplying frac × tsDenom. For example, "quarter" with tsDenom=4 = 1 beat.
-  Supported durations: whole, dothalf (dotted half), half, dotquarter (dotted quarter),
-  quarter, doteighth (dotted eighth), eighth, dot16th (dotted 16th), sixteenth, thirtysecond.
+  ◆ CONTEXT: The user (tb) builds this incrementally across multiple chat sessions,
+    sometimes from different accounts. This manifest IS the memory. When tb starts
+    a new session, they upload this file → Claude reads manifest first → continues
+    seamlessly. The manifest must always be complete enough to reconstruct full
+    context with zero prior conversation.
 
-  ─────────────────────────────────────────────────────────────────────────────
-  COLUMN SYSTEM
-  ─────────────────────────────────────────────────────────────────────────────
-  S.columns is an array of arrays. Each inner array holds note objects.
+  ◆ COMMUNICATION STYLE WITH TB: Direct, technical, no hand-holding. tb is
+    comfortable with implementation-level detail, prefers iterative phases,
+    likes dark sci-fi aesthetic, gives specific feedback at each step.
+    Do not add unrequested features. Ask before large architectural changes.
 
-  columns[0]  — THE TIMELINE (Track 1 / f(x))
-    Notes here have no beatOffset. Their beat positions are determined purely by
-    their order in the array — each note starts where the previous one ends.
-    This column is rendered as a vertical stack of note boxes separated by
-    10px "insert zones" (drag targets). Rests are valid here and create silence.
-    getRows() computes [{note, idx, startBeat, beats, height}, ...] for this column.
+  ◆ NOTATION EFFICIENCY: When updating this manifest, prefer structured notation
+    over prose. Reuse existing symbol/section conventions. Compact > verbose.
+    This document is read by machines first; legibility to humans is secondary.
 
-  columns[i > 0]  — FREE-FLOAT TRACKS (g(x), h(x), j(x), ...)
-    Notes here have a beatOffset property (a beat number, fractional allowed).
-    They are absolutely positioned within their column's drop zone using beatToY().
-    They can overlap each other in time; the Desmos output for each track is sorted
-    by beatOffset before emitting. These map to g(x), h(x), j(x), k(x), etc.
-    Track names follow fnNames = ['f','g','h','j','k','l','m','n','p','q'].
-    Columns beyond index 9 are named v11, v12, etc.
+  ══════════════════════════════════════════════════════════════════════════════════
+  §1  PROJECT IDENTITY
+  ══════════════════════════════════════════════════════════════════════════════════
 
-  A note object looks like:
-    { id: number, type: 'note'|'rest', pitch: number, duration: string, beatOffset?: number }
-  beatOffset is only present on columns[i > 0] notes.
+  NAME:     NOTA — Desmos Music Composer
+  STACK:    HTML5 + CSS3 + Vanilla JS + Firebase 10 (compat SDK)
+  HOSTING:  Single .html file, self-contained, user hosts however they want
+  FIREBASE: project=song-to-desmos  appId=1:835040309941:web:6f73aeaadb2db65a9a04fc
+            auth=email+Google  db=Firestore  storage=none (not used)
+  FONTS:    Orbitron (logo/headings CDN), JetBrains Mono (body/code CDN)
+  THEME:    Dark sci-fi. CSS vars on :root. See §8 for color palette.
 
-  ─────────────────────────────────────────────────────────────────────────────
-  RENDERING PIPELINE
-  ─────────────────────────────────────────────────────────────────────────────
-  render() is the single top-level render function. It calls, in order:
-    1. syncSettings()       — reads header input values into S
-    2. renderColumns()      — rebuilds the entire #colsArea innerHTML with note boxes
-    3. bindNoteEvents()     — re-attaches drag and mousedown listeners to .nb elements
-    4. renderBeatLines()    — draws horizontal beat/bar lines on the .bl-layer
-    5. renderRuler()        — draws beat numbers on the left ruler strip
-    6. renderSelectionHighlights() — applies/removes .selected CSS class
+  ══════════════════════════════════════════════════════════════════════════════════
+  §2  ARCHITECTURE OVERVIEW
+  ══════════════════════════════════════════════════════════════════════════════════
 
-  render() is called after every mutation (add, delete, update, drag, undo, zoom change,
-  settings change). It is a full teardown+rebuild of the DOM — no partial updates.
+  UI PANELS:
+    HEADER          — time sig, key sig, generate btn, zoom, project controls,
+                      friends btn (👥), chat btn (💬), user avatar + sign-out
+    RULER (42px)    — left strip, beat/bar labels, scrolls with workspace
+    WORKSPACE       — scrollable canvas, beat-lines overlay, columns of note blocks
+    OUTPUT (310px)  — right panel, generated Desmos expressions + copy buttons
 
-  pxBeat() = S.zoom * 1.2  — converts beats to pixels
+  OVERLAY STACK (z-index):
+    authOverlay     10000   (login gate — blocks all interaction until signed in)
+    usernameOverlay 10500   (username setup — blocks until username chosen)
+    createGroupOverlay 11000
+    joinGroupOverlay   11000
+    reportOverlay      11000
+    projOverlay      9500
+    friendsOverlay   9400
+    chatOverlay      9300
+    kbdOverlay       9000
 
-  beatToY(beat, rows, padTop)
-    Maps a beat number to an absolute Y pixel in the workspace.
-    padTop = 16 (workspace padding) + col-hdr height + 10px (first insert zone).
-    Accounts for the fact that note boxes have a minimum pixel height (110px for notes,
-    80px for rests), so short-duration notes take more vertical space than their raw beat
-    count would imply. The rows array (from getRows()) carries the actual rendered heights.
+  GLOBAL STATE OBJECT S:
+    { tsNum, tsDenom, keySig, zoom, columns[][], output[], expanded:Set }
+    columns[0]    → timeline track (f(x)) — sequential, no beatOffset
+    columns[i>0]  → free-float tracks (g,h,j,k,l,m,n,p,q → v11,v12...) — beatOffset required
 
-  yToBeat(y, rows)
-    Inverse of beatToY. Converts a Y pixel offset (relative to beat-0 in a free-float
-    column, not the full workspace) to a beat number. Used during drag-over in free-float
-    columns to compute where the dragged note would land.
+  RENDER PIPELINE:  render() → syncSettings() → renderColumns() → bindNoteEvents()
+                    → renderBeatLines() → renderRuler() → renderSelectionHighlights()
+  ◆ render() is monkey-patched after Firebase init to also call scheduleAutoSave()
 
-  NOTE BOX RENDERING (nbHtml)
-  ───────────────────────────
-  Each note/rest is rendered as a .nb div (note box). Box height is determined by:
-    - The note's actual beat duration × pxBeat() (raw height)
-    - A minimum of 110px for notes, 80px for rests (fullMinH)
-    - If rawH < fullMinH and the note is NOT in S.expanded → "collapsed" mode
-  Collapsed mode (.nb-collapsed): shows a compact single-row layout with a badge,
-    a short label, an expand button (⋯), and a delete button. No dropdowns visible.
-  Expanded mode: shows the full layout with Pitch dropdown, Duration dropdown, beat count.
-  The expand/collapse button calls toggleExpand(id, e) which adds/removes from S.expanded.
-  Manually expanded notes get overflow:visible and z-index:10 so their dropdowns
-  extend past their allocated slot without clipping.
+  ══════════════════════════════════════════════════════════════════════════════════
+  §3  MUSIC ENGINE  [P0] ✓
+  ══════════════════════════════════════════════════════════════════════════════════
 
-  INSERT ZONES (izHtml, col 0 only)
-  ──────────────────────────────────
-  Between every note in column 0 (and before the first and after the last), a 10px
-  .iz div acts as a drag-drop target for reordering. The .iz div has data-before
-  set to the index where a dropped note would be inserted. When a drag is hovering
-  over an insert zone it glows cyan (::after pseudo-element, opacity 1).
+  PITCH ENCODING:   int relative to A4=0. A4=0, Bb4=1, B4=2, C5=3… G#4=-1, G4=-2…
+    @noteNameToY(name)  "C5" → int
+    @yToNoteName(y)     int  → "C5"
+    range: C3(-21) to B6(+26), 48 chromatic pitches
 
-  FREE-FLOAT COLUMN DROP ZONES (.col-dropzone)
-  ─────────────────────────────────────────────
-  Each column i > 0 gets a .col-dropzone div whose height is computed as the
-  maximum of: column 0's total pixel height, and the height needed to contain
-  all the column's own notes plus 80px padding. A ghost line (.col-ghost) inside
-  this zone shows a horizontal cyan line at the beat position where the dragged
-  note would land (updated during colOver via colGhost positioning).
+  DURATION KEYS + FRACS (of whole note):
+    whole=1, dothalf=3/4, half=1/2, dotquarter=3/8, quarter=1/4,
+    doteighth=3/16, eighth=1/8, dot16th=3/32, sixteenth=1/16, thirtysecond=1/32
+    getBeats(durVal, tsDenom) → actual beat count
 
-  NEW COLUMN DROP ZONE (.new-col, #newColZone)
-  ─────────────────────────────────────────────
-  A "+" zone rendered to the right of all existing columns. Dropping a note here
-  creates a new column. Its marginTop and height are set after DOM measurement in
-  render() so it aligns exactly with beat 0 of column 0.
+  KEY SIGNATURES: KEY_SIGNATURES[key] = {letter: +1|-1} accidentals
+    Supported: C G D A E B F# C# F Bb Eb Ab Db Gb Cb
+    @letterPitch(letter) → picks octave closest to _lastPitch
 
-  ─────────────────────────────────────────────────────────────────────────────
-  DRAG & DROP SYSTEM
-  ─────────────────────────────────────────────────────────────────────────────
-  Uses the native HTML drag-and-drop API (draggable="true", dragstart/dragend/
-  dragover/dragleave/drop events).
+  COLUMNS:
+    col[0]: note={id,type,pitch,duration}  no beatOffset
+    col[i>0]: note={id,type,pitch,duration,beatOffset}
+    @getRows() → [{note,idx,startBeat,beats,height}] for col 0 only
+    @findFreeBeat(col,start,dur,eighth,excludeIds) → collision-free beat
 
-  drag = { active, id, col, row, multi, multiNotes[], pivotBeat }
-    Tracks the current drag operation. `multi` is true when >1 note is selected.
-    `multiNotes` is a snapshot of all selected notes with their current beat
-    positions at drag start. `pivotBeat` is the beat of the note being dragged.
+  DRAG: HTML5 drag API. Single or multi-select drag (drag.multi=true).
+    Snap: eighth-note grid. Can drag into new column (+) zone → S.columns.push([])
+    dragSnap tracks hover target for ghost-line rendering.
 
-  dragSnap = { col, beat }
-    Tracks the last snapped beat/col during a colOver hover for the ghost line.
+  UNDO: undoStack (max 100 JSON snapshots of S.columns). @pushUndo() before every mutation.
+    Only columns snapshotted — NOT tsNum/tsDenom/keySig/zoom.
 
-  Drop targets and their behavior:
-    • .iz (insert zone, col 0)     → reorder within col 0, or move free-float → col 0
-    • .nb (note box)               → swap content between two notes (type/pitch/duration)
-    • .col-dropzone (col i > 0)    → move note into that column at the hovered beat
-    • #newColZone                  → move note into a brand new column
+  CLIPBOARD: [{type,pitch,duration,beatOffset,col}]
+    @copySelected(), @cutSelected(), @pasteClipboard()
+    Paste col-0 items → insert at closest gap to mouse Y
+    Paste free-float → shift group so earliest note lands at mouse beat
 
-  Multi-drag: when multiple notes are selected and one is dragged, all selected
-  notes move together. Their relative beat offsets are preserved; the group shifts
-  by delta = (drop beat) - (pivot note's original beat).
+  SELECTION:  Set of note IDs. Rubber-band (marquee) via mousedown on empty workspace.
+    Ctrl/Meta = additive. Shift+letter = batch pitch edit on selection.
 
-  swapNoteContent(id1, col1, id2, col2)
-    Swaps type/pitch/duration between two note objects. Used when dropping one
-    note box onto another. Does NOT change their positions.
+  KEYBOARD SHORTCUTS:
+    A-G           → addNoteForLetter (key-sig aware, octave-closest to _lastPitch)
+    R             → addRest
+    Delete/Bksp   → deleteSelected
+    Ctrl+Z        → applyUndo
+    Ctrl+A        → selectAll
+    Ctrl+C/X/V    → copy/cut/paste
+    Shift+A-G     → editSelectionPitch
+    Shift+1/@/#/$/* → set duration (whole/half/dothalf/quarter/eighth)
+    Shift+>       → toggleDot
+    Shift+↑↓      → semitone nudge ±1
+    Ctrl+↑↓       → octave nudge ±12
+    ?             → toggleHelp
 
-  ─────────────────────────────────────────────────────────────────────────────
-  KEYBOARD SHORTCUTS
-  ─────────────────────────────────────────────────────────────────────────────
-  All shortcuts are blocked when focus is inside an <input> or <select>.
+  DESMOS GENERATION: @generateDesmos()
+    col[i] → fn name: f,g,h,j,k,l,m,n,p,q → v11,v12…
+    Output: fn(x) = {s0<x<=e0:p0, s1<x<=e1:p1, …}
+    SAME-PITCH BREAK: consecutive same-pitch back-to-back → e trimmed -0.1 beats
+    Rests skipped. Only cols with ≥1 pitched note emitted.
+    latex vs code: latex uses \left\{ \right\} for Desmos paste. code uses literal {}.
 
-    B              — Add Note at mouse position (calls addNote())
-    R              — Add Rest at mouse position (calls addRest())
-    Delete / Backspace  — Delete all selected notes
-    Ctrl+Z         — Undo (pops from undoStack, restores S.columns snapshot)
-    Ctrl+A         — Select all notes across all columns
-    Ctrl+C         — Copy selected notes to clipboard
-    Ctrl+X         — Cut selected notes (copy then delete)
-    Ctrl+V         — Paste clipboard at mouse position (see PASTE SYSTEM)
+  ZOOM: S.zoom (36–200). pxBeat()=zoom*1.2. stepZoom(±12). render() on change.
 
-  ─────────────────────────────────────────────────────────────────────────────
-  MOUSE-POSITION-AWARE ADD  (resolveAddTarget, addNote, addRest)
-  ─────────────────────────────────────────────────────────────────────────────
-  _lastMouseX / _lastMouseY are updated only when the mouse moves inside #wsScroll
-  (the workspace scroll container). This means the coordinates always reflect where
-  the user was last hovering in the workspace, not the header buttons.
+  COLLAPSED NOTES: notes with rawH < minH auto-collapse to max(rawH,28)px.
+    User can expand via ⊕ button → S.expanded.add(id) → height=max(rawH,minH).
 
-  resolveAddTarget(durVal) uses these coordinates to decide where to insert:
-    • Finds the closest column horizontally by comparing mouse X to each column's
-      bounding rect.
-    • Converts mouse Y to a beat number using the workspace's padTop, pxBeat(),
-      and snapping to the nearest eighth note.
-    • For col 0: walks the rows to find the insertion index whose midpoint is
-      closest to the snapped beat.
-    • For col i > 0: starts at the snapped beat and nudges forward to the next
-      free eighth-note slot if there would be an overlap with existing notes.
+  ══════════════════════════════════════════════════════════════════════════════════
+  §4  FIREBASE AUTH + USER PROFILES  [P1] ✓
+  ══════════════════════════════════════════════════════════════════════════════════
 
-  addNote() inserts a quarter-note pitched to defaultPitch() (middle of range).
-  addRest() inserts a quarter-rest (pitch=0, ignored in Desmos output).
-  Both call pushUndo() first, then resolveAddTarget(), then render().
+  AUTH FLOWS:
+    email+password login/register → Firebase Auth
+    Google Sign-In → signInWithPopup(GoogleAuthProvider)
+    Password reset → sendPasswordResetEmail
+    @friendlyAuthError(e) maps Firebase error codes → human strings
 
-  ─────────────────────────────────────────────────────────────────────────────
-  SELECTION SYSTEM
-  ─────────────────────────────────────────────────────────────────────────────
-  selection  — a Set of note IDs currently selected.
+  USER PROFILE LIFECYCLE:
+    onAuthStateChanged(user) → if user:
+      profilesRef().doc(uid).get() → if exists+has username: @onUserLogin(user)
+      else: show usernameOverlay (blocks UI until username chosen)
+    usernameOverlay: debounced availability check (500ms) → @doSetUsername()
+      batch.set: #userProfiles/{uid} + #usernames/{usernameLower}
+    @renderUserArea(user) → injects avatar+username+signout into #userArea
 
-  selectNote(id, additive)
-    If additive (Ctrl/Shift held): toggles the note in the set.
-    Otherwise: clears the set and selects just this note.
+  PROFILE SCHEMA (#userProfiles/{uid}):
+    { uid, username, usernameLower, displayName, email, createdAt }
+  USERNAME INDEX (#usernames/{lower}):
+    { uid, username }
+    ◆ Lookup always by lower-case key. Store canonical case in value.
 
-  selectAll()        — adds every note ID across all columns to selection.
-  renderSelectionHighlights()  — applies/removes .selected class on .nb elements.
+  GLOBAL VARS: _currentUser (Firebase User), _userProfile (profile doc data)
 
-  RUBBER-BAND (MARQUEE) SELECTION
-  ────────────────────────────────
-  Click-dragging on empty workspace space activates a rubber-band box (#rubberBand,
-  position:fixed). Any .nb whose bounding rect intersects the rubber-band rect is
-  added to selection. Ctrl/Meta held during rubber-band adds to existing selection
-  rather than replacing it. The rubber-band is cancelled on mouseup or window blur.
+  ══════════════════════════════════════════════════════════════════════════════════
+  §5  PROJECTS  [P1] ✓
+  ══════════════════════════════════════════════════════════════════════════════════
 
-  ─────────────────────────────────────────────────────────────────────────────
-  CLIPBOARD & PASTE SYSTEM
-  ─────────────────────────────────────────────────────────────────────────────
-  clipboard  — array of note snapshots: [{type, pitch, duration, beatOffset, col}, ...]
+  SCHEMA (#users/{uid}/projects/{projId}):
+    { name, updatedAt, data:{ columns:JSON_str, tsNum, tsDenom, keySig, zoom } }
+    ◆ S.columns stored as JSON string — Firestore rejects nested arrays directly.
 
-  copySelected()   — snapshots selected notes into clipboard (does not modify S).
-  cutSelected()    — copySelected() + deleteSelected().
-  pasteClipboard() — inserts clipboard notes at the mouse position. Behavior:
+  CRUD:
+    @saveProject()    → upsert. If _currentProjId null → .add() → sets _currentProjId
+    @loadProjById(id) → .get() → @loadProjectData(doc)
+    @deleteProject(id,name) → confirm → .delete()
+    @newProject()     → reset S+UI, _currentProjId=null
+    @startRenameProject(id,btn) → inline input in projList
 
-    Col-0 items (notes from the timeline):
-      Finds the gap between timeline rows whose beat position is closest to the
-      mouse's Y coordinate. Inserts the notes as a block at that index.
-      Multiple items are inserted in their original relative order.
+  AUTO-SAVE: _autoSaveTimer. Fires 4000ms after last render() if user is logged in
+    AND _currentProjId exists. Not triggered on new unsaved projects.
+    @onProjectNameChange() → scheduleAutoSave if proj exists.
 
-    Free-float items (notes from columns i > 0):
-      Determines the target column by finding the closest column to mouse X.
-      If the mouse is not near any existing free-float column (>120px away),
-      a new column is opened.
-      The entire group is time-shifted so that the earliest note in the group
-      lands at the snapped mouse beat. Each note then has its beat nudged forward
-      to the nearest free eighth-note slot to avoid collisions with existing notes
-      in that column.
-    Pasted notes are immediately selected after paste.
+  SAVE STATUS PILL: idle | saving(pulse) | saved(green,3s) | error(pink)
 
-  ─────────────────────────────────────────────────────────────────────────────
-  UNDO SYSTEM
-  ─────────────────────────────────────────────────────────────────────────────
-  undoStack  — array of deep-cloned snapshots of S.columns (max 100 entries).
-  pushUndo() — must be called before every mutation. Saves a JSON clone of S.columns.
-  applyUndo() — pops the last snapshot, restores S.columns, cleans up stale IDs
-    from selection and S.expanded, then calls render().
-  Only S.columns is snapshotted (not settings or zoom). One undo step per user action.
+  PROJECTS MODAL: #projOverlay. @toggleProjModal() → if opening: @renderProjList()
 
-  ─────────────────────────────────────────────────────────────────────────────
-  DESMOS CODE GENERATION  (generateDesmos)
-  ─────────────────────────────────────────────────────────────────────────────
-  Called by the "▶ Generate" button. Produces one piecewise function per column
-  that contains at least one pitched note (rests are silently skipped).
+  ══════════════════════════════════════════════════════════════════════════════════
+  §6  FRIENDS SYSTEM  [P1] ✓
+  ══════════════════════════════════════════════════════════════════════════════════
 
-  Output format per column:
-    f(x) = {s0 < x <= e0:pitch0, s1 < x <= e1:pitch1, ...}
-  Where s = start beat, e = end beat, pitch = integer Y value.
+  SCHEMA:
+    #friends/{uid}/list/{friendUid}:
+      { uid, username, displayName, since }
+    #friendRequests/{reqId}:
+      { fromUid, fromUsername, toUid, toUsername, status:'pending'|'accepted'|'declined', createdAt }
 
-  SAME-PITCH BREAK RULE:
-    If two consecutive pitched notes in the same column are back-to-back in time
-    (i.e. note A ends exactly where note B starts) AND they have the same pitch,
-    note A's end is trimmed by 0.1 beats (e.g. end becomes 1.9 instead of 2.0).
-    This inserts a tiny audible gap so Desmos re-triggers the note rather than
-    playing it as one continuous tone. Different pitches or non-adjacent notes
-    are NOT affected.
+  REAL-TIME LISTENERS (set up in @setupFriendListeners, torn down in @cleanupFriendListeners):
+    _friendsUnsub   → #friends/{uid}/list orderBy username
+    _requestsUnsub  → #friendRequests where toUid==uid && status==pending
 
-  For col 0, segments are derived from getRows() (ordered by timeline position).
-  For col i > 0, notes are sorted by beatOffset before processing.
+  FRIEND MODAL TABS: friends | requests | find
+    Friends tab   → @renderFriendsList() — shows friend items with 💬 Message / Remove / 🚫 / ⚠️
+    Requests tab  → @renderRequestsList() — accept/decline buttons + pink badge count
+    Find tab      → @doFindUser() — lookup by username, shows Add/Message/Remove/Block/Report
 
-  Each output line has three forms:
-    code  — plain text for display in the UI (uses < and > literally)
-    latex — Desmos-compatible LaTeX with \left\{ \right\} delimiters (copied to clipboard)
+  CRUD:
+    @doSendRequest(toUid,toUsername)  → .add() to #friendRequests
+    @doAcceptRequest(reqId)          → batch: update req status + set both friends/list docs
+    @doDeclineRequest(reqId)         → update status='declined'
+    @doRemoveFriend(uid,username)    → batch: delete both friends/list docs
 
-  renderOutput(lines) builds the output panel HTML.
-  copyLine(idx, btn)  copies a single line's latex to the clipboard.
-  copyAll()           copies all lines joined by newlines.
+  BADGES: #friendsNotifBadge (header) + ftab-badge span (tab) ← _pendingRequests.length
 
-  ─────────────────────────────────────────────────────────────────────────────
-  RULER & BEAT LINES
-  ─────────────────────────────────────────────────────────────────────────────
-  The ruler is a 42px-wide strip on the left of the workspace. It contains
-  .rm divs (ruler marks) absolutely positioned using beatToY(). Bar lines (every
-  tsNum beats) are labelled with their beat number; beat lines show a dot "·".
-  At low zoom (pxBeat < 30), beat lines are suppressed to avoid clutter.
+  ══════════════════════════════════════════════════════════════════════════════════
+  §7  DIRECT MESSAGES + BLOCKING + REPORTING  [P2] ✓
+  ══════════════════════════════════════════════════════════════════════════════════
 
-  Beat lines (.bl divs inside #beatLayer) are full-width horizontal lines rendered
-  behind the columns. Bar lines use a brighter blue; beat lines are very dim.
-  Both ruler and beat lines extend to max(32, totalBeats + 8) beats.
+  SCHEMA:
+    #directMessages/{convId}/msgs/{msgId}:
+      { uid, username, text, at:Timestamp }
+      convId = dmConvId(uid1,uid2) = 'dm_' + [uid1,uid2].sort().join('_')
+    #userConvs/{uid}/convs/{convId}:
+      { participants:[uid1,uid2], pUsernames:{uid:username}, lastMsg, lastAt, unread }
+    #blocked/{uid}/list/{blockedUid}:
+      { uid, username, blockedAt }
+    #reports/{reportId}:
+      { fromUid, fromUsername, targetUid, targetUsername, reason, details, createdAt }
 
-  The ruler scroll is kept in sync with the workspace scroll via a scroll event
-  listener on #wsScroll that transforms #rulerInner with translateY.
+  REAL-TIME LISTENERS:
+    _chatConvsUnsub → #userConvs/{uid}/convs orderBy lastAt desc
+    _chatMsgsUnsub  → #directMessages/{cid}/msgs orderBy at asc limitToLast 120
+    Both set up in @setupChatListeners (called via patched @setupFriendListeners)
 
-  ─────────────────────────────────────────────────────────────────────────────
-  ZOOM
-  ─────────────────────────────────────────────────────────────────────────────
-  The zoom slider (range 36–200) sets S.zoom. pxBeat() = S.zoom * 1.2.
-  Changing zoom calls render() which recomputes all pixel heights and positions.
-  The zoom label (#zoomLbl) shows the raw slider value.
+  GLOBAL VARS: _chatConvs[], _activeConvId, _chatMsgsUnsub, _chatConvsUnsub,
+               _blockedUids:Set, _totalUnread
 
-  ─────────────────────────────────────────────────────────────────────────────
-  SETTINGS INPUTS
-  ─────────────────────────────────────────────────────────────────────────────
-  Three header inputs re-trigger render() on both 'change' and 'input' events:
-    #tsNum    — time signature numerator (beats per bar)
-    #tsDenom  — time signature denominator (note value per beat)
-    #keySig   — key signature select (e.g. "C", "A", "Bb")
-  syncSettings() reads these into S at the start of every render().
+  CHAT MODAL:  #chatOverlay → .chat-modal → .chat-left + .chat-right
+    Left: DMs tab | Groups tab (tabs added in P3, see §8)
+    DM list: @renderConvList() — filters out blocked partners
+    Right: @_renderChatRight(partnerUid,username) — header (block/report btns) + msgs + input
+    @_openConv(cid,pUid,pUsername) — sets _activeConvId, marks unread=0, renders, starts listener
+    @_listenToMessages(cid) — replaces _chatMsgsUnsub, calls @_renderMessages
 
-  ─────────────────────────────────────────────────────────────────────────────
-  ID SYSTEM
-  ─────────────────────────────────────────────────────────────────────────────
-  Every note object gets a globally unique integer ID via nid() (_nextId++).
-  IDs are used as keys in the selection Set, S.expanded Set, and as data-id
-  attributes on .nb DOM elements. IDs are never reused within a session.
-  They are NOT persisted — refreshing the page resets _nextId to 1.
+  @openDMWith(friendUid,friendUsername) — closes friendsOverlay, opens chatOverlay,
+    ensures conv metadata exists in both users' #userConvs, then calls _openConv
 
-  ─────────────────────────────────────────────────────────────────────────────
-  CSS THEME
-  ─────────────────────────────────────────────────────────────────────────────
-  The app uses a dark sci-fi theme with CSS custom properties defined on :root.
-  Key color variables:
-    --cyan   (#00f5d4)  — primary accent, selections, cursor glow
-    --pink   (#f72585)  — destructive / generate button
-    --purple (#9b5de5)  — note boxes, col-0 header
-    --blue   (#4cc9f0)  — beat lines, output function labels
-    --green  (#80ed99)  — rest boxes
-    --yellow (#ffd60a)  — reserved
-  Fonts: Orbitron (logo/headers), JetBrains Mono (body/code).
+  SEND: @sendChatMessage() — adds to msgs subcollection + batch updates both userConvs
+    (self unread=0, partner unread+=1)
 
-*/ /* ── end of feature reference ── */
+  BLOCKING:
+    @doBlockUser(uid,username) → .set() in #blocked/{me}/list/{uid}, remove from friends,
+      refresh UI if blocked conv is active
+    @doUnblockUser(uid,username) → .delete() from blocked, refresh UI
+    Blocked users: filtered from DM list, chat input hidden, "You have blocked" notice shown
+    ◆ WARN: blocking does NOT prevent them from sending msgs server-side (no Firebase rules
+      enforcing this yet). Client-side only. ◈ Add Firestore security rule to enforce.
+
+  REPORTING:
+    @openReportModal(uid,username) → opens #reportOverlay, populates target fields
+    @submitReport() → .add() to #reports. No admin UI yet — raw Firestore collection.
+    Reasons: harassment | spam | inappropriate | hate | impersonation | other
+    ◆ [TODO] Admin dashboard to view/action reports (see §10)
+
+  UNREAD BADGE: #chatNotifBadge on 💬 Chat header button ← _totalUnread (sum of all conv unread)
+
+  TOAST: @showToast(msg, color?) — fixed bottom pill, 3s duration, CSS transition
+
+  ══════════════════════════════════════════════════════════════════════════════════
+  §8  GROUP CHATS  [P3] ✓
+  ══════════════════════════════════════════════════════════════════════════════════
+
+  SCHEMA:
+    #groupChats/{gid}:
+      { name, code, adminUid, adminUsername, memberUids:[], memberUsernames:{uid:name},
+        bannedUids:[], lastMsg, lastAt, createdAt }
+    #groupChats/{gid}/msgs/{msgId}:
+      { uid, username, text, at:Timestamp }
+    #userGroups/{uid}/list/{gid}:
+      { name, code, adminUid, lastMsg, lastAt, unread }
+    #groupInviteCodes/{code}:
+      { gid, name, adminUid }
+
+  INVITE CODE: 6-char alphanumeric, chars=ABCDEFGHJKLMNPQRSTUVWXYZ23456789 (no ambiguous)
+    @genGroupCode() — generates random code, @doCreateGroup() checks uniqueness (max 10 tries)
+
+  REAL-TIME LISTENERS:
+    _groupsUnsub    → #userGroups/{uid}/list orderBy lastAt desc
+    _groupMsgsUnsub → #groupChats/{gid}/msgs orderBy at asc limitToLast 120
+    Set up in @setupGroupListeners (called via patched @setupChatListeners)
+
+  GLOBAL VARS: _groups[], _activeGroupId, _groupMsgsUnsub, _groupsUnsub,
+               _activeChatLeftTab:'dms'|'groups', _membersSidebarOpen:bool
+
+  CHAT LEFT PANEL TABS: #cltabDMs | #cltabGroups
+    @switchChatLeftTab(tab) — toggles lists + toolbars
+    DM toolbar: "Select a friend to message" label
+    Group toolbar: [+ New] → @openCreateGroupModal() | [# Join] → @openJoinGroupModal()
+
+  GROUP LIST: @renderGroupList() — purple # avatar, name, preview, unread badge
+
+  CREATE GROUP: #createGroupOverlay → @doCreateGroup()
+    → batch: .set(#groupChats/{gid}) + .set(#groupInviteCodes/{code}) + .set(#userGroups/{me}/{gid})
+    → shows code in #newGroupCodeDisplay (click to copy)
+
+  JOIN GROUP: #joinGroupOverlay → @doJoinGroup()
+    lookup #groupInviteCodes/{code} → get gid → check banned → check already member
+    → batch: arrayUnion uid into memberUids, set memberUsernames.uid, set #userGroups/{uid}/{gid}
+
+  INVITE BY USERNAME (admin only): @inviteToGroupByUsername(gid)
+    lookup username → check banned/already-member → arrayUnion + set userGroups entry
+
+  GROUP CHAT RIGHT PANEL: @_renderGroupChatRight(gData)
+    header: group name, member count, admin badge, code pill (click→copy), Members btn,
+            Leave (non-admin) | Delete (admin) btn
+    content: .chat-right-content → .chat-msgs-col (msgs + [invite row if admin] + input)
+    members sidebar appended to .chat-right-content when toggled
+
+  MEMBERS SIDEBAR: @toggleMembersSidebar(gid) — toggle .chat-members-sidebar
+    shows all memberUids with avatars + ADMIN badge
+    admin sees: ✕ kick btn + 🚫 ban btn per non-admin member
+    banned section (admin only): lists bannedUids with ↩ unban btn
+
+  MEMBER MANAGEMENT:
+    @kickMember(gid,uid,username)   → arrayRemove from memberUids + delete userGroups entry
+    @banMember(gid,uid,username)    → arrayRemove memberUids + arrayUnion bannedUids + delete entry
+    @unbanMember(gid,uid,username)  → arrayRemove bannedUids
+    @confirmLeaveGroup(gid)         → arrayRemove + delete entry, clears chatRight
+    @confirmDeleteGroup(gid) ⚑      → batch delete all userGroups entries + inviteCode + group doc
+      ◆ WARN: msgs subcollection NOT deleted (needs Cloud Function). Orphaned data.
+
+  SEND: @sendGroupMessage() — adds msg + updates group doc lastMsg + batch updates all memberUids'
+    userGroups entries (self unread=0, others unread+=1)
+    ◆ WARN: reads full member list on every send (N+1 pattern). Fine for small groups.
+      [TODO] Use Cloud Function for scalable fan-out if groups get large.
+
+  UNREAD: Groups tab badge (span.chat-ltab-badge) ← sum of _groups[i].unread
+
+  ══════════════════════════════════════════════════════════════════════════════════
+  §9  CSS THEME + DESIGN SYSTEM
+  ══════════════════════════════════════════════════════════════════════════════════
+
+  ROOT VARS:
+    --bg:#07070f  --surface:#0c0c1a  --surface2:#111122  --surface3:#181830
+    --border:#22224a  --border2:#2e2e5a
+    --cyan:#00f5d4   --cyan-dim:rgba(0,245,212,0.15)
+    --pink:#f72585   --pink-dim:rgba(247,37,133,0.15)
+    --purple:#9b5de5 --purple-dim:rgba(155,93,229,0.15)
+    --blue:#4cc9f0   --blue-dim:rgba(76,201,240,0.12)
+    --green:#80ed99  --green-dim:rgba(128,237,153,0.12)
+    --yellow:#ffd60a
+    --text:#c4cce8   --text-dim:#5c6380  --text-muted:#2e3050
+    --note-bg:#0e0e22  --rest-bg:#0a120f
+    --beat-line:rgba(76,201,240,0.10)  --bar-line:rgba(76,201,240,0.32)
+
+  COLOR ROLES:
+    cyan   → primary accent, selections, cursor glow, save indicators
+    pink   → destructive actions, generate button, error states, badges
+    purple → note boxes, col-0 header, group chat accents
+    blue   → beat lines, output function labels
+    green  → rest boxes, success states, available usernames
+    yellow → invite codes, admin badges, save-in-progress
+
+  KEY CSS CLASSES (social UI):
+    .btn-sm / .btn-sm.accent / .btn-sm.danger
+    .friend-item / .friend-avatar / .friend-info / .friend-actions
+    .conv-item / .conv-item.active / .conv-unread
+    .msg-bubble.sent / .msg-bubble.recv
+    .chat-members-sidebar / .chat-member-item / .member-role
+    .group-code-pill / .group-code-display
+    .nota-toast / .notif-badge / .blocked-badge / .ftab-badge
+
+  ══════════════════════════════════════════════════════════════════════════════════
+  §10  FUTURE GOALS  [GOAL]
+  ══════════════════════════════════════════════════════════════════════════════════
+
+  [GOAL][HIGH] COLLABORATIVE PROJECTS
+    User can create a "public project", share via 6-digit code or direct invite.
+    Other users join → see the same composer in real-time, can add/edit notes.
+    Likely implementation: project has a sharedWith:[uid] list + Firestore real-time
+    listener on project doc. Presence via heartbeat docs or Firebase RTDB.
+    ◆ This is the MOST REQUESTED feature. Do this next after P3 is stable.
+
+  [GOAL][HIGH] PROJECT INVITE BY USERNAME
+    From the project, owner can type a username → sends a project invite (similar
+    to friend request UX). Recipient sees notification + accept/decline.
+    Schema: #projectInvites/{inviteId} { projId, fromUid, toUid, status }
+
+  [GOAL][MED] ADMIN / MODERATION DASHBOARD
+    Hidden page (admin-only UID whitelist) that shows:
+      - All reports (#reports) with action buttons (dismiss, warn, ban)
+      - Global ban list
+      - User lookup
+    Implementation: separate admin.html or in-page panel behind UID check.
+
+  [GOAL][MED] GLOBAL BANS
+    Admin can globally ban a UID. Banned users can still read app but all write
+    operations fail. Enforced via Firebase Security Rules checking #globalBans/{uid}.
+    Schema: #globalBans/{uid}: { bannedAt, reason, bannedByUid }
+
+  [GOAL][MED] ONLINE PRESENCE / STATUS
+    Show green dot on friend avatars when online.
+    Implementation: write heartbeat to #presence/{uid} with lastSeen timestamp every
+    30s while tab is open. Read via real-time listener on friend UIDs.
+    Firebase RTDB (not Firestore) is better for this — lower latency, onDisconnect.
+
+  [GOAL][MED] PROFILE PAGES
+    Click on a username → see their profile: display name, join date, public projects,
+    mutual friends. Could be an in-app modal or a /profile?u=username URL param page.
+
+  [GOAL][LOW] NOTIFICATION SYSTEM
+    In-app notification bell. Events: friend request, project invite, group invite,
+    mention in group chat (@username), message from non-friend.
+    Schema: #notifications/{uid}/list/{notifId}: { type, fromUid, fromUsername,
+    refId, read:bool, createdAt }
+
+  [GOAL][LOW] IN-BROWSER AUDIO PREVIEW
+    Use Web Audio API (AudioContext + OscillatorNode) to play back the composition
+    directly in the browser without needing Desmos. Each note → oscillator with
+    frequency from MIDI mapping. Would need a play/stop button in the header.
+    ◆ This is a pure client-side feature, no Firebase needed.
+
+  [GOAL][LOW] PROJECT VISIBILITY / SHARING
+    Projects can be public (browsable) or private (default). Public projects appear
+    in a "Discover" feed. Schema: add isPublic:bool, ownerUsername to project doc.
+
+  [GOAL][LOW] THEMES / APPEARANCE SETTINGS
+    Let users choose color accent. Swap --cyan / --pink values. Store in userProfile.
+
+  ══════════════════════════════════════════════════════════════════════════════════
+  §11  TRIED + FAILED  [FAIL]
+  ══════════════════════════════════════════════════════════════════════════════════
+
+  No failures documented yet. This section will track:
+    [FAIL] description | reason it failed | what was tried instead
+
+  ══════════════════════════════════════════════════════════════════════════════════
+  §12  FIREBASE SECURITY RULES — CURRENT GAPS  ◈
+  ══════════════════════════════════════════════════════════════════════════════════
+
+  ◈ These are known missing rule enforcements (client-side only currently):
+    1. Block enforcement: blocked users can still write to #directMessages/{cid}/msgs
+       → Need rule: check #blocked/{recipientUid}/list/{senderUid} doesn't exist
+    2. Group ban enforcement: banned uid can rejoin if they guess the code
+       → Need rule on #userGroups write: check !gData.bannedUids.includes(uid)
+    3. Report spam: any user can submit unlimited reports
+       → Rate limit via rule or Cloud Function
+    4. Group message fan-out: N writes on every send (one per member's userGroups)
+       → Fine for <50 members. Cloud Function needed for scale.
+    5. DM between non-friends: currently allowed
+       → If desired, add rule: sender must be in receiver's #friends/list
+
+  ══════════════════════════════════════════════════════════════════════════════════
+  §13  MONKEY-PATCH CHAIN  (execution order matters)
+  ══════════════════════════════════════════════════════════════════════════════════
+
+  render()                 ← patched to also call scheduleAutoSave (after Firebase init)
+  setupFriendListeners()   ← patched to also call setupChatListeners (P2)
+  setupChatListeners()     ← patched to also call setupGroupListeners (P3)
+  cleanupFriendListeners() ← patched to also call cleanupChatListeners (P2)
+  cleanupChatListeners()   ← patched to also call cleanupGroupListeners (P3)
+  doSignOut()              ← patched to call cleanupFriendListeners + close modals
+  renderFriendsList()      ← patched to add 💬/🚫/⚠️ buttons (P2)
+  doFindUser()             ← patched to show block/unblock/report (P2)
+  toggleChatModal()        ← patched to support tab state + group auto-select (P3)
+
+  ◆ Each patch saves _orig prefix of the previous version. Chain is:
+    P3_patch calls P2_patch calls original (or P1 version).
+    Future patches: always save _orig, call it inside new version.
+
+  ══════════════════════════════════════════════════════════════════════════════════
+  §14  KNOWN ISSUES / WARTS
+  ══════════════════════════════════════════════════════════════════════════════════
+
+  1. Group msg subcollection deletion on @confirmDeleteGroup: only group doc + userGroups
+     entries + inviteCode deleted. msgs subcollection is orphaned in Firestore.
+     Fix: Cloud Function triggered on group doc delete.
+
+  2. _baseRender vs render: original render() saved as _baseRender, then re-assigned.
+     If another patch reassigns render() and calls _baseRender(), it skips any
+     intermediate patches that also reassigned render(). Currently only one patch on
+     render() so not an issue yet.
+
+  3. DM conv creation on @openDMWith: conv docs created for both users on first open
+     even if no messages are ever sent. Minor Firestore bloat.
+
+  4. Invite code collision: @genGroupCode retries up to 10 times. With 6 chars and
+     ~32^6 space this is astronomically unlikely to fail, but retry logic exists.
+
+  5. escapeHtml injected into onclick attributes in innerHTML. Sufficient for XSS
+     prevention in same-origin context but not a formal sanitization library.
+     ◆ Do NOT store user-controlled data directly in innerHTML without escapeHtml.
+
+  ══════════════════════════════════════════════════════════════════════════════════
+  §15  CHANGELOG
+  ══════════════════════════════════════════════════════════════════════════════════
+
+  [2025-06 | SESSION:1 | Claude-Sonnet-4.6]
+    ADDED P2: direct messages, blocking, reporting
+    ADDED P2: 💬 Chat button in header, chat overlay with DM list + chat right panel
+    ADDED P2: #directMessages, #userConvs, #blocked, #reports Firestore collections
+    ADDED P2: @openDMWith, @sendChatMessage, @doBlockUser, @doUnblockUser
+    ADDED P2: @openReportModal, @submitReport, @showToast
+    ADDED P2: Message + Block + Report buttons in renderFriendsList + doFindUser
+    ADDED P2: .nota-toast, .chat-overlay, .report-overlay CSS
+
+  [2025-06 | SESSION:2 | Claude-Sonnet-4.6]
+    ADDED P3: group chats — create, join by code, invite by username, kick, ban, unban
+    ADDED P3: DM/Groups tab split in chat left panel
+    ADDED P3: members sidebar with admin controls
+    ADDED P3: #groupChats, #userGroups, #groupInviteCodes Firestore collections
+    ADDED P3: @doCreateGroup, @doJoinGroup, @openGroup, @sendGroupMessage
+    ADDED P3: @kickMember, @banMember, @unbanMember, @confirmLeaveGroup, @confirmDeleteGroup
+    ADDED P3: @inviteToGroupByUsername, @toggleMembersSidebar, @copyGroupCode
+    ADDED P3: #createGroupOverlay, #joinGroupOverlay HTML modals
+    ADDED P3: all group CSS (tabs, sidebar, code pill, invite row, right-content layout)
+
+  [2025-06 | SESSION:3 | Claude-Sonnet-4.6]
+    ADDED: NOTA_MANIFEST (this document) — §0-§15 — replaces old feature reference comment
+    Manifest format: AI-primary, structured notation, self-updating instructions
+
+  ══════════════════════════════════════════════════════════════════════════════════
+  §16  SESSION LOG
+  ══════════════════════════════════════════════════════════════════════════════════
+
+  [SESSION:1] tb uploaded file. Goal: add chat, friend system, banning, reporting.
+    Analysed existing code (auth, friends, projects all already present from P1).
+    Built P2 (DMs, blocking, reporting) in one pass. tb approved, said "Continue".
+
+  [SESSION:2] tb said "Continue". Built P3 (group chats) in one pass.
+    Output delivered. No follow-up issues reported.
+
+  [SESSION:3] tb requested: add comprehensive AI-readable manifest inside code.
+    Specifications: every feature, future goals, chat history, tried/failed,
+    instruction to always update manifest, AI-optimized communication format.
+    Result: this document (§0-§16).
+
+*/ /* ── end of NOTA_MANIFEST ── */
+
+
 
 /* ═══════════════════════════════════════════════════════════
    CONSTANTS & MUSIC UTILITIES
@@ -3943,21 +4596,1047 @@ async function doRemoveFriend(friendUid, friendUsername) {
   } catch(e) { console.error('Remove friend error:', e); }
 }
 
-/* ─── Patch doSignOut to clean up ─── */
+/* ═══════════════════════════════════════════════════════════
+   PHASE 2 — DIRECT MESSAGES, BLOCKING & REPORTING
+══════════════════════════════════════════════════════════ */
+
+let _chatConvs       = [];         // cached conversations list
+let _activeConvId    = null;       // currently open conversation ID
+let _chatMsgsUnsub   = null;       // real-time listener for active conv
+let _chatConvsUnsub  = null;       // real-time listener for conv list
+let _blockedUids     = new Set();  // UIDs this user has blocked
+let _totalUnread     = 0;
+
+/* ─── Firestore refs ─── */
+function dmsRef()              { return db.collection('directMessages'); }
+function userConvsRef(uid)     { return db.collection('userConvs').doc(uid).collection('convs'); }
+function blockedRef(uid)       { return db.collection('blocked').doc(uid).collection('list'); }
+function reportsRef()          { return db.collection('reports'); }
+function dmConvId(uid1, uid2)  { return 'dm_' + [uid1, uid2].sort().join('_'); }
+
+/* ─── Setup chat listeners on login ─── */
+async function setupChatListeners(uid) {
+  cleanupChatListeners();
+
+  // Load blocked UIDs
+  try {
+    const bSnap = await blockedRef(uid).get();
+    _blockedUids = new Set(bSnap.docs.map(d => d.id));
+  } catch(e) { console.warn('Could not load blocked users:', e); }
+
+  // Real-time conversation list
+  _chatConvsUnsub = userConvsRef(uid)
+    .orderBy('lastAt', 'desc')
+    .onSnapshot(snap => {
+      _chatConvs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      _totalUnread = _chatConvs.reduce((s, c) => s + (c.unread || 0), 0);
+      updateChatBadge();
+      const chatOv = document.getElementById('chatOverlay');
+      if (chatOv && chatOv.classList.contains('open')) renderConvList();
+    }, err => console.warn('Chat convs listener error:', err));
+}
+
+function cleanupChatListeners() {
+  if (_chatConvsUnsub) { _chatConvsUnsub(); _chatConvsUnsub = null; }
+  if (_chatMsgsUnsub)  { _chatMsgsUnsub();  _chatMsgsUnsub  = null; }
+  _chatConvs = []; _activeConvId = null;
+  _blockedUids = new Set(); _totalUnread = 0;
+  updateChatBadge();
+}
+
+function updateChatBadge() {
+  const badge = document.getElementById('chatNotifBadge');
+  if (!badge) return;
+  if (_totalUnread > 0) {
+    badge.style.display = 'flex';
+    badge.textContent = _totalUnread > 99 ? '99+' : String(_totalUnread);
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+/* ─── Toggle chat modal ─── */
+function toggleChatModal() {
+  if (!_currentUser) return;
+  const ov = document.getElementById('chatOverlay');
+  ov.classList.toggle('open');
+  if (ov.classList.contains('open')) {
+    renderConvList();
+    // Auto-select first conversation if none active
+    if (!_activeConvId && _chatConvs.length > 0) {
+      const first = _chatConvs[0];
+      const partnerUid = first.participants?.find(p => p !== _currentUser.uid) || '';
+      const partnerUsername = first.pUsernames?.[partnerUid] || '?';
+      _openConv(first.id, partnerUid, partnerUsername);
+    }
+  }
+}
+
+function closeChatOverlay(e) {
+  if (e.target === document.getElementById('chatOverlay')) {
+    document.getElementById('chatOverlay').classList.remove('open');
+  }
+}
+
+/* ─── Open a DM from the Friends modal ─── */
+async function openDMWith(friendUid, friendUsername) {
+  // Close friends modal, open chat
+  const friendsOv = document.getElementById('friendsOverlay');
+  if (friendsOv.classList.contains('open')) friendsOv.classList.remove('open');
+
+  const chatOv = document.getElementById('chatOverlay');
+  if (!chatOv.classList.contains('open')) chatOv.classList.add('open');
+
+  const cid = dmConvId(_currentUser.uid, friendUid);
+
+  // Ensure conv metadata exists for both users
+  try {
+    const mySnap = await userConvsRef(_currentUser.uid).doc(cid).get();
+    if (!mySnap.exists) {
+      const convData = {
+        participants: [_currentUser.uid, friendUid],
+        pUsernames: {
+          [_currentUser.uid]: _userProfile.username,
+          [friendUid]: friendUsername,
+        },
+        lastMsg:  '',
+        lastAt:   firebase.firestore.FieldValue.serverTimestamp(),
+        unread:   0,
+      };
+      const batch = db.batch();
+      batch.set(userConvsRef(_currentUser.uid).doc(cid), convData);
+      batch.set(userConvsRef(friendUid).doc(cid), { ...convData, unread: 0 });
+      await batch.commit();
+    }
+  } catch(e) { console.error('openDMWith setup error:', e); }
+
+  renderConvList();
+  _openConv(cid, friendUid, friendUsername);
+}
+
+/* ─── Core: open a specific conversation ─── */
+function _openConv(cid, partnerUid, partnerUsername) {
+  _activeConvId = cid;
+  // Mark as read
+  userConvsRef(_currentUser.uid).doc(cid).update({ unread: 0 }).catch(() => {});
+  renderConvList();
+  _renderChatRight(partnerUid, partnerUsername);
+  _listenToMessages(cid);
+}
+
+/* ─── Render conversation list (left panel) ─── */
+function renderConvList() {
+  const el = document.getElementById('chatConvList');
+  if (!el) return;
+  const visible = _chatConvs.filter(c => !_blockedUids.has(
+    c.participants?.find(p => p !== _currentUser.uid)
+  ));
+  if (!visible.length) {
+    el.innerHTML = '<div class="chat-empty">No conversations yet.<br><span style="color:var(--text-muted);font-size:10px">Message a friend from the<br><strong style="color:var(--cyan)">Friends</strong> panel.</span></div>';
+    return;
+  }
+  el.innerHTML = visible.map(c => {
+    const partnerUid      = c.participants?.find(p => p !== _currentUser.uid) || '';
+    const partnerUsername = c.pUsernames?.[partnerUid] || '?';
+    const initials        = partnerUsername.slice(0, 2).toUpperCase();
+    const isActive        = c.id === _activeConvId;
+    const unread          = c.unread || 0;
+    const preview         = c.lastMsg ? escapeHtml(c.lastMsg.slice(0, 35)) + (c.lastMsg.length > 35 ? '…' : '') : '';
+    return `<div class="conv-item${isActive ? ' active' : ''}"
+        onclick="_openConv('${escapeHtml(c.id)}','${escapeHtml(partnerUid)}','${escapeHtml(partnerUsername)}')">
+      <div class="friend-avatar" style="width:28px;height:28px;font-size:9px;flex-shrink:0">${escapeHtml(initials)}</div>
+      <div class="conv-info">
+        <div class="conv-name">@${escapeHtml(partnerUsername)}</div>
+        <div class="conv-preview">${preview}</div>
+      </div>
+      ${unread > 0 ? `<span class="conv-unread">${unread}</span>` : ''}
+    </div>`;
+  }).join('');
+}
+
+/* ─── Render right panel header + input ─── */
+function _renderChatRight(partnerUid, partnerUsername) {
+  const right = document.getElementById('chatRight');
+  if (!right) return;
+  const isBlocked = _blockedUids.has(partnerUid);
+  right.innerHTML = `
+    <div class="chat-right-hdr">
+      <span>@${escapeHtml(partnerUsername)}</span>
+      <div style="display:flex;gap:5px">
+        ${isBlocked
+          ? `<button class="btn-sm accent" onclick="doUnblockUser('${escapeHtml(partnerUid)}','${escapeHtml(partnerUsername)}')">Unblock</button>`
+          : `<button class="btn-sm" style="font-size:9px" onclick="doBlockUser('${escapeHtml(partnerUid)}','${escapeHtml(partnerUsername)}')">🚫 Block</button>`
+        }
+        <button class="btn-sm" style="font-size:9px" onclick="openReportModal('${escapeHtml(partnerUid)}','${escapeHtml(partnerUsername)}')">⚠️ Report</button>
+      </div>
+    </div>
+    <div class="msgs-area" id="msgsArea">
+      <div class="chat-empty">Loading messages…</div>
+    </div>
+    ${isBlocked ? '' : `
+    <div class="chat-input-row">
+      <input class="chat-input" id="chatMsgInput"
+        placeholder="Message @${escapeHtml(partnerUsername)}…" maxlength="500"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage();}">
+      <button class="chat-send-btn" onclick="sendChatMessage()">▶</button>
+    </div>`}
+    ${isBlocked ? '<div style="text-align:center;padding:12px;font-size:10px;color:var(--text-muted);border-top:1px solid var(--border)">You have blocked this user.</div>' : ''}
+  `;
+}
+
+/* ─── Real-time message listener ─── */
+function _listenToMessages(cid) {
+  if (_chatMsgsUnsub) { _chatMsgsUnsub(); _chatMsgsUnsub = null; }
+  _chatMsgsUnsub = dmsRef().doc(cid).collection('msgs')
+    .orderBy('at', 'asc').limitToLast(120)
+    .onSnapshot(snap => {
+      _renderMessages(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    }, err => {
+      const el = document.getElementById('msgsArea');
+      if (el) el.innerHTML = '<div class="chat-empty" style="color:var(--pink)">Error loading messages.</div>';
+      console.warn('Messages listener error:', err);
+    });
+}
+
+/* ─── Render message bubbles ─── */
+function _renderMessages(msgs) {
+  const el = document.getElementById('msgsArea');
+  if (!el) return;
+  if (!msgs.length) {
+    el.innerHTML = '<div class="chat-empty">No messages yet.<br><span style="font-size:10px;color:var(--text-muted)">Say hello! 👋</span></div>';
+    return;
+  }
+  const wasAtBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 60;
+  el.innerHTML = msgs.map(m => {
+    const isSent = m.uid === _currentUser.uid;
+    const time   = m.at?.toDate
+      ? m.at.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      : '';
+    return `<div class="msg-row${isSent ? ' sent' : ''}">
+      <div>
+        <div class="msg-bubble${isSent ? ' sent' : ' recv'}">${escapeHtml(m.text)}</div>
+        <div class="msg-meta${isSent ? ' right' : ''}">${escapeHtml(m.username)} · ${time}</div>
+      </div>
+    </div>`;
+  }).join('');
+  if (wasAtBottom) el.scrollTop = el.scrollHeight;
+}
+
+/* ─── Send a message ─── */
+async function sendChatMessage() {
+  const input = document.getElementById('chatMsgInput');
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text || !_activeConvId || !_currentUser) return;
+  input.value = '';
+  const cid = _activeConvId;
+  const conv = _chatConvs.find(c => c.id === cid);
+  const partnerUid = conv?.participants?.find(p => p !== _currentUser.uid);
+  if (!partnerUid) return;
+
+  try {
+    await dmsRef().doc(cid).collection('msgs').add({
+      uid:      _currentUser.uid,
+      username: _userProfile.username,
+      text,
+      at:       firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    const updateData = {
+      lastMsg: text,
+      lastAt:  firebase.firestore.FieldValue.serverTimestamp(),
+    };
+    const batch = db.batch();
+    batch.set(userConvsRef(_currentUser.uid).doc(cid), { ...updateData, unread: 0 }, { merge: true });
+    batch.set(userConvsRef(partnerUid).doc(cid), {
+      ...updateData,
+      participants: [_currentUser.uid, partnerUid],
+      pUsernames: conv.pUsernames || {},
+      unread: firebase.firestore.FieldValue.increment(1),
+    }, { merge: true });
+    await batch.commit();
+  } catch(e) { console.error('sendChatMessage error:', e); }
+}
+
+/* ─── Block / Unblock ─── */
+async function doBlockUser(uid, username) {
+  if (!confirm(`Block @${username}?\n\nThey won't be able to message or send friend requests to you.`)) return;
+  try {
+    await blockedRef(_currentUser.uid).doc(uid).set({
+      uid, username, blockedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    _blockedUids.add(uid);
+
+    // Remove from friends if currently friends
+    const fSnap = await friendsRef(_currentUser.uid).doc(uid).get();
+    if (fSnap.exists) {
+      const batch = db.batch();
+      batch.delete(friendsRef(_currentUser.uid).doc(uid));
+      batch.delete(friendsRef(uid).doc(_currentUser.uid));
+      await batch.commit();
+    }
+
+    // If this is the active conv, refresh right panel to blocked state
+    if (_activeConvId) {
+      const conv = _chatConvs.find(c => c.id === _activeConvId);
+      if (conv?.participants?.includes(uid)) {
+        _renderChatRight(uid, username);
+      }
+    }
+
+    renderConvList();
+    showToast(`@${username} has been blocked.`);
+  } catch(e) { console.error('Block error:', e); }
+}
+
+async function doUnblockUser(uid, username) {
+  if (!confirm(`Unblock @${username}?`)) return;
+  try {
+    await blockedRef(_currentUser.uid).doc(uid).delete();
+    _blockedUids.delete(uid);
+    // Refresh chat right panel
+    if (_activeConvId) {
+      const conv = _chatConvs.find(c => c.id === _activeConvId);
+      if (conv?.participants?.includes(uid)) {
+        _renderChatRight(uid, username);
+        _listenToMessages(_activeConvId);
+      }
+    }
+    renderConvList();
+    showToast(`@${username} has been unblocked.`);
+    // Refresh find user panel if open
+    const findInput = document.getElementById('findUsernameInput');
+    if (findInput?.value) doFindUser();
+  } catch(e) { console.error('Unblock error:', e); }
+}
+
+/* ─── Report user ─── */
+function openReportModal(uid, username) {
+  document.getElementById('reportTargetUid').value = uid;
+  document.getElementById('reportTargetUsername').textContent = '@' + username;
+  document.getElementById('reportReason').value = 'harassment';
+  document.getElementById('reportDetails').value = '';
+  document.getElementById('reportError').textContent = '';
+  document.getElementById('reportSuccess').style.display = 'none';
+  document.getElementById('reportForm').style.display = '';
+  document.getElementById('reportOverlay').classList.add('open');
+}
+
+function closeReportModal() {
+  document.getElementById('reportOverlay').classList.remove('open');
+}
+
+async function submitReport() {
+  const uid      = document.getElementById('reportTargetUid').value;
+  const username = document.getElementById('reportTargetUsername').textContent.replace('@','');
+  const reason   = document.getElementById('reportReason').value;
+  const details  = document.getElementById('reportDetails').value.trim();
+  const errEl    = document.getElementById('reportError');
+  errEl.textContent = '';
+  const btn = document.getElementById('reportSubmitBtn');
+  btn.disabled = true; btn.textContent = 'Submitting…';
+  try {
+    await reportsRef().add({
+      fromUid:        _currentUser.uid,
+      fromUsername:   _userProfile.username,
+      targetUid:      uid,
+      targetUsername: username,
+      reason, details,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    document.getElementById('reportForm').style.display = 'none';
+    document.getElementById('reportSuccess').style.display = '';
+    setTimeout(closeReportModal, 2500);
+  } catch(e) {
+    errEl.textContent = 'Failed to submit report. Please try again.';
+    console.error('Report error:', e);
+  }
+  btn.disabled = false; btn.textContent = 'Submit Report';
+}
+
+/* ─── Toast notifications ─── */
+function showToast(msg, color) {
+  const t = document.createElement('div');
+  t.className = 'nota-toast';
+  if (color) t.style.borderColor = color;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  requestAnimationFrame(() => { requestAnimationFrame(() => t.classList.add('show')); });
+  setTimeout(() => {
+    t.classList.remove('show');
+    setTimeout(() => t.remove(), 300);
+  }, 3000);
+}
+
+/* ─── Patch setupFriendListeners to also set up chat ─── */
+const _origSetupFriendListeners = setupFriendListeners;
+setupFriendListeners = function(uid) {
+  _origSetupFriendListeners(uid);
+  setupChatListeners(uid);
+};
+
+/* ─── Patch cleanupFriendListeners to also clean up chat ─── */
+const _origCleanupFriendListeners = cleanupFriendListeners;
+cleanupFriendListeners = function() {
+  _origCleanupFriendListeners();
+  cleanupChatListeners();
+};
+
+/* ─── Patch renderFriendsList to add Message + Block buttons ─── */
+const _origRenderFriendsList = renderFriendsList;
+renderFriendsList = function() {
+  const el = document.getElementById('fpanelFriends');
+  if (!_friendsList.length) {
+    el.innerHTML = '<div class="friends-empty">No friends yet.<br><span style="color:var(--text-muted);font-size:10px">Search for people in the <strong style="color:var(--cyan)">Find People</strong> tab.</span></div>';
+    return;
+  }
+  el.innerHTML = _friendsList.map(f => `
+    <div class="friend-item">
+      <div class="friend-avatar">${escapeHtml(f.username.slice(0,2).toUpperCase())}</div>
+      <div class="friend-info">
+        <div class="friend-name">${escapeHtml(f.displayName || f.username)}</div>
+        <div class="friend-username">@${escapeHtml(f.username)}</div>
+      </div>
+      <div class="friend-actions" style="gap:4px">
+        <button class="btn-sm accent" onclick="openDMWith('${f.uid}','${escapeHtml(f.username)}')" title="Send message">💬</button>
+        <button class="btn-sm danger" onclick="doRemoveFriend('${f.uid}','${escapeHtml(f.username)}')">Remove</button>
+        <button class="btn-sm" style="font-size:9px" onclick="doBlockUser('${f.uid}','${escapeHtml(f.username)}')">🚫</button>
+        <button class="btn-sm" style="font-size:9px" onclick="openReportModal('${f.uid}','${escapeHtml(f.username)}')">⚠️</button>
+      </div>
+    </div>
+  `).join('');
+};
+
+/* ─── Patch doFindUser to show Block/Unblock + Report buttons ─── */
+const _origDoFindUser = doFindUser;
+doFindUser = async function() {
+  const val = document.getElementById('findUsernameInput').value.trim();
+  const res = document.getElementById('findResult');
+  if (!val) { res.innerHTML = ''; return; }
+  res.innerHTML = '<div class="friends-empty">Searching…</div>';
+  try {
+    const snap = await usernamesRef().doc(val.toLowerCase()).get();
+    if (!snap.exists) { res.innerHTML = '<div class="friends-empty">No user found with that username.</div>'; return; }
+    const { uid, username } = snap.data();
+    if (uid === _currentUser.uid) { res.innerHTML = '<div class="friends-empty">That\'s you!</div>'; return; }
+
+    const friendSnap = await friendsRef(_currentUser.uid).doc(uid).get();
+    const isFriend = friendSnap.exists;
+    const isBlocked = _blockedUids.has(uid);
+
+    let sentStatus = false;
+    if (!isFriend && !isBlocked) {
+      const sentSnap = await friendReqsRef()
+        .where('fromUid', '==', _currentUser.uid).where('toUid', '==', uid).where('status', '==', 'pending').get();
+      sentStatus = !sentSnap.empty;
+    }
+
+    const profileSnap = await profilesRef().doc(uid).get();
+    const profile = profileSnap.data() || {};
+
+    res.innerHTML = `
+      <div class="friend-item">
+        <div class="friend-avatar">${escapeHtml(username.slice(0,2).toUpperCase())}</div>
+        <div class="friend-info">
+          <div class="friend-name">${escapeHtml(profile.displayName || username)}</div>
+          <div class="friend-username">@${escapeHtml(username)}</div>
+          ${isBlocked ? '<span class="blocked-badge">BLOCKED</span>' : ''}
+        </div>
+        <div class="friend-actions" style="gap:4px;flex-wrap:wrap;justify-content:flex-end">
+          ${isBlocked
+            ? `<button class="btn-sm accent" onclick="doUnblockUser('${uid}','${escapeHtml(username)}')">Unblock</button>`
+            : isFriend
+              ? `<button class="btn-sm accent" onclick="openDMWith('${uid}','${escapeHtml(username)}')">💬 Message</button>
+                 <button class="btn-sm danger" onclick="doRemoveFriend('${uid}','${escapeHtml(username)}')">Remove</button>`
+              : sentStatus
+                ? '<span style="font-size:10px;color:var(--text-muted)">Request sent</span>'
+                : `<button class="btn-sm accent" onclick="doSendRequest('${uid}','${escapeHtml(username)}')">Add Friend</button>`
+          }
+          ${!isBlocked ? `<button class="btn-sm" style="font-size:9px" title="Block" onclick="doBlockUser('${uid}','${escapeHtml(username)}')">🚫</button>` : ''}
+          <button class="btn-sm" style="font-size:9px" title="Report" onclick="openReportModal('${uid}','${escapeHtml(username)}')">⚠️</button>
+        </div>
+      </div>`;
+  } catch(e) {
+    res.innerHTML = '<div class="friends-empty" style="color:var(--pink)">Error searching. Try again.</div>';
+    console.error(e);
+  }
+};
+
+
 const _origSignOut = doSignOut;
 doSignOut = async function() {
-  cleanupFriendListeners();
+  cleanupFriendListeners();  // also calls cleanupChatListeners via patch above
   _userProfile = null;
   _currentProjId = null;
   document.getElementById('projNameInput').value = '';
+  document.getElementById('chatOverlay')?.classList.remove('open');
+  document.getElementById('friendsOverlay')?.classList.remove('open');
   await auth.signOut();
 };
 
 /* ═══════════════════════════════════════════════════════════
-   INITIAL RENDER
+   PHASE 3 — GROUP CHATS
 ══════════════════════════════════════════════════════════ */
 
-_baseRender();
+let _groups          = [];       // cached group list
+let _activeGroupId   = null;     // currently open group ID
+let _groupMsgsUnsub  = null;     // real-time msgs listener for active group
+let _groupsUnsub     = null;     // real-time listener for user's group list
+let _activeChatLeftTab = 'dms';  // 'dms' | 'groups'
+let _membersSidebarOpen = false;
+
+/* ─── Firestore refs ─── */
+function groupsRef()              { return db.collection('groupChats'); }
+function userGroupsRef(uid)       { return db.collection('userGroups').doc(uid).collection('list'); }
+function groupInviteCodesRef()    { return db.collection('groupInviteCodes'); }
+
+/* ─── Random 6-char code generator ─── */
+function genGroupCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no ambiguous chars
+  let code = '';
+  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
+/* ─── Setup group listeners ─── */
+async function setupGroupListeners(uid) {
+  cleanupGroupListeners();
+  _groupsUnsub = userGroupsRef(uid)
+    .orderBy('lastAt', 'desc')
+    .onSnapshot(snap => {
+      _groups = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const unreadGroups = _groups.reduce((s, g) => s + (g.unread || 0), 0);
+      // Update groups tab badge
+      const gTab = document.getElementById('cltabGroups');
+      if (gTab) {
+        const ex = gTab.querySelector('.chat-ltab-badge');
+        if (ex) ex.remove();
+        if (unreadGroups > 0) {
+          const b = document.createElement('span');
+          b.className = 'chat-ltab-badge';
+          b.textContent = unreadGroups;
+          gTab.appendChild(b);
+        }
+      }
+      if (_activeChatLeftTab === 'groups') renderGroupList();
+    }, err => console.warn('Group listener error:', err));
+}
+
+function cleanupGroupListeners() {
+  if (_groupsUnsub)   { _groupsUnsub();   _groupsUnsub   = null; }
+  if (_groupMsgsUnsub){ _groupMsgsUnsub(); _groupMsgsUnsub = null; }
+  _groups = []; _activeGroupId = null;
+}
+
+/* ─── Switch left tab ─── */
+function switchChatLeftTab(tab) {
+  _activeChatLeftTab = tab;
+  ['dms','groups'].forEach(t => {
+    document.getElementById('cltab' + (t === 'dms' ? 'DMs' : 'Groups')).classList.toggle('active', t === tab);
+  });
+  document.getElementById('chatConvList').style.display   = tab === 'dms'    ? 'flex' : 'none';
+  document.getElementById('chatGroupList').style.display  = tab === 'groups' ? 'flex' : 'none';
+  document.getElementById('chatDmToolbar').style.display  = tab === 'dms'    ? 'flex' : 'none';
+  document.getElementById('chatGroupToolbar').style.display = tab === 'groups' ? 'flex' : 'none';
+
+  if (tab === 'groups') renderGroupList();
+  if (tab === 'dms')    renderConvList();
+}
+
+/* ─── Render group list ─── */
+function renderGroupList() {
+  const el = document.getElementById('chatGroupList');
+  if (!el) return;
+  if (!_groups.length) {
+    el.innerHTML = '<div class="chat-empty">No groups yet.<br><span style="font-size:10px;color:var(--text-muted)">Click <strong style="color:var(--purple)">+ New</strong> to create one<br>or <strong style="color:var(--cyan)"># Join</strong> with a code.</span></div>';
+    return;
+  }
+  el.innerHTML = _groups.map(g => {
+    const isActive = g.id === _activeGroupId;
+    const unread   = g.unread || 0;
+    const preview  = g.lastMsg ? escapeHtml(g.lastMsg.slice(0, 35)) + (g.lastMsg.length > 35 ? '…' : '') : 'No messages yet';
+    return `<div class="conv-item${isActive ? ' active' : ''}" onclick="openGroup('${escapeHtml(g.id)}')">
+      <div class="friend-avatar" style="width:28px;height:28px;font-size:9px;flex-shrink:0;background:linear-gradient(135deg,var(--purple),var(--blue))">#</div>
+      <div class="conv-info">
+        <div class="conv-name">${escapeHtml(g.name || 'Unnamed Group')}</div>
+        <div class="conv-preview">${preview}</div>
+      </div>
+      ${unread > 0 ? `<span class="conv-unread">${unread}</span>` : ''}
+    </div>`;
+  }).join('');
+}
+
+/* ─── Open a group conversation ─── */
+async function openGroup(gid) {
+  _activeGroupId = gid;
+  _activeConvId  = null;
+  _membersSidebarOpen = false;
+  // Mark as read
+  userGroupsRef(_currentUser.uid).doc(gid).update({ unread: 0 }).catch(() => {});
+  renderGroupList();
+
+  // Fetch latest group doc for members / code
+  const gSnap = await groupsRef().doc(gid).get();
+  if (!gSnap.exists) { showToast('Group not found.', 'var(--pink)'); return; }
+  const gData = { id: gSnap.id, ...gSnap.data() };
+
+  _renderGroupChatRight(gData);
+  _listenToGroupMessages(gid);
+}
+
+/* ─── Render group right panel ─── */
+function _renderGroupChatRight(gData) {
+  const right = document.getElementById('chatRight');
+  if (!right) return;
+  const isAdmin = gData.adminUid === _currentUser.uid;
+  const memberCount = (gData.memberUids || []).length;
+
+  right.innerHTML = `
+    <div class="chat-right-hdr">
+      <span style="display:flex;align-items:center;gap:8px">
+        <span style="color:var(--purple);font-size:14px">#</span>
+        ${escapeHtml(gData.name || 'Group')}
+        <span style="font-size:9px;color:var(--text-muted)">${memberCount} member${memberCount !== 1 ? 's' : ''}</span>
+        ${isAdmin ? '<span style="font-size:8px;color:var(--yellow);border:1px solid var(--yellow);padding:1px 5px;border-radius:3px;letter-spacing:.5px">ADMIN</span>' : ''}
+      </span>
+      <div style="display:flex;gap:5px;align-items:center">
+        <span class="group-code-pill" onclick="copyGroupCode('${escapeHtml(gData.code || '')}')" title="Click to copy invite code">
+          ${escapeHtml(gData.code || '——')}
+        </span>
+        <button class="btn-sm" style="font-size:9px" onclick="toggleMembersSidebar('${escapeHtml(gData.id)}')">👥 Members</button>
+        <button class="btn-sm danger" style="font-size:9px" onclick="${isAdmin ? `confirmDeleteGroup('${escapeHtml(gData.id)}')` : `confirmLeaveGroup('${escapeHtml(gData.id)}')`}">
+          ${isAdmin ? '🗑 Delete' : '← Leave'}
+        </button>
+      </div>
+    </div>
+    <div class="chat-right-content" id="chatRightContent">
+      <div class="chat-msgs-col">
+        <div class="msgs-area" id="msgsArea">
+          <div class="chat-empty">Loading messages…</div>
+        </div>
+        ${isAdmin ? `
+        <div class="group-invite-row">
+          <input class="group-invite-input" id="groupInviteInput" placeholder="Invite by username…" maxlength="20"
+            onkeydown="if(event.key==='Enter')inviteToGroupByUsername('${escapeHtml(gData.id)}')">
+          <button class="btn-sm accent" style="font-size:9px" onclick="inviteToGroupByUsername('${escapeHtml(gData.id)}')">Invite</button>
+        </div>` : ''}
+        <div class="chat-input-row">
+          <input class="chat-input" id="chatMsgInput"
+            placeholder="Message #${escapeHtml(gData.name || 'group')}…" maxlength="500"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendGroupMessage();}">
+          <button class="chat-send-btn" onclick="sendGroupMessage()">▶</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ─── Toggle members sidebar ─── */
+async function toggleMembersSidebar(gid) {
+  const contentEl = document.getElementById('chatRightContent');
+  if (!contentEl) return;
+
+  const existing = contentEl.querySelector('.chat-members-sidebar');
+  if (existing) { existing.remove(); _membersSidebarOpen = false; return; }
+  _membersSidebarOpen = true;
+
+  const gSnap = await groupsRef().doc(gid).get();
+  if (!gSnap.exists) return;
+  const gData = { id: gSnap.id, ...gSnap.data() };
+  const isAdmin = gData.adminUid === _currentUser.uid;
+
+  const memberUids  = gData.memberUids || [];
+  const memberNames = gData.memberUsernames || {};
+  const bannedUids  = new Set(gData.bannedUids || []);
+
+  const sidebar = document.createElement('div');
+  sidebar.className = 'chat-members-sidebar';
+  sidebar.innerHTML = `
+    <div class="chat-members-hdr">
+      <span>Members (${memberUids.length})</span>
+    </div>
+    <div class="chat-member-list">
+      ${memberUids.map(uid => {
+        const uname  = memberNames[uid] || uid.slice(0, 8);
+        const isMe   = uid === _currentUser.uid;
+        const isOwner = uid === gData.adminUid;
+        return `<div class="chat-member-item">
+          <div class="friend-avatar" style="width:22px;height:22px;font-size:8px;flex-shrink:0">${escapeHtml(uname.slice(0,2).toUpperCase())}</div>
+          <span class="chat-member-name" title="@${escapeHtml(uname)}">@${escapeHtml(uname)}</span>
+          ${isOwner ? '<span class="member-role">ADMIN</span>' : ''}
+          ${isAdmin && !isMe && !isOwner ? `
+            <button class="member-actions-btn" title="Kick" onclick="kickMember('${escapeHtml(gid)}','${escapeHtml(uid)}','${escapeHtml(uname)}')">✕</button>
+            <button class="member-actions-btn" title="Ban" onclick="banMember('${escapeHtml(gid)}','${escapeHtml(uid)}','${escapeHtml(uname)}')" style="font-size:10px">🚫</button>
+          ` : ''}
+        </div>`;
+      }).join('')}
+      ${bannedUids.size > 0 && isAdmin ? `
+        <div style="font-size:8px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;padding:8px 7px 3px;border-top:1px solid var(--border);margin-top:6px">Banned</div>
+        ${[...bannedUids].map(uid => {
+          const uname = memberNames[uid] || uid.slice(0, 8);
+          return `<div class="chat-member-item" style="opacity:.5">
+            <div class="friend-avatar" style="width:22px;height:22px;font-size:8px;flex-shrink:0;opacity:.5">${escapeHtml(uname.slice(0,2).toUpperCase())}</div>
+            <span class="chat-member-name" style="color:var(--text-muted)">@${escapeHtml(uname)}</span>
+            <button class="member-actions-btn" title="Unban" onclick="unbanMember('${escapeHtml(gid)}','${escapeHtml(uid)}','${escapeHtml(uname)}')" style="color:var(--green);font-size:10px">↩</button>
+          </div>`;
+        }).join('')}
+      ` : ''}
+    </div>
+  `;
+  contentEl.appendChild(sidebar);
+}
+
+/* ─── Group message listener ─── */
+function _listenToGroupMessages(gid) {
+  if (_groupMsgsUnsub) { _groupMsgsUnsub(); _groupMsgsUnsub = null; }
+  _groupMsgsUnsub = groupsRef().doc(gid).collection('msgs')
+    .orderBy('at', 'asc').limitToLast(120)
+    .onSnapshot(snap => {
+      _renderMessages(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    }, err => {
+      const el = document.getElementById('msgsArea');
+      if (el) el.innerHTML = '<div class="chat-empty" style="color:var(--pink)">Error loading messages.</div>';
+    });
+}
+
+/* ─── Send group message ─── */
+async function sendGroupMessage() {
+  const input = document.getElementById('chatMsgInput');
+  if (!input || !_activeGroupId) return;
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  const gid = _activeGroupId;
+  try {
+    await groupsRef().doc(gid).collection('msgs').add({
+      uid:      _currentUser.uid,
+      username: _userProfile.username,
+      text,
+      at:       firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    // Update group metadata
+    const updateData = { lastMsg: text, lastAt: firebase.firestore.FieldValue.serverTimestamp() };
+    await groupsRef().doc(gid).update(updateData);
+    // Update unread for all members except self
+    const gSnap = await groupsRef().doc(gid).get();
+    if (gSnap.exists) {
+      const members = gSnap.data().memberUids || [];
+      const batch = db.batch();
+      members.forEach(uid => {
+        const ref = userGroupsRef(uid).doc(gid);
+        if (uid === _currentUser.uid) {
+          batch.set(ref, { ...updateData, unread: 0 }, { merge: true });
+        } else {
+          batch.set(ref, { ...updateData, unread: firebase.firestore.FieldValue.increment(1) }, { merge: true });
+        }
+      });
+      await batch.commit();
+    }
+  } catch(e) { console.error('sendGroupMessage error:', e); }
+}
+
+/* ─── Create group ─── */
+async function doCreateGroup() {
+  const name = document.getElementById('newGroupName').value.trim();
+  const errEl = document.getElementById('createGroupError');
+  errEl.textContent = '';
+  if (!name) { errEl.textContent = 'Please enter a group name.'; return; }
+  if (name.length > 40) { errEl.textContent = 'Name must be 40 characters or less.'; return; }
+  const btn = document.getElementById('createGroupBtn');
+  btn.disabled = true; btn.textContent = 'Creating…';
+
+  try {
+    // Generate unique code
+    let code, codeExists = true;
+    let attempts = 0;
+    while (codeExists && attempts < 10) {
+      code = genGroupCode();
+      const cSnap = await groupInviteCodesRef().doc(code).get();
+      codeExists = cSnap.exists;
+      attempts++;
+    }
+    const uid = _currentUser.uid;
+    const gRef = groupsRef().doc();
+    const gid  = gRef.id;
+
+    const groupData = {
+      name,
+      code,
+      adminUid:       uid,
+      adminUsername:  _userProfile.username,
+      memberUids:     [uid],
+      memberUsernames: { [uid]: _userProfile.username },
+      bannedUids:     [],
+      lastMsg:        '',
+      lastAt:         firebase.firestore.FieldValue.serverTimestamp(),
+      createdAt:      firebase.firestore.FieldValue.serverTimestamp(),
+    };
+
+    const batch = db.batch();
+    batch.set(gRef, groupData);
+    batch.set(groupInviteCodesRef().doc(code), { gid, name, adminUid: uid });
+    batch.set(userGroupsRef(uid).doc(gid), {
+      name, code, adminUid: uid, lastMsg: '', lastAt: firebase.firestore.FieldValue.serverTimestamp(), unread: 0
+    });
+    await batch.commit();
+
+    document.getElementById('createGroupForm').style.display = 'none';
+    document.getElementById('newGroupCodeDisplay').textContent = code;
+    document.getElementById('createGroupSuccess').style.display = '';
+    switchChatLeftTab('groups');
+  } catch(e) {
+    errEl.textContent = 'Failed to create group. Please try again.';
+    console.error('createGroup error:', e);
+  }
+  btn.disabled = false; btn.textContent = 'Create';
+}
+
+/* ─── Join group by code ─── */
+async function doJoinGroup() {
+  const code   = document.getElementById('joinGroupCodeInput').value.trim().toUpperCase();
+  const errEl  = document.getElementById('joinGroupError');
+  const succEl = document.getElementById('joinGroupSuccess');
+  errEl.textContent = ''; succEl.textContent = '';
+  if (code.length !== 6) { errEl.textContent = 'Code must be exactly 6 characters.'; return; }
+  const btn = document.getElementById('joinGroupBtn');
+  btn.disabled = true; btn.textContent = 'Joining…';
+  try {
+    const cSnap = await groupInviteCodesRef().doc(code).get();
+    if (!cSnap.exists) { errEl.textContent = 'Invalid or expired invite code.'; btn.disabled = false; btn.textContent = 'Join'; return; }
+    const { gid } = cSnap.data();
+    const gSnap = await groupsRef().doc(gid).get();
+    if (!gSnap.exists) { errEl.textContent = 'That group no longer exists.'; btn.disabled = false; btn.textContent = 'Join'; return; }
+    const gData = gSnap.data();
+    const uid   = _currentUser.uid;
+
+    // Check banned
+    if ((gData.bannedUids || []).includes(uid)) {
+      errEl.textContent = 'You have been banned from this group.';
+      btn.disabled = false; btn.textContent = 'Join'; return;
+    }
+    // Already a member?
+    if ((gData.memberUids || []).includes(uid)) {
+      succEl.textContent = `✓ You're already in "${gData.name}".`;
+      switchChatLeftTab('groups');
+      setTimeout(closeJoinGroupModal, 1500);
+      btn.disabled = false; btn.textContent = 'Join'; return;
+    }
+
+    const batch = db.batch();
+    batch.update(groupsRef().doc(gid), {
+      memberUids: firebase.firestore.FieldValue.arrayUnion(uid),
+      [`memberUsernames.${uid}`]: _userProfile.username,
+    });
+    batch.set(userGroupsRef(uid).doc(gid), {
+      name: gData.name, code: gData.code, adminUid: gData.adminUid,
+      lastMsg: gData.lastMsg || '', lastAt: gData.lastAt || firebase.firestore.FieldValue.serverTimestamp(), unread: 0,
+    });
+    await batch.commit();
+
+    succEl.textContent = `✓ Joined "${gData.name}"!`;
+    switchChatLeftTab('groups');
+    setTimeout(closeJoinGroupModal, 1500);
+  } catch(e) {
+    errEl.textContent = 'Failed to join group. Please try again.';
+    console.error('joinGroup error:', e);
+  }
+  btn.disabled = false; btn.textContent = 'Join';
+}
+
+/* ─── Invite by username ─── */
+async function inviteToGroupByUsername(gid) {
+  const input = document.getElementById('groupInviteInput');
+  if (!input) return;
+  const val = input.value.trim();
+  if (!val) return;
+  try {
+    const uSnap = await usernamesRef().doc(val.toLowerCase()).get();
+    if (!uSnap.exists) { showToast(`@${val} not found.`, 'var(--pink)'); return; }
+    const { uid, username } = uSnap.data();
+    const gSnap = await groupsRef().doc(gid).get();
+    if (!gSnap.exists) return;
+    const gData = gSnap.data();
+
+    if ((gData.bannedUids || []).includes(uid)) {
+      showToast(`@${username} is banned from this group.`, 'var(--pink)'); return;
+    }
+    if ((gData.memberUids || []).includes(uid)) {
+      showToast(`@${username} is already in this group.`, 'var(--yellow)'); return;
+    }
+
+    const batch = db.batch();
+    batch.update(groupsRef().doc(gid), {
+      memberUids: firebase.firestore.FieldValue.arrayUnion(uid),
+      [`memberUsernames.${uid}`]: username,
+    });
+    batch.set(userGroupsRef(uid).doc(gid), {
+      name: gData.name, code: gData.code, adminUid: gData.adminUid,
+      lastMsg: gData.lastMsg || '', lastAt: gData.lastAt || firebase.firestore.FieldValue.serverTimestamp(), unread: 0,
+    });
+    await batch.commit();
+
+    input.value = '';
+    showToast(`@${username} invited to group!`);
+    // Refresh sidebar if open
+    if (_membersSidebarOpen) toggleMembersSidebar(gid);
+  } catch(e) {
+    showToast('Error inviting user.', 'var(--pink)');
+    console.error('inviteToGroupByUsername error:', e);
+  }
+}
+
+/* ─── Kick member ─── */
+async function kickMember(gid, uid, username) {
+  if (!confirm(`Kick @${username} from the group?`)) return;
+  try {
+    const batch = db.batch();
+    batch.update(groupsRef().doc(gid), {
+      memberUids: firebase.firestore.FieldValue.arrayRemove(uid),
+    });
+    batch.delete(userGroupsRef(uid).doc(gid));
+    await batch.commit();
+    showToast(`@${username} was kicked.`);
+    if (_membersSidebarOpen) toggleMembersSidebar(gid);
+  } catch(e) { console.error('kickMember error:', e); }
+}
+
+/* ─── Ban member ─── */
+async function banMember(gid, uid, username) {
+  if (!confirm(`Ban @${username} from the group?\nThey cannot rejoin via code.`)) return;
+  try {
+    const batch = db.batch();
+    batch.update(groupsRef().doc(gid), {
+      memberUids: firebase.firestore.FieldValue.arrayRemove(uid),
+      bannedUids: firebase.firestore.FieldValue.arrayUnion(uid),
+    });
+    batch.delete(userGroupsRef(uid).doc(gid));
+    await batch.commit();
+    showToast(`@${username} was banned.`, 'var(--pink)');
+    if (_membersSidebarOpen) toggleMembersSidebar(gid);
+  } catch(e) { console.error('banMember error:', e); }
+}
+
+/* ─── Unban member ─── */
+async function unbanMember(gid, uid, username) {
+  if (!confirm(`Unban @${username}?`)) return;
+  try {
+    await groupsRef().doc(gid).update({
+      bannedUids: firebase.firestore.FieldValue.arrayRemove(uid),
+    });
+    showToast(`@${username} unbanned.`);
+    if (_membersSidebarOpen) toggleMembersSidebar(gid);
+  } catch(e) { console.error('unbanMember error:', e); }
+}
+
+/* ─── Leave group ─── */
+async function confirmLeaveGroup(gid) {
+  const group = _groups.find(g => g.id === gid);
+  if (!confirm(`Leave "${group?.name || 'this group'}"?`)) return;
+  try {
+    const batch = db.batch();
+    batch.update(groupsRef().doc(gid), {
+      memberUids: firebase.firestore.FieldValue.arrayRemove(_currentUser.uid),
+    });
+    batch.delete(userGroupsRef(_currentUser.uid).doc(gid));
+    await batch.commit();
+    _activeGroupId = null;
+    document.getElementById('chatRight').innerHTML = `
+      <div class="chat-placeholder">
+        <div class="placeholder-icon">💬</div>
+        <div>Select a conversation</div>
+      </div>`;
+    showToast('You left the group.');
+  } catch(e) { console.error('leaveGroup error:', e); }
+}
+
+/* ─── Delete group (admin only) ─── */
+async function confirmDeleteGroup(gid) {
+  const group = _groups.find(g => g.id === gid);
+  if (!confirm(`Delete "${group?.name || 'this group'}"? This cannot be undone.`)) return;
+  try {
+    const gSnap = await groupsRef().doc(gid).get();
+    const gData = gSnap.data() || {};
+    const members = gData.memberUids || [];
+    const batch = db.batch();
+    // Remove from all members' userGroups
+    members.forEach(uid => batch.delete(userGroupsRef(uid).doc(gid)));
+    // Delete invite code
+    if (gData.code) batch.delete(groupInviteCodesRef().doc(gData.code));
+    // Delete group doc (messages subcollection not deleted here — would need Cloud Function for that)
+    batch.delete(groupsRef().doc(gid));
+    await batch.commit();
+    _activeGroupId = null;
+    document.getElementById('chatRight').innerHTML = `
+      <div class="chat-placeholder">
+        <div class="placeholder-icon">💬</div>
+        <div>Select a conversation</div>
+      </div>`;
+    showToast('Group deleted.');
+  } catch(e) { console.error('deleteGroup error:', e); }
+}
+
+/* ─── Copy invite code ─── */
+function copyGroupCode(code) {
+  navigator.clipboard.writeText(code).then(() => showToast(`Code "${code}" copied!`)).catch(() => {
+    prompt('Copy this invite code:', code);
+  });
+}
+
+/* ─── Modal helpers ─── */
+function openCreateGroupModal() {
+  document.getElementById('newGroupName').value = '';
+  document.getElementById('createGroupError').textContent = '';
+  document.getElementById('createGroupForm').style.display = '';
+  document.getElementById('createGroupSuccess').style.display = 'none';
+  document.getElementById('createGroupOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('newGroupName').focus(), 60);
+}
+function closeCreateGroupModal() {
+  document.getElementById('createGroupOverlay').classList.remove('open');
+}
+
+function openJoinGroupModal() {
+  document.getElementById('joinGroupCodeInput').value = '';
+  document.getElementById('joinGroupError').textContent = '';
+  document.getElementById('joinGroupSuccess').textContent = '';
+  document.getElementById('joinGroupOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('joinGroupCodeInput').focus(), 60);
+}
+function closeJoinGroupModal() {
+  document.getElementById('joinGroupOverlay').classList.remove('open');
+}
+
+/* ─── Patch setupChatListeners to also setup groups ─── */
+const _origSetupChatListeners = setupChatListeners;
+setupChatListeners = async function(uid) {
+  await _origSetupChatListeners(uid);
+  await setupGroupListeners(uid);
+};
+
+/* ─── Patch cleanupChatListeners to also cleanup groups ─── */
+const _origCleanupChatListeners = cleanupChatListeners;
+cleanupChatListeners = function() {
+  _origCleanupChatListeners();
+  cleanupGroupListeners();
+};
+
+/* ─── Patch toggleChatModal to refresh current tab ─── */
+const _origToggleChatModal = toggleChatModal;
+toggleChatModal = function() {
+  if (!_currentUser) return;
+  const ov = document.getElementById('chatOverlay');
+  ov.classList.toggle('open');
+  if (ov.classList.contains('open')) {
+    switchChatLeftTab(_activeChatLeftTab);
+    if (!_activeConvId && !_activeGroupId && _chatConvs.length > 0 && _activeChatLeftTab === 'dms') {
+      const first = _chatConvs[0];
+      const partnerUid = first.participants?.find(p => p !== _currentUser.uid) || '';
+      const partnerUsername = first.pUsernames?.[partnerUid] || '?';
+      _openConv(first.id, partnerUid, partnerUsername);
+    }
+  }
+};
+
+
 
 
 </script>
