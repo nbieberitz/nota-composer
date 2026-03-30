@@ -927,6 +927,14 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
         <div class="kbd-desc">Pitch down <em>one semitone</em> (half step, ignores key signature)</div>
       </div>
       <div class="kbd-row">
+        <div class="kbd-keys"><kbd class="mod">Ctrl</kbd><span class="kbd-plus">+</span><kbd>↑</kbd></div>
+        <div class="kbd-desc">Pitch up <em>one octave</em> (12 semitones)</div>
+      </div>
+      <div class="kbd-row">
+        <div class="kbd-keys"><kbd class="mod">Ctrl</kbd><span class="kbd-plus">+</span><kbd>↓</kbd></div>
+        <div class="kbd-desc">Pitch down <em>one octave</em> (12 semitones)</div>
+      </div>
+      <div class="kbd-row">
         <div class="kbd-keys"><kbd>Del</kbd> / <kbd>Backspace</kbd></div>
         <div class="kbd-desc">Delete all selected notes</div>
       </div>
@@ -2993,6 +3001,9 @@ document.addEventListener('keydown', e => {
   if (ctrl && e.key === 'c') { e.preventDefault(); copySelected(); return; }
   if (ctrl && e.key === 'x') { e.preventDefault(); cutSelected(); return; }
   if (ctrl && e.key === 'v') { e.preventDefault(); pasteClipboard(); return; }
+  // Ctrl+↑/↓ → octave nudge (+/- 12 semitones)
+  if (ctrl && !shift && e.key === 'ArrowUp')   { e.preventDefault(); editSelectionSemitone(+12); return; }
+  if (ctrl && !shift && e.key === 'ArrowDown') { e.preventDefault(); editSelectionSemitone(-12); return; }
 
   // ── Shift: edit selection ────────────────────────────────────────────────
   if (shift && !ctrl) {
@@ -3009,6 +3020,7 @@ document.addEventListener('keydown', e => {
     // Shift+↑/↓ → semitone nudge
     if (e.key === 'ArrowUp')   { e.preventDefault(); editSelectionSemitone(+1); return; }
     if (e.key === 'ArrowDown') { e.preventDefault(); editSelectionSemitone(-1); return; }
+  }
   }
 
   // ── No modifier: add notes ───────────────────────────────────────────────
@@ -3227,7 +3239,7 @@ function getProjectData() {
     name:      document.getElementById('projNameInput').value.trim() || 'Untitled',
     updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
     data: {
-      columns:  JSON.parse(JSON.stringify(S.columns)),
+      columns:  JSON.stringify(S.columns), // serialised — Firestore doesn't support nested arrays
       tsNum:    S.tsNum,
       tsDenom:  S.tsDenom,
       keySig:   S.keySig,
@@ -3274,7 +3286,7 @@ function loadProjectData(doc) {
   _currentProjId = doc.id;
   document.getElementById('projNameInput').value = d.name || 'Untitled';
   const pd = d.data || {};
-  S.columns = pd.columns || [[]];
+  S.columns = typeof pd.columns === 'string' ? JSON.parse(pd.columns) : (pd.columns || [[]]);
   S.tsNum   = pd.tsNum   || 4;
   S.tsDenom = pd.tsDenom || 4;
   S.keySig  = pd.keySig  || 'C';
