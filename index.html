@@ -3276,7 +3276,7 @@ async function saveProject() {
 function scheduleAutoSave() {
   if (!_currentUser || !_currentProjId) return;
   clearTimeout(_autoSaveTimer);
-  setSaveStatus('saving', '● Unsaved');
+  setSaveStatus('saving', '● Saving Changes…');
   _autoSaveTimer = setTimeout(saveProject, AUTO_SAVE_DELAY);
 }
 
