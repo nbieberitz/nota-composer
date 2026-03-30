@@ -11,12 +11,12 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <style>
 :root {
-  --bg: #07070f;
-  --surface: #0c0c1a;
-  --surface2: #111122;
-  --surface3: #181830;
-  --border: #22224a;
-  --border2: #2e2e5a;
+  --bg: #0e0e1c;
+  --surface: #141428;
+  --surface2: #1a1a33;
+  --surface3: #21213e;
+  --border: #2d2d5c;
+  --border2: #3c3c6e;
   --cyan: #00f5d4;
   --cyan-dim: rgba(0,245,212,0.15);
   --pink: #f72585;
@@ -28,11 +28,11 @@
   --green: #80ed99;
   --green-dim: rgba(128,237,153,0.12);
   --yellow: #ffd60a;
-  --text: #c4cce8;
-  --text-dim: #5c6380;
-  --text-muted: #2e3050;
-  --note-bg: #0e0e22;
-  --rest-bg: #0a120f;
+  --text: #ced5f0;
+  --text-dim: #707898;
+  --text-muted: #3e4068;
+  --note-bg: #161632;
+  --rest-bg: #121c16;
   --beat-line: rgba(76,201,240,0.10);
   --bar-line: rgba(76,201,240,0.32);
 }
@@ -103,7 +103,7 @@ body {
   align-items: center;
   gap: 14px;
   padding: 9px 18px;
-  background: linear-gradient(100deg,#0c0820 0%,#0d0b20 60%,#080c1a 100%);
+  background: linear-gradient(100deg,#14102e 0%,#15132e 60%,#101526 100%);
   border-bottom: 1px solid var(--border);
   box-shadow: 0 2px 24px rgba(0,0,0,0.6);
   flex-shrink: 0;
@@ -1968,7 +1968,7 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
 
 <script>
 /* ╔══════════════════════════════════════════════════════════════════════════════════╗
-   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2025-03-30            ║
+   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2026-03-30            ║
    ║  PURPOSE: Single source of truth for all AI tools reading/editing this file.   ║
    ║  FORMAT: dense structured notation > English prose. Symbols defined below.     ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝
@@ -2376,16 +2376,16 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   ══════════════════════════════════════════════════════════════════════════════════
 
   ROOT VARS:
-    --bg:#07070f  --surface:#0c0c1a  --surface2:#111122  --surface3:#181830
-    --border:#22224a  --border2:#2e2e5a
+    --bg:#0e0e1c  --surface:#141428  --surface2:#1a1a33  --surface3:#21213e
+    --border:#2d2d5c  --border2:#3c3c6e
     --cyan:#00f5d4   --cyan-dim:rgba(0,245,212,0.15)
     --pink:#f72585   --pink-dim:rgba(247,37,133,0.15)
     --purple:#9b5de5 --purple-dim:rgba(155,93,229,0.15)
     --blue:#4cc9f0   --blue-dim:rgba(76,201,240,0.12)
     --green:#80ed99  --green-dim:rgba(128,237,153,0.12)
     --yellow:#ffd60a
-    --text:#c4cce8   --text-dim:#5c6380  --text-muted:#2e3050
-    --note-bg:#0e0e22  --rest-bg:#0a120f
+    --text:#ced5f0   --text-dim:#707898  --text-muted:#3e4068
+    --note-bg:#161632  --rest-bg:#121c16
     --beat-line:rgba(76,201,240,0.10)  --bar-line:rgba(76,201,240,0.32)
 
   COLOR ROLES:
@@ -2554,6 +2554,17 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     ADDED: NOTA_MANIFEST (this document) — §0-§15 — replaces old feature reference comment
     Manifest format: AI-primary, structured notation, self-updating instructions
 
+  [2026-03-30 | SESSION:5 | Claude-Sonnet-4.6]
+    CHANGED: Dark theme lightened — all background/surface/border/text vars shifted
+             ~10-15 brightness units lighter. Accent colors unchanged.
+             --bg:#07070f→#0e0e1c  --surface:#0c0c1a→#141428
+             --surface2:#111122→#1a1a33  --surface3:#181830→#21213e
+             --border:#22224a→#2d2d5c  --border2:#2e2e5a→#3c3c6e
+             --text:#c4cce8→#ced5f0  --text-dim:#5c6380→#707898
+             --text-muted:#2e3050→#3e4068
+             --note-bg:#0e0e22→#161632  --rest-bg:#0a120f→#121c16
+             Header gradient hardcoded hex values updated to match.
+
   [2025-03-30 | SESSION:4 | Claude-Sonnet-4.6]
     ADDED: Guest mode — "Continue as Guest" button on auth screen
            @continueAsGuest(), _guestMode bool, guest banner in #userArea
@@ -2595,7 +2606,9 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     instruction to always update manifest, AI-optimized communication format.
     Result: this document (§0-§16).
 
-  [SESSION:4] tb uploaded file from new chat. Four features added iteratively:
+  [SESSION:5] tb said dark theme is "a bit too dark". Lightened all background/surface/
+    border/text CSS vars by ~10-15 brightness units. Accent colors (cyan/pink/purple/
+    blue/green/yellow) unchanged. Manifest updated per §0 rules.
     1. Guest mode (Continue as Guest on sign-in screen, guest banner in header)
     2. BPM input in header
     3. Output panel overhaul — ticker setup card, reset/tone/graph/fn sections,
