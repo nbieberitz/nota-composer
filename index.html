@@ -858,6 +858,136 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   background: var(--surface2); flex-shrink: 0;
   display: flex; gap: 8px; justify-content: flex-end;
 }
+
+/* ── Username setup overlay ── */
+.username-overlay {
+  position: fixed; inset: 0; z-index: 10500;
+  background: rgba(4,4,14,0.96); backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center;
+}
+.username-box {
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 16px; box-shadow: 0 12px 70px rgba(0,0,0,.8), 0 0 0 1px rgba(0,245,212,.07);
+  width: 380px; max-width: 96vw; padding: 32px 30px 28px;
+}
+.username-hint {
+  font-size: 10px; color: var(--text-muted); margin-bottom: 18px;
+  line-height: 1.8; text-align: center;
+}
+.username-rules {
+  font-size: 9px; color: var(--text-muted); margin-top: 8px;
+  letter-spacing: .5px; text-align: center;
+}
+
+/* ── Friends button + badge ── */
+.friends-btn-wrap { position: relative; display: inline-flex; }
+.notif-badge {
+  position: absolute; top: -4px; right: -4px;
+  background: var(--pink); color: #fff;
+  font-size: 8px; font-weight: 700;
+  min-width: 15px; height: 15px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 3px; pointer-events: none;
+  box-shadow: 0 0 8px rgba(247,37,133,.5);
+}
+
+/* ── Friends modal ── */
+.friends-overlay {
+  position: fixed; inset: 0; z-index: 9400;
+  background: rgba(4,4,14,0.78); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity .18s;
+}
+.friends-overlay.open { opacity: 1; pointer-events: all; }
+.friends-modal {
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 14px; box-shadow: 0 8px 60px rgba(0,0,0,.7);
+  width: 420px; max-width: 96vw; max-height: 85vh;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.friends-hdr {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+  background: var(--surface2); flex-shrink: 0;
+}
+.friends-title {
+  font-family: 'Orbitron', sans-serif; font-size: 11px;
+  color: var(--cyan); letter-spacing: 3px;
+  text-shadow: 0 0 10px rgba(0,245,212,.4);
+}
+.friends-tabs {
+  display: flex; border-bottom: 1px solid var(--border);
+  background: var(--surface2); flex-shrink: 0;
+}
+.ftab {
+  flex: 1; background: none; border: none; cursor: pointer;
+  font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--text-muted); padding: 9px 0;
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+  transition: all .15s; position: relative;
+}
+.ftab.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+.ftab:hover:not(.active) { color: var(--text); }
+.ftab-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--pink); color: #fff; font-size: 7px; font-weight: 700;
+  min-width: 13px; height: 13px; border-radius: 7px; padding: 0 2px;
+  margin-left: 4px; vertical-align: middle;
+}
+.friends-body {
+  flex: 1; overflow-y: auto; padding: 10px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.friends-body::-webkit-scrollbar { width: 5px; }
+.friends-body::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+.friends-empty {
+  text-align: center; padding: 40px 20px;
+  color: var(--text-muted); font-size: 11px; line-height: 2;
+}
+.friend-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 8px;
+  background: var(--surface2); border: 1px solid var(--border);
+  transition: border-color .15s;
+}
+.friend-item:hover { border-color: var(--border2); }
+.friend-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--purple), var(--cyan));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0;
+  font-family: 'Orbitron', sans-serif;
+}
+.friend-info { flex: 1; min-width: 0; }
+.friend-name {
+  font-size: 12px; color: var(--text); font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.friend-username {
+  font-size: 9px; color: var(--text-muted); margin-top: 1px; letter-spacing: .5px;
+}
+.friend-actions { display: flex; gap: 5px; flex-shrink: 0; }
+.req-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 8px;
+  background: var(--surface2); border: 1px solid var(--cyan);
+  background: rgba(0,245,212,.04);
+}
+.find-row {
+  display: flex; gap: 6px; padding: 10px; flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+}
+.find-input {
+  flex: 1; background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 12px;
+  padding: 7px 10px; border-radius: 6px; outline: none;
+  transition: border-color .15s;
+}
+.find-input:focus { border-color: var(--cyan); }
+.find-result {
+  padding: 10px; display: flex; flex-direction: column; gap: 6px;
+}
 </style>
 </head>
 <body>
@@ -979,6 +1109,59 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   </div>
 </div>
 
+<!-- ════════ USERNAME SETUP OVERLAY ════════ -->
+<div class="username-overlay" id="usernameOverlay" style="display:none">
+  <div class="username-box">
+    <div class="auth-logo">NOTA</div>
+    <div class="auth-tagline">Choose your username</div>
+    <p class="username-hint">Pick a unique username so other users can find you and send you friend requests.</p>
+    <div class="auth-field">
+      <label class="auth-label">Username</label>
+      <input class="auth-input" id="usernameInput" type="text" placeholder="e.g. composer42" maxlength="20"
+        onkeydown="if(event.key==='Enter')doSetUsername()" oninput="onUsernameInput()">
+      <div class="username-rules">3–20 characters · letters, numbers, underscores only</div>
+    </div>
+    <div id="usernameAvailability" style="font-size:10px;min-height:14px;text-align:center;margin-bottom:8px;letter-spacing:.5px;"></div>
+    <button class="auth-btn primary" id="usernameSubmitBtn" onclick="doSetUsername()">Set Username</button>
+    <div class="auth-error" id="usernameError"></div>
+  </div>
+</div>
+
+<!-- ════════ FRIENDS MODAL ════════ -->
+<div class="friends-overlay" id="friendsOverlay" onclick="closeFriendsModal(event)">
+  <div class="friends-modal">
+    <div class="friends-hdr">
+      <span class="friends-title">Friends</span>
+      <button class="kbd-close" onclick="toggleFriendsModal()">×</button>
+    </div>
+    <div class="friends-tabs">
+      <button class="ftab active" id="ftabFriends"   onclick="switchFriendsTab('friends')">Friends</button>
+      <button class="ftab"        id="ftabRequests"  onclick="switchFriendsTab('requests')">Requests</button>
+      <button class="ftab"        id="ftabFind"      onclick="switchFriendsTab('find')">Find People</button>
+    </div>
+
+    <!-- Friends list -->
+    <div id="fpanelFriends" class="friends-body" style="display:flex; flex-direction:column;">
+      <div class="friends-empty">Loading…</div>
+    </div>
+
+    <!-- Pending requests -->
+    <div id="fpanelRequests" class="friends-body" style="display:none; flex-direction:column;">
+      <div class="friends-empty">Loading…</div>
+    </div>
+
+    <!-- Find people -->
+    <div id="fpanelFind" style="display:none; flex:1; overflow:hidden; flex-direction:column;">
+      <div class="find-row">
+        <input class="find-input" id="findUsernameInput" placeholder="Search by username…" maxlength="20"
+          onkeydown="if(event.key==='Enter')doFindUser()">
+        <button class="btn-sm accent" onclick="doFindUser()">Search</button>
+      </div>
+      <div class="find-result" id="findResult"></div>
+    </div>
+  </div>
+</div>
+
 <!-- ════════ AUTH MODAL ════════ -->
 <div class="auth-overlay" id="authOverlay">
   <div class="auth-box">
@@ -995,11 +1178,11 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     <div id="authPanelLogin">
       <div class="auth-field">
         <label class="auth-label">Email</label>
-        <input class="auth-input" id="loginEmail" type="email" placeholder="you@example.com" autocomplete="email">
+        <input class="auth-input" id="loginEmail" type="email" placeholder="you@example.com" autocomplete="email" onkeydown="if(event.key==='Enter')document.getElementById('loginPassword').focus()">
       </div>
       <div class="auth-field">
         <label class="auth-label">Password</label>
-        <input class="auth-input" id="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password">
+        <input class="auth-input" id="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
       </div>
       <div class="auth-forgot"><a onclick="switchAuthTab('forgot')">Forgot password?</a></div>
       <button class="auth-btn primary" onclick="doLogin()">Sign In</button>
@@ -1015,15 +1198,15 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     <div id="authPanelRegister" style="display:none">
       <div class="auth-field">
         <label class="auth-label">Display Name</label>
-        <input class="auth-input" id="regName" type="text" placeholder="Your name" autocomplete="name">
+        <input class="auth-input" id="regName" type="text" placeholder="Your name" autocomplete="name" onkeydown="if(event.key==='Enter')document.getElementById('regEmail').focus()">
       </div>
       <div class="auth-field">
         <label class="auth-label">Email</label>
-        <input class="auth-input" id="regEmail" type="email" placeholder="you@example.com" autocomplete="email">
+        <input class="auth-input" id="regEmail" type="email" placeholder="you@example.com" autocomplete="email" onkeydown="if(event.key==='Enter')document.getElementById('regPassword').focus()">
       </div>
       <div class="auth-field">
         <label class="auth-label">Password</label>
-        <input class="auth-input" id="regPassword" type="password" placeholder="At least 6 characters" autocomplete="new-password">
+        <input class="auth-input" id="regPassword" type="password" placeholder="At least 6 characters" autocomplete="new-password" onkeydown="if(event.key==='Enter')doRegister()">
       </div>
       <button class="auth-btn primary" onclick="doRegister()">Create Account</button>
       <div class="auth-divider">or</div>
@@ -1041,7 +1224,7 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
       </p>
       <div class="auth-field">
         <label class="auth-label">Email</label>
-        <input class="auth-input" id="forgotEmail" type="email" placeholder="you@example.com">
+        <input class="auth-input" id="forgotEmail" type="email" placeholder="you@example.com" onkeydown="if(event.key==='Enter')doForgotPassword()">
       </div>
       <button class="auth-btn primary" onclick="doForgotPassword()">Send Reset Link</button>
       <div class="auth-error"   id="forgotError"></div>
@@ -1138,6 +1321,12 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
 
   <!-- User area -->
   <div class="sep"></div>
+  <div id="friendsBtnWrap" style="display:none">
+    <div class="friends-btn-wrap">
+      <button class="btn-sm" onclick="toggleFriendsModal()" title="Friends">👥 Friends</button>
+      <span class="notif-badge" id="friendsNotifBadge" style="display:none"></span>
+    </div>
+  </div>
   <div class="user-area" id="userArea">
     <!-- Injected by auth state listener -->
     <button class="btn-sm accent" onclick="document.getElementById('authOverlay').style.display='flex'">Sign In</button>
@@ -3118,33 +3307,32 @@ let _autoSaveTimer  = null;
 const AUTO_SAVE_DELAY = 4000; // ms after last change
 
 /* ─── Auth state listener ─── */
-auth.onAuthStateChanged(user => {
+auth.onAuthStateChanged(async user => {
   _currentUser = user;
   if (user) {
-    // Hide auth overlay, show project controls
     document.getElementById('authOverlay').style.display = 'none';
     document.getElementById('projControls').style.display = 'flex';
     document.getElementById('projSep').style.display = 'block';
-    // Render user avatar + email
-    const area = document.getElementById('userArea');
-    const initials = (user.displayName || user.email || '?').slice(0, 2).toUpperCase();
-    area.innerHTML = `
-      <div class="user-avatar" title="${user.email}">${initials}</div>
-      <span class="user-email">${user.displayName || user.email}</span>
-      <button class="btn-sm danger" onclick="doSignOut()">Sign Out</button>
-    `;
+    document.getElementById('friendsBtnWrap').style.display = 'block';
+    await onUserLogin(user);
   } else {
     document.getElementById('authOverlay').style.display = 'flex';
     document.getElementById('projControls').style.display = 'none';
     document.getElementById('projSep').style.display = 'none';
+    document.getElementById('friendsBtnWrap').style.display = 'none';
+    document.getElementById('usernameOverlay').style.display = 'none';
     const area = document.getElementById('userArea');
     area.innerHTML = `<button class="btn-sm accent" onclick="document.getElementById('authOverlay').style.display='flex'">Sign In</button>`;
     _currentProjId = null;
+    cleanupFriendListeners();
   }
 });
 
 /* ─── Auth UI helpers ─── */
+let _activeAuthTab = 'login';
+
 function switchAuthTab(tab) {
+  _activeAuthTab = tab;
   ['login','register','forgot'].forEach(t => {
     document.getElementById('authPanel' + t.charAt(0).toUpperCase() + t.slice(1)).style.display = t === tab ? '' : 'none';
     document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1)).classList.toggle('active', t === tab);
@@ -3156,15 +3344,24 @@ function switchAuthTab(tab) {
 
 function setAuthError(id, msg) { document.getElementById(id).textContent = msg; }
 
+function setAuthBtnLoading(btnEl, loading, defaultText) {
+  btnEl.disabled = loading;
+  btnEl.textContent = loading ? 'Please wait…' : defaultText;
+  btnEl.style.opacity = loading ? '0.7' : '';
+}
+
 async function doLogin() {
   const email = document.getElementById('loginEmail').value.trim();
   const pass  = document.getElementById('loginPassword').value;
   setAuthError('loginError', '');
   if (!email || !pass) { setAuthError('loginError', 'Please fill in all fields.'); return; }
+  const btn = document.querySelector('#authPanelLogin .auth-btn.primary');
+  setAuthBtnLoading(btn, true, 'Sign In');
   try {
     await auth.signInWithEmailAndPassword(email, pass);
   } catch(e) {
     setAuthError('loginError', friendlyAuthError(e));
+    setAuthBtnLoading(btn, false, 'Sign In');
   }
 }
 
@@ -3174,23 +3371,26 @@ async function doRegister() {
   const pass  = document.getElementById('regPassword').value;
   setAuthError('regError', '');
   if (!email || !pass) { setAuthError('regError', 'Please fill in all fields.'); return; }
+  if (pass.length < 6) { setAuthError('regError', 'Password must be at least 6 characters.'); return; }
+  const btn = document.querySelector('#authPanelRegister .auth-btn.primary');
+  setAuthBtnLoading(btn, true, 'Create Account');
   try {
     const cred = await auth.createUserWithEmailAndPassword(email, pass);
     if (name) await cred.user.updateProfile({ displayName: name });
   } catch(e) {
     setAuthError('regError', friendlyAuthError(e));
+    setAuthBtnLoading(btn, false, 'Create Account');
   }
 }
 
 async function doGoogleSignIn() {
+  const errorId = _activeAuthTab === 'register' ? 'regError' : 'loginError';
+  setAuthError(errorId, '');
   try {
     const provider = new firebase.auth.GoogleAuthProvider();
     await auth.signInWithPopup(provider);
   } catch(e) {
-    // surface error on whichever tab is active
-    const activeError = document.getElementById('loginError').closest('[style]')?.style.display === 'none'
-      ? 'regError' : 'loginError';
-    setAuthError(activeError, friendlyAuthError(e));
+    setAuthError(errorId, friendlyAuthError(e));
   }
 }
 
@@ -3199,12 +3399,15 @@ async function doForgotPassword() {
   setAuthError('forgotError', '');
   document.getElementById('forgotSuccess').textContent = '';
   if (!email) { setAuthError('forgotError', 'Please enter your email.'); return; }
+  const btn = document.querySelector('#authPanelForgot .auth-btn.primary');
+  setAuthBtnLoading(btn, true, 'Send Reset Link');
   try {
     await auth.sendPasswordResetEmail(email);
     document.getElementById('forgotSuccess').textContent = '✓ Reset link sent — check your inbox.';
   } catch(e) {
     setAuthError('forgotError', friendlyAuthError(e));
   }
+  setAuthBtnLoading(btn, false, 'Send Reset Link');
 }
 
 async function doSignOut() {
@@ -3404,6 +3607,350 @@ const _baseRender = render;
 render = function() {
   _baseRender();
   if (_currentUser && _currentProjId) scheduleAutoSave();
+};
+
+/* ═══════════════════════════════════════════════════════════
+   PHASE 1 — USER PROFILES & FRIENDS
+══════════════════════════════════════════════════════════ */
+
+let _userProfile       = null;   // current user's profile doc data
+let _friendsUnsub      = null;   // real-time listener for friends list
+let _requestsUnsub     = null;   // real-time listener for incoming requests
+let _friendsList       = [];     // cached friends array
+let _pendingRequests   = [];     // cached incoming pending requests
+let _usernameCheckTimer = null;
+
+/* ─── Firestore helpers ─── */
+function profilesRef()  { return db.collection('userProfiles'); }
+function usernamesRef() { return db.collection('usernames'); }
+function friendsRef(uid)   { return db.collection('friends').doc(uid).collection('list'); }
+function friendReqsRef()   { return db.collection('friendRequests'); }
+
+/* ─── On login: load or prompt for profile ─── */
+async function onUserLogin(user) {
+  const snap = await profilesRef().doc(user.uid).get();
+  if (snap.exists && snap.data().username) {
+    _userProfile = snap.data();
+    renderUserArea(user);
+    setupFriendListeners(user.uid);
+  } else {
+    // New user — need a username
+    document.getElementById('usernameOverlay').style.display = 'flex';
+    document.getElementById('usernameInput').value = '';
+    document.getElementById('usernameError').textContent = '';
+    document.getElementById('usernameAvailability').textContent = '';
+    renderUserArea(user); // still render header so they can see the app behind
+  }
+}
+
+function renderUserArea(user) {
+  const area = document.getElementById('userArea');
+  const name = _userProfile?.username || user.displayName || user.email || '?';
+  const initials = name.slice(0,2).toUpperCase();
+  area.innerHTML = `
+    <div class="user-avatar" title="${escapeHtml(user.email)}">${escapeHtml(initials)}</div>
+    <span class="user-email">@${escapeHtml(_userProfile?.username || '…')}</span>
+    <button class="btn-sm danger" onclick="doSignOut()">Sign Out</button>
+  `;
+}
+
+/* ─── Username setup ─── */
+function onUsernameInput() {
+  clearTimeout(_usernameCheckTimer);
+  const val = document.getElementById('usernameInput').value.trim();
+  const avail = document.getElementById('usernameAvailability');
+  document.getElementById('usernameError').textContent = '';
+  if (!val || val.length < 3) { avail.textContent = ''; return; }
+  if (!/^[a-zA-Z0-9_]+$/.test(val)) {
+    avail.style.color = 'var(--pink)';
+    avail.textContent = '✗ Letters, numbers, and underscores only';
+    return;
+  }
+  avail.style.color = 'var(--text-muted)';
+  avail.textContent = 'Checking…';
+  _usernameCheckTimer = setTimeout(async () => {
+    const snap = await usernamesRef().doc(val.toLowerCase()).get();
+    if (snap.exists) {
+      avail.style.color = 'var(--pink)';
+      avail.textContent = '✗ Username already taken';
+    } else {
+      avail.style.color = 'var(--green)';
+      avail.textContent = '✓ Available!';
+    }
+  }, 500);
+}
+
+async function doSetUsername() {
+  const val = document.getElementById('usernameInput').value.trim();
+  const errEl = document.getElementById('usernameError');
+  errEl.textContent = '';
+  if (!val) { errEl.textContent = 'Please enter a username.'; return; }
+  if (val.length < 3) { errEl.textContent = 'Username must be at least 3 characters.'; return; }
+  if (val.length > 20) { errEl.textContent = 'Username must be 20 characters or less.'; return; }
+  if (!/^[a-zA-Z0-9_]+$/.test(val)) { errEl.textContent = 'Letters, numbers, and underscores only.'; return; }
+  const btn = document.getElementById('usernameSubmitBtn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    const lower = val.toLowerCase();
+    // Check uniqueness
+    const snap = await usernamesRef().doc(lower).get();
+    if (snap.exists) { errEl.textContent = 'That username is already taken.'; btn.disabled = false; btn.textContent = 'Set Username'; return; }
+    const user = _currentUser;
+    const profile = {
+      uid:         user.uid,
+      username:    val,
+      usernameLower: lower,
+      displayName: user.displayName || val,
+      email:       user.email,
+      createdAt:   firebase.firestore.FieldValue.serverTimestamp(),
+    };
+    // Use a batch write so both succeed or both fail
+    const batch = db.batch();
+    batch.set(profilesRef().doc(user.uid), profile);
+    batch.set(usernamesRef().doc(lower), { uid: user.uid, username: val });
+    await batch.commit();
+    _userProfile = profile;
+    document.getElementById('usernameOverlay').style.display = 'none';
+    renderUserArea(user);
+    setupFriendListeners(user.uid);
+  } catch(e) {
+    errEl.textContent = 'Error saving username. Please try again.';
+    console.error(e);
+  }
+  btn.disabled = false; btn.textContent = 'Set Username';
+}
+
+/* ─── Real-time friend listeners ─── */
+function setupFriendListeners(uid) {
+  cleanupFriendListeners();
+
+  // Friends list
+  _friendsUnsub = friendsRef(uid).orderBy('username').onSnapshot(snap => {
+    _friendsList = snap.docs.map(d => d.data());
+    if (document.getElementById('ftabFriends').classList.contains('active')) renderFriendsList();
+  });
+
+  // Incoming pending requests
+  _requestsUnsub = friendReqsRef()
+    .where('toUid', '==', uid)
+    .where('status', '==', 'pending')
+    .onSnapshot(snap => {
+      _pendingRequests = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      updateRequestsBadge();
+      if (document.getElementById('ftabRequests').classList.contains('active')) renderRequestsList();
+    });
+}
+
+function cleanupFriendListeners() {
+  if (_friendsUnsub)  { _friendsUnsub();  _friendsUnsub  = null; }
+  if (_requestsUnsub) { _requestsUnsub(); _requestsUnsub = null; }
+  _friendsList = []; _pendingRequests = [];
+}
+
+function updateRequestsBadge() {
+  const count = _pendingRequests.length;
+  // Header badge
+  const hBadge = document.getElementById('friendsNotifBadge');
+  hBadge.style.display = count > 0 ? 'flex' : 'none';
+  hBadge.textContent = count > 0 ? count : '';
+  // Tab badge
+  const tBtn = document.getElementById('ftabRequests');
+  const existing = tBtn.querySelector('.ftab-badge');
+  if (existing) existing.remove();
+  if (count > 0) {
+    const b = document.createElement('span');
+    b.className = 'ftab-badge';
+    b.textContent = count;
+    tBtn.appendChild(b);
+  }
+}
+
+/* ─── Friends modal ─── */
+let _activeFriendsTab = 'friends';
+
+function toggleFriendsModal() {
+  if (!_currentUser) return;
+  const ov = document.getElementById('friendsOverlay');
+  ov.classList.toggle('open');
+  if (ov.classList.contains('open')) {
+    switchFriendsTab(_activeFriendsTab);
+  }
+}
+function closeFriendsModal(e) {
+  if (e.target === document.getElementById('friendsOverlay')) toggleFriendsModal();
+}
+
+function switchFriendsTab(tab) {
+  _activeFriendsTab = tab;
+  ['friends','requests','find'].forEach(t => {
+    document.getElementById('ftab' + t.charAt(0).toUpperCase() + t.slice(1)).classList.toggle('active', t === tab);
+  });
+  document.getElementById('fpanelFriends').style.display   = tab === 'friends'  ? 'flex'  : 'none';
+  document.getElementById('fpanelRequests').style.display  = tab === 'requests' ? 'flex'  : 'none';
+  document.getElementById('fpanelFind').style.display      = tab === 'find'     ? 'flex'  : 'none';
+  if (tab === 'friends')  renderFriendsList();
+  if (tab === 'requests') renderRequestsList();
+  if (tab === 'find') {
+    document.getElementById('findUsernameInput').value = '';
+    document.getElementById('findResult').innerHTML = '';
+    setTimeout(() => document.getElementById('findUsernameInput').focus(), 50);
+  }
+}
+
+function renderFriendsList() {
+  const el = document.getElementById('fpanelFriends');
+  if (!_friendsList.length) {
+    el.innerHTML = '<div class="friends-empty">No friends yet.<br><span style="color:var(--text-muted);font-size:10px">Search for people in the <strong style="color:var(--cyan)">Find People</strong> tab.</span></div>';
+    return;
+  }
+  el.innerHTML = _friendsList.map(f => `
+    <div class="friend-item">
+      <div class="friend-avatar">${escapeHtml(f.username.slice(0,2).toUpperCase())}</div>
+      <div class="friend-info">
+        <div class="friend-name">${escapeHtml(f.displayName || f.username)}</div>
+        <div class="friend-username">@${escapeHtml(f.username)}</div>
+      </div>
+      <div class="friend-actions">
+        <button class="btn-sm danger" onclick="doRemoveFriend('${f.uid}','${escapeHtml(f.username)}')">Remove</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderRequestsList() {
+  const el = document.getElementById('fpanelRequests');
+  if (!_pendingRequests.length) {
+    el.innerHTML = '<div class="friends-empty">No pending requests.</div>';
+    return;
+  }
+  el.innerHTML = _pendingRequests.map(r => `
+    <div class="req-item">
+      <div class="friend-avatar">${escapeHtml(r.fromUsername.slice(0,2).toUpperCase())}</div>
+      <div class="friend-info">
+        <div class="friend-name">@${escapeHtml(r.fromUsername)}</div>
+        <div class="friend-username">wants to be your friend</div>
+      </div>
+      <div class="friend-actions">
+        <button class="btn-sm accent" onclick="doAcceptRequest('${r.id}')">Accept</button>
+        <button class="btn-sm danger"  onclick="doDeclineRequest('${r.id}')">Decline</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ─── Find people ─── */
+async function doFindUser() {
+  const val = document.getElementById('findUsernameInput').value.trim();
+  const res = document.getElementById('findResult');
+  if (!val) { res.innerHTML = ''; return; }
+  res.innerHTML = '<div class="friends-empty">Searching…</div>';
+  try {
+    const snap = await usernamesRef().doc(val.toLowerCase()).get();
+    if (!snap.exists) {
+      res.innerHTML = '<div class="friends-empty">No user found with that username.</div>';
+      return;
+    }
+    const { uid, username } = snap.data();
+    if (uid === _currentUser.uid) {
+      res.innerHTML = '<div class="friends-empty">That\'s you!</div>';
+      return;
+    }
+    // Check if already friends
+    const friendSnap = await friendsRef(_currentUser.uid).doc(uid).get();
+    const isFriend = friendSnap.exists;
+    // Check if request already sent
+    const sentSnap = await friendReqsRef()
+      .where('fromUid', '==', _currentUser.uid)
+      .where('toUid', '==', uid)
+      .where('status', '==', 'pending')
+      .get();
+    const alreadySent = !sentSnap.empty;
+    const profileSnap = await profilesRef().doc(uid).get();
+    const profile = profileSnap.data() || {};
+    res.innerHTML = `
+      <div class="friend-item">
+        <div class="friend-avatar">${escapeHtml(username.slice(0,2).toUpperCase())}</div>
+        <div class="friend-info">
+          <div class="friend-name">${escapeHtml(profile.displayName || username)}</div>
+          <div class="friend-username">@${escapeHtml(username)}</div>
+        </div>
+        <div class="friend-actions">
+          ${isFriend
+            ? '<span style="font-size:10px;color:var(--green)">✓ Friends</span>'
+            : alreadySent
+              ? '<span style="font-size:10px;color:var(--text-muted)">Request sent</span>'
+              : `<button class="btn-sm accent" onclick="doSendRequest('${uid}','${escapeHtml(username)}')">Add Friend</button>`
+          }
+        </div>
+      </div>`;
+  } catch(e) {
+    res.innerHTML = '<div class="friends-empty" style="color:var(--pink)">Error searching. Try again.</div>';
+    console.error(e);
+  }
+}
+
+/* ─── Friend request CRUD ─── */
+async function doSendRequest(toUid, toUsername) {
+  try {
+    await friendReqsRef().add({
+      fromUid:      _currentUser.uid,
+      fromUsername: _userProfile.username,
+      toUid,
+      toUsername,
+      status:       'pending',
+      createdAt:    firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    // Refresh the find result
+    doFindUser();
+  } catch(e) { console.error('Send request error:', e); }
+}
+
+async function doAcceptRequest(reqId) {
+  try {
+    const reqSnap = await friendReqsRef().doc(reqId).get();
+    if (!reqSnap.exists) return;
+    const req = reqSnap.data();
+    const batch = db.batch();
+    // Update request status
+    batch.update(friendReqsRef().doc(reqId), { status: 'accepted' });
+    // Add to both friends lists
+    batch.set(friendsRef(_currentUser.uid).doc(req.fromUid), {
+      uid: req.fromUid, username: req.fromUsername,
+      displayName: req.fromUsername, since: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    batch.set(friendsRef(req.fromUid).doc(_currentUser.uid), {
+      uid: _currentUser.uid, username: _userProfile.username,
+      displayName: _userProfile.displayName || _userProfile.username,
+      since: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    await batch.commit();
+  } catch(e) { console.error('Accept request error:', e); }
+}
+
+async function doDeclineRequest(reqId) {
+  try {
+    await friendReqsRef().doc(reqId).update({ status: 'declined' });
+  } catch(e) { console.error('Decline request error:', e); }
+}
+
+async function doRemoveFriend(friendUid, friendUsername) {
+  if (!confirm(`Remove @${friendUsername} from your friends?`)) return;
+  try {
+    const batch = db.batch();
+    batch.delete(friendsRef(_currentUser.uid).doc(friendUid));
+    batch.delete(friendsRef(friendUid).doc(_currentUser.uid));
+    await batch.commit();
+  } catch(e) { console.error('Remove friend error:', e); }
+}
+
+/* ─── Patch doSignOut to clean up ─── */
+const _origSignOut = doSignOut;
+doSignOut = async function() {
+  cleanupFriendListeners();
+  _userProfile = null;
+  _currentProjId = null;
+  document.getElementById('projNameInput').value = '';
+  await auth.signOut();
 };
 
 /* ═══════════════════════════════════════════════════════════
