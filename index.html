@@ -438,6 +438,70 @@ select:focus { border-color: var(--cyan); }
 }
 .cbtn-all:hover { background: rgba(0,245,212,.18); box-shadow: 0 0 10px rgba(0,245,212,.3); }
 
+/* ── Ticker setup card ── */
+.out-setup {
+  background: rgba(76,201,240,0.06);
+  border: 1px solid rgba(76,201,240,0.25);
+  border-radius: 8px;
+  padding: 11px 12px;
+}
+.out-setup-hdr {
+  font-size: 8px; text-transform: uppercase; letter-spacing: 2px;
+  color: var(--blue); margin-bottom: 10px;
+  display: flex; align-items: center; gap: 7px;
+}
+.out-setup-hdr::after {
+  content: ''; flex: 1; height: 1px; background: rgba(76,201,240,0.2);
+}
+.out-setup-desc {
+  font-size: 10px; color: var(--text-dim); line-height: 1.8; margin-bottom: 10px;
+}
+.out-ticker-row {
+  display: flex; align-items: center; gap: 5px; flex-wrap: wrap;
+  background: var(--surface3); border: 1px solid var(--border2);
+  border-radius: 6px; padding: 7px 10px;
+  font-size: 10px; color: var(--text-dim); letter-spacing: .5px;
+}
+.out-ticker-kw { color: var(--text-muted); }
+.out-ticker-arrow { color: var(--purple); font-size: 13px; }
+.out-ticker-val {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--cyan);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; font-weight: 600;
+  padding: 2px 8px; border-radius: 4px;
+  letter-spacing: .5px;
+}
+.out-ticker-sep { color: var(--text-muted); margin: 0 2px; }
+
+/* ── Section label ── */
+.out-section {
+  font-size: 8px; text-transform: uppercase; letter-spacing: 2px;
+  color: var(--text-muted); padding: 2px 0 4px;
+  display: flex; align-items: center; gap: 8px;
+  margin-top: 2px;
+}
+.out-section::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+
+/* ── Extra line (reset / tone / graph) ── */
+.out-extra {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 7px 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+.out-extra-code {
+  flex: 1; font-size: 10px; color: var(--cyan);
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: .3px; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+  font-style: italic;
+}
+
 .out-empty {
   color: var(--text-dim); font-size: 11px;
   text-align: center; padding: 30px 10px; line-height: 2;
@@ -790,6 +854,51 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   font-size: 10px; color: var(--green); margin-top: 10px;
   min-height: 14px; text-align: center; letter-spacing: .5px;
 }
+
+.auth-guest-divider {
+  display: flex; align-items: center; gap: 10px; margin: 20px 0 0;
+  font-size: 9px; color: var(--text-muted); letter-spacing: 1px;
+}
+.auth-guest-divider::before, .auth-guest-divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+.auth-btn.guest {
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--text-muted);
+  margin-top: 10px;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  transition: all .2s;
+}
+.auth-btn.guest:hover {
+  border-color: var(--purple);
+  color: var(--purple);
+  box-shadow: 0 0 12px rgba(155,93,229,.2);
+}
+.auth-guest-note {
+  text-align: center; font-size: 9px; color: var(--text-muted);
+  margin-top: 8px; letter-spacing: .5px; line-height: 1.6;
+}
+
+/* Guest mode banner in header */
+.guest-banner {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(155,93,229,.12);
+  border: 1px solid rgba(155,93,229,.35);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 9px; color: var(--purple);
+  letter-spacing: .8px;
+  white-space: nowrap;
+  cursor: default;
+}
+.guest-banner a {
+  color: var(--cyan); text-decoration: none; cursor: pointer;
+  font-weight: 600;
+  transition: opacity .15s;
+}
+.guest-banner a:hover { opacity: .75; }
 
 /* ── Projects modal ── */
 .proj-overlay {
@@ -1656,6 +1765,11 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
       <div class="auth-success" id="forgotSuccess"></div>
     </div>
 
+    <!-- GUEST MODE -->
+    <div class="auth-guest-divider">or</div>
+    <button class="auth-btn guest" onclick="continueAsGuest()">Continue as Guest</button>
+    <div class="auth-guest-note">No account needed · Compose locally · Cloud saves &amp; social features unavailable</div>
+
   </div>
 </div>
 
@@ -1690,6 +1804,13 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     <input class="ti sm" id="tsNum"   value="4" title="Beats per measure">
     <span class="slash">/</span>
     <input class="ti sm" id="tsDenom" value="4" title="Note that gets 1 beat">
+  </div>
+
+  <div class="sep"></div>
+
+  <div class="sg">
+    <span class="sl">BPM</span>
+    <input class="ti sm" id="bpmInput" value="120" title="Beats per minute" style="width:48px">
   </div>
 
   <div class="sep"></div>
@@ -2438,6 +2559,7 @@ let S = {
   zoom:     120,
   columns:  [[]],
   output:   [],
+  extraLines: [],
   expanded: new Set(), // note IDs manually expanded past their beat height
 };
 
@@ -3748,7 +3870,101 @@ function renderOutput(lines) {
     </div>`;
     return;
   }
-  el.innerHTML = lines.map((line, i) => `
+
+  // ── Compute BPM variables ──
+  const bpm = parseFloat(document.getElementById('bpmInput').value) || 120;
+  const b   = parseInt(document.getElementById('tsNum').value) || 4;   // beats per measure (numerator)
+  const c   = Math.round((60000 * b) / bpm * 1000) / 1000;            // ms per ticker step
+  const d   = Math.round((1 / b) * 1000000) / 1000000;                // t increment per tick
+
+  // ── Store extra lines on S.output for copyAll ──
+  // Extra lines: reset1, reset2, then tone×tracks, graph×tracks, then fn×tracks
+  const extraLines = [];
+
+  // t reset
+  extraLines.push({ copy: 't\\to0', show: 't → 0',           group: 'reset' });
+  extraLines.push({ copy: 't=0',    show: 't = 0',            group: 'reset' });
+
+  // tone lines  (one per track that has output)
+  lines.forEach(line => {
+    const fn = line.fn.replace('(x)','');  // 'f', 'g', etc.
+    extraLines.push({
+      copy: `\\operatorname{tone}\\left(440\\cdot2^{\\frac{n}{12}}\\right)\\operatorname{with}n=${fn}\\left(t\\right)`,
+      show: `tone(440·2^(n/12)) with n = ${fn}(t)`,
+      group: 'tone'
+    });
+  });
+
+  // graph point lines
+  lines.forEach(line => {
+    const fn = line.fn.replace('(x)','');
+    extraLines.push({
+      copy: `\\left(t,${fn}\\left(t\\right)\\right)`,
+      show: `(t, ${fn}(t))`,
+      group: 'graph'
+    });
+  });
+
+  S.output = lines;
+  S.extraLines = extraLines;
+
+  // ── Build HTML ──
+  let html = '';
+
+  // 1. Ticker setup card
+  html += `
+  <div class="out-setup">
+    <div class="out-setup-hdr">Ticker Setup</div>
+    <div class="out-setup-desc">In Desmos, click <strong style="color:var(--cyan)">+</strong> and add a <strong style="color:var(--cyan)">Ticker</strong>, then fill in the two values:</div>
+    <div class="out-ticker-row">
+      <span class="out-ticker-kw">Run</span>
+      <span class="out-ticker-kw">t</span>
+      <span class="out-ticker-arrow">→</span>
+      <span class="out-ticker-kw">t +</span>
+      <span class="out-ticker-val">${d}</span>
+      <button class="cbtn" style="flex-shrink:0" onclick="copyText('${d}', this)">Copy</button>
+      <span class="out-ticker-sep">every</span>
+      <span class="out-ticker-val">${c}</span>
+      <button class="cbtn" style="flex-shrink:0" onclick="copyText('${c}', this)">Copy</button>
+      <span class="out-ticker-kw">ms</span>
+    </div>
+  </div>`;
+
+  // 2. Reset section
+  html += `<div class="out-section">Ticker Reset</div>`;
+  extraLines.filter(l => l.group === 'reset').forEach((line, i) => {
+    html += `
+    <div class="out-extra">
+      <span class="out-extra-code">${escapeHtml(line.show)}</span>
+      <button class="cbtn" style="flex-shrink:0" onclick="copyExtra(${i},this)">Copy</button>
+    </div>`;
+  });
+
+  // 3. Tone section
+  const toneOffset = 2; // after the 2 reset lines
+  html += `<div class="out-section">Tone Expressions</div>`;
+  extraLines.filter(l => l.group === 'tone').forEach((line, i) => {
+    html += `
+    <div class="out-extra">
+      <span class="out-extra-code">${escapeHtml(line.show)}</span>
+      <button class="cbtn" style="flex-shrink:0" onclick="copyExtra(${toneOffset + i},this)">Copy</button>
+    </div>`;
+  });
+
+  // 4. Graph point section
+  const graphOffset = toneOffset + lines.length;
+  html += `<div class="out-section">Graph Points</div>`;
+  extraLines.filter(l => l.group === 'graph').forEach((line, i) => {
+    html += `
+    <div class="out-extra">
+      <span class="out-extra-code">${escapeHtml(line.show)}</span>
+      <button class="cbtn" style="flex-shrink:0" onclick="copyExtra(${graphOffset + i},this)">Copy</button>
+    </div>`;
+  });
+
+  // 5. Function definitions
+  html += `<div class="out-section">Function Definitions</div>`;
+  html += lines.map((line, i) => `
     <div class="out-line">
       <div class="out-lhdr">
         <span class="out-fn">${line.fn}</span>
@@ -3757,6 +3973,32 @@ function renderOutput(lines) {
       <div class="out-code" id="oc${i}">${escapeHtml(line.code)}</div>
     </div>
   `).join('');
+
+  el.innerHTML = html;
+}
+
+function copyText(text, btn) {
+  navigator.clipboard.writeText(String(text)).then(() => {
+    btn.textContent = '✓';
+    btn.classList.add('ok');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('ok'); }, 1600);
+  }).catch(() => {
+    btn.textContent = '✗';
+    setTimeout(() => { btn.textContent = 'Copy'; }, 1600);
+  });
+}
+
+function copyExtra(idx, btn) {
+  const line = S.extraLines?.[idx];
+  if (!line) return;
+  navigator.clipboard.writeText(line.copy).then(() => {
+    btn.textContent = '✓ Copied';
+    btn.classList.add('ok');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('ok'); }, 1800);
+  }).catch(() => {
+    btn.textContent = '✗';
+    setTimeout(() => { btn.textContent = 'Copy'; }, 1800);
+  });
 }
 
 function escapeHtml(s) {
@@ -3784,7 +4026,10 @@ function copyLine(idx, btn) {
 
 function copyAll() {
   if (!S.output.length) return;
-  const text = S.output.map(l => l.latex).join('\n');
+  // Copy: extra lines (reset, tone, graph) + function definitions
+  const extraText = (S.extraLines || []).map(l => l.copy).join('\n');
+  const fnText    = S.output.map(l => l.latex).join('\n');
+  const text      = extraText + '\n' + fnText;
   const btn = document.querySelector('.cbtn-all');
   navigator.clipboard.writeText(text).then(() => {
     const orig = btn.textContent;
@@ -3955,20 +4200,37 @@ const db   = firebase.firestore();
 
 /* ─── Current project state ─── */
 let _currentUser    = null;   // Firebase User object
+let _guestMode      = false;  // true when user chose to skip sign-in
 let _currentProjId  = null;   // Firestore doc ID of loaded project
 let _autoSaveTimer  = null;
 const AUTO_SAVE_DELAY = 4000; // ms after last change
+
+/* ─── Guest mode entry ─── */
+function continueAsGuest() {
+  _guestMode = true;
+  document.getElementById('authOverlay').style.display = 'none';
+  document.getElementById('projControls').style.display = 'none';
+  document.getElementById('projSep').style.display = 'none';
+  document.getElementById('friendsBtnWrap').style.display = 'none';
+  // Show guest banner in the user area
+  const area = document.getElementById('userArea');
+  area.innerHTML = `
+    <div class="guest-banner">
+      ◈ Guest Mode &nbsp;·&nbsp; <a onclick="document.getElementById('authOverlay').style.display='flex';_guestMode=false;">Sign In</a>
+    </div>`;
+}
 
 /* ─── Auth state listener ─── */
 auth.onAuthStateChanged(async user => {
   _currentUser = user;
   if (user) {
+    _guestMode = false;
     document.getElementById('authOverlay').style.display = 'none';
     document.getElementById('projControls').style.display = 'flex';
     document.getElementById('projSep').style.display = 'block';
     document.getElementById('friendsBtnWrap').style.display = 'block';
     await onUserLogin(user);
-  } else {
+  } else if (!_guestMode) {
     document.getElementById('authOverlay').style.display = 'flex';
     document.getElementById('projControls').style.display = 'none';
     document.getElementById('projSep').style.display = 'none';
