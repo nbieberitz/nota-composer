@@ -3918,11 +3918,8 @@ function renderOutput(lines) {
     <div class="out-setup-desc">In Desmos, click <strong style="color:var(--cyan)">+</strong> and add a <strong style="color:var(--cyan)">Ticker</strong>, then fill in the two values:</div>
     <div class="out-ticker-row">
       <span class="out-ticker-kw">Run</span>
-      <span class="out-ticker-kw">t</span>
-      <span class="out-ticker-arrow">→</span>
-      <span class="out-ticker-kw">t +</span>
-      <span class="out-ticker-val">${d}</span>
-      <button class="cbtn" style="flex-shrink:0" onclick="copyText('${d}', this)">Copy</button>
+      <span class="out-ticker-val">t → ${d}</span>
+      <button class="cbtn" style="flex-shrink:0" onclick="copyText('t\\\\to${d}', this)">Copy</button>
       <span class="out-ticker-sep">every</span>
       <span class="out-ticker-val">${c}</span>
       <button class="cbtn" style="flex-shrink:0" onclick="copyText('${c}', this)">Copy</button>
