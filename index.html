@@ -6,6 +6,7 @@
 <title>NOTA — Desmos Music Composer</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
 <!-- Firebase SDKs (compat) -->
+<script src="https://www.desmos.com/api/v1.10/calculator.js?apiKey=dcb31709b452b1cf9dc26972add0fda6"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -910,13 +911,14 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   content: ''; flex: 1; height: 1px; background: var(--border);
 }
 .auth-btn.guest {
-  background: transparent;
+  background: var(--surface2);
   border: 1px solid var(--border2);
-  color: var(--text-muted);
+  color: var(--text);
   margin-top: 10px;
   font-size: 11px;
   letter-spacing: 1.5px;
   transition: all .2s;
+  display: flex; align-items: center; justify-content: center;
 }
 .auth-btn.guest:hover {
   border-color: var(--purple);
@@ -924,7 +926,7 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   box-shadow: 0 0 12px rgba(155,93,229,.2);
 }
 .auth-guest-note {
-  text-align: center; font-size: 9px; color: var(--text-muted);
+  text-align: center; font-size: 9px; color: var(--text-dim);
   margin-top: 8px; letter-spacing: .5px; line-height: 1.6;
 }
 
@@ -1456,6 +1458,61 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
 .chat-msgs-col {
   flex: 1; display: flex; flex-direction: column; min-width: 0;
 }
+
+/* ─── DESMOS OVERLAY ─── */
+.btn-graph {
+  background: var(--blue-dim);
+  border: 1px solid var(--blue);
+  color: var(--blue);
+}
+.btn-graph:hover { background: rgba(76,201,240,.22); box-shadow: 0 0 12px rgba(76,201,240,.35); transform: translateY(-1px); }
+.btn-graph.active { background: rgba(76,201,240,.22); box-shadow: 0 0 10px rgba(76,201,240,.3); }
+
+#desmosOverlay {
+  display: none;
+  position: fixed; inset: 0;
+  z-index: 9600;
+  background: rgba(5,5,18,0.82);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+#desmosOverlay.open { display: flex; }
+
+.desmos-modal {
+  width: 100%; max-width: 1100px;
+  height: 100%; max-height: 820px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 14px;
+  box-shadow: 0 0 60px rgba(76,201,240,.12), 0 0 0 1px rgba(76,201,240,.06);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.desmos-modal-hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 16px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.desmos-modal-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px; color: var(--blue); letter-spacing: 3px;
+  text-shadow: 0 0 10px rgba(76,201,240,.4);
+}
+.desmos-modal-meta {
+  font-size: 9px; color: var(--text-dim); letter-spacing: .5px; margin-left: 14px;
+}
+.desmos-close-btn {
+  background: var(--surface3); border: 1px solid var(--border2);
+  color: var(--text-dim); font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; padding: 5px 12px; border-radius: 6px;
+  cursor: pointer; letter-spacing: 1px; transition: all .15s;
+}
+.desmos-close-btn:hover { border-color: var(--pink); color: var(--pink); }
+#desmosCalcContainer { flex: 1; position: relative; min-height: 0; }
 </style>
 </head>
 <body>
@@ -1815,7 +1872,7 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     <!-- GUEST MODE -->
     <div class="auth-guest-divider">or</div>
     <button class="auth-btn guest" onclick="continueAsGuest()">Continue as Guest</button>
-    <div class="auth-guest-note">No account needed · Compose locally · Cloud saves &amp; social features unavailable</div>
+    <div class="auth-guest-note">Many features are unavailable with Guest</div>
 
   </div>
 </div>
@@ -1890,6 +1947,7 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   <div class="sep"></div>
 
   <button class="btn btn-gen"  onclick="generateDesmos()">▶ Generate</button>
+  <button class="btn btn-graph" id="desmosBtn" onclick="toggleDesmosOverlay()" title="View in Desmos">📈 Graph</button>
   <button class="btn-help" onclick="toggleHelp()">? Shortcuts</button>
 
   <div class="sep" id="projSep" style="display:none"></div>
@@ -2069,6 +2127,7 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     friendsOverlay   9400
     chatOverlay      9300
     kbdOverlay       9000
+    desmosOverlay    9600
 
   GLOBAL STATE OBJECT S:
     { tsNum, tsDenom, keySig, zoom, columns[][], output[], extraLines[], expanded:Set }
@@ -2554,6 +2613,27 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     ADDED: NOTA_MANIFEST (this document) — §0-§15 — replaces old feature reference comment
     Manifest format: AI-primary, structured notation, self-updating instructions
 
+  [2026-03-30 | SESSION:8 | Claude-Sonnet-4.6]
+    ADDED: Desmos Embed API integration (v1.10, public demo key)
+           #desmosOverlay — fullscreen modal with live Desmos GraphingCalculator
+           📈 Graph button in header (next to ▶ Generate) — .btn-graph style
+           @_initDesmosCalc() — lazy init on first open
+           @toggleDesmosOverlay() — show/hide, activates button state
+           @_syncToDesmos() — pushes t=0, function defs (LaTeX), graph point traces
+           generateDesmos() patched to call _syncToDesmos() when overlay is open
+           CSS: .btn-graph, #desmosOverlay, .desmos-modal, .desmos-modal-hdr,
+                .desmos-modal-title, .desmos-modal-meta, .desmos-close-btn,
+                #desmosCalcContainer
+           GLOBAL VARS: _desmosCalc, _desmosOpen
+
+  [2026-03-30 | SESSION:7 | Claude-Sonnet-4.6]
+    CHANGED: .auth-guest-note text → "Many features are unavailable with Guest"
+
+  [2026-03-30 | SESSION:6 | Claude-Sonnet-4.6]
+    CHANGED: .auth-btn.guest — background transparent→var(--surface2), color text-muted→var(--text)
+             Added display:flex/align/justify to match .auth-btn.google layout
+    CHANGED: .auth-guest-note — color text-muted→var(--text-dim) (more visible)
+
   [2026-03-30 | SESSION:5 | Claude-Sonnet-4.6]
     CHANGED: Dark theme lightened — all background/surface/border/text vars shifted
              ~10-15 brightness units lighter. Accent colors unchanged.
@@ -2606,6 +2686,17 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     instruction to always update manifest, AI-optimized communication format.
     Result: this document (§0-§16).
 
+  [SESSION:8] tb requested Desmos embed integration. Used Desmos public Embed API v1.10.
+    Fullscreen overlay with live GraphingCalculator. 📈 Graph button placed next to
+    ▶ Generate. Auto-syncs t=0 + fn defs + graph point traces on Generate click.
+    Overlay also syncs on open if output already exists.
+
+  [SESSION:7] tb changed auth-guest-note text to "Many features are unavailable with Guest".
+
+  [SESSION:6]
+    Matched button style to .auth-btn.google (surface2 bg, text color). Note bumped
+    from text-muted to text-dim. Button text/note text content unchanged.
+
   [SESSION:5] tb said dark theme is "a bit too dark". Lightened all background/surface/
     border/text CSS vars by ~10-15 brightness units. Accent colors (cyan/pink/purple/
     blue/green/yellow) unchanged. Manifest updated per §0 rules.
@@ -2623,6 +2714,76 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
 */ /* ── end of NOTA_MANIFEST ── */
 
 
+
+
+/* ═══════════════════════════════════════════════════════════
+   DESMOS EMBED
+══════════════════════════════════════════════════════════ */
+
+let _desmosCalc = null;
+let _desmosOpen = false;
+
+function _initDesmosCalc() {
+  if (_desmosCalc) return;
+  const container = document.getElementById('desmosCalcContainer');
+  _desmosCalc = Desmos.GraphingCalculator(container, {
+    keypad: false,
+    expressions: true,
+    settingsMenu: true,
+    zoomButtons: true,
+    border: false,
+    backgroundColor: '#141428',  // matches --surface
+  });
+}
+
+function toggleDesmosOverlay() {
+  const ov  = document.getElementById('desmosOverlay');
+  const btn = document.getElementById('desmosBtn');
+  _desmosOpen = !_desmosOpen;
+  if (_desmosOpen) {
+    ov.classList.add('open');
+    btn.classList.add('active');
+    _initDesmosCalc();
+    // Sync current output if it exists
+    _syncToDesmos();
+  } else {
+    ov.classList.remove('open');
+    btn.classList.remove('active');
+  }
+}
+
+function _syncToDesmos() {
+  if (!_desmosCalc) return;
+  _desmosCalc.setBlank();
+
+  const exprs = [];
+  let id = 1;
+
+  // t = 0  (the ticker variable)
+  exprs.push({ id: String(id++), latex: 't=0' });
+
+  // Function definitions
+  (S.output || []).forEach(line => {
+    exprs.push({ id: String(id++), latex: line.latex });
+  });
+
+  // Graph point traces  (t, fn(t))
+  (S.output || []).forEach(line => {
+    const fn = line.fn.replace('(x)', '');
+    exprs.push({ id: String(id++), latex: `\left(t,${fn}\left(t\right)\right)` });
+  });
+
+  _desmosCalc.setExpressions(exprs);
+
+  // Update meta label
+  const meta = document.getElementById('desmosMeta');
+  if (meta) {
+    const count = (S.output || []).length;
+    meta.textContent = count > 0
+      ? `— ${count} track${count === 1 ? '' : 's'} loaded`
+      : '— hit ▶ Generate to populate';
+  }
+}
 
 /* ═══════════════════════════════════════════════════════════
    CONSTANTS & MUSIC UTILITIES
@@ -4015,6 +4176,8 @@ function generateDesmos() {
 
     S.output = lines;
   renderOutput(lines);
+  // Auto-sync to Desmos if overlay is open
+  if (_desmosOpen) _syncToDesmos();
 }
 
 function renderOutput(lines) {
@@ -6066,6 +6229,21 @@ toggleChatModal = function() {
 
 
 
+
+
+<!-- ════════ DESMOS OVERLAY ════════ -->
+<div id="desmosOverlay">
+  <div class="desmos-modal">
+    <div class="desmos-modal-hdr">
+      <div style="display:flex;align-items:baseline;gap:0">
+        <span class="desmos-modal-title">DESMOS PREVIEW</span>
+        <span class="desmos-modal-meta" id="desmosMeta">— hit ▶ Generate to populate</span>
+      </div>
+      <button class="desmos-close-btn" onclick="toggleDesmosOverlay()">✕ Close</button>
+    </div>
+    <div id="desmosCalcContainer"></div>
+  </div>
+</div>
 
 </script>
 </body>
