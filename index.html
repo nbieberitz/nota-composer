@@ -3873,9 +3873,21 @@ function renderOutput(lines) {
 
   // ── Compute BPM variables ──
   const bpm = parseFloat(document.getElementById('bpmInput').value) || 120;
-  const b   = parseInt(document.getElementById('tsNum').value) || 4;   // beats per measure (numerator)
-  const c   = Math.round((60000 * b) / bpm * 1000) / 1000;            // ms per ticker step
-  const d   = Math.round((1 / b) * 1000000) / 1000000;                // t increment per tick
+  const d_ts = parseInt(document.getElementById('tsDenom').value) || 4; // tsDenom for getBeats
+
+  // b = shortest note/rest duration (in beats) anywhere in all tracks
+  let minBeats = Infinity;
+  S.columns.forEach(col => {
+    col.forEach(note => {
+      const nb = getBeats(note.duration, d_ts);
+      if (nb > 0 && nb < minBeats) minBeats = nb;
+    });
+  });
+  if (!isFinite(minBeats)) minBeats = 1; // fallback if no notes
+
+  const b = Math.round(minBeats * 1000000) / 1000000;
+  const c = Math.round((60000 * b) / bpm * 1000) / 1000;  // ms per tick
+  const d = Math.round(b * 1000000) / 1000000;             // t increment per tick (= b)
 
   // ── Store extra lines on S.output for copyAll ──
   // Extra lines: reset1, reset2, then tone×tracks, graph×tracks, then fn×tracks
