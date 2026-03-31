@@ -3692,6 +3692,17 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     ADDED: NOTA_MANIFEST (this document) — §0-§15 — replaces old feature reference comment
     Manifest format: AI-primary, structured notation, self-updating instructions
 
+  [2026-03-31 | SESSION:31 | Claude-Sonnet-4.6]
+    FIXED BUG: "Uncaught Error in snapshot listener: permission-denied" on sign-out.
+               Root cause: P2 doSignOut patch called `await auth.signOut()` directly
+               instead of `await _origSignOut()`, breaking the patch chain and skipping
+               P4's cleanupProjInviteListeners() and stopCollabListener().
+               _projInvitesUnsub and _sharedProjsUnsub (no error handlers) were left
+               alive when auth cleared — firing permission-denied into the console.
+    FIXED:     `await auth.signOut()` → `await _origSignOut()` in the P2 patch.
+               Full chain: Admin→P5(stopPresence)→P2(friends+chat+groups)→P4(collab+invites)→original(auth.signOut).
+    VERSION:   v1.4.0 (no bump — bug fix only)
+
   [2026-03-31 | SESSION:30 | Claude-Sonnet-4.6]
     CHANGED: ADMIN_UID updated throughout: jMsWFzCxsJXtNGcuwKHnSxlDLU33 →
              jEjlW2A0z4TBsLPltDMTlPlvee12. Updated in: ADMIN_UID constant,
@@ -8015,7 +8026,7 @@ doSignOut = async function() {
   document.getElementById('projNameInput').value = '';
   document.getElementById('chatOverlay')?.classList.remove('open');
   document.getElementById('friendsOverlay')?.classList.remove('open');
-  await auth.signOut();
+  await _origSignOut();  // continue chain → P4 (stopCollabListener + cleanupProjInviteListeners) → original (auth.signOut)
 };
 
 /* ═══════════════════════════════════════════════════════════
