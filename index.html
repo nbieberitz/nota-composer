@@ -2584,7 +2584,7 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
 
 <script>
 /* ╔══════════════════════════════════════════════════════════════════════════════════╗
-   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2026-03-30 (SESSION:17)║
+   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2026-03-31 (SESSION:18)║
    ║  PURPOSE: Single source of truth for all AI tools reading/editing this file.   ║
    ║  FORMAT: dense structured notation > English prose. Symbols defined below.     ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝
@@ -3499,6 +3499,13 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     ADDED: NOTA_MANIFEST (this document) — §0-§15 — replaces old feature reference comment
     Manifest format: AI-primary, structured notation, self-updating instructions
 
+  [2026-03-31 | SESSION:18 | Claude-Sonnet-4.6]
+    FIXED BUG: Missing </script></body></html> closing tags at end of file.
+               Browser loaded HTML but never executed the <script> block → every
+               function (continueAsGuest, doRegister, etc.) was undefined at runtime.
+               Console error: "Uncaught ReferenceError: continueAsGuest is not defined"
+               Fix: appended </script></body></html> to end of file.
+
   [2026-03-30 | SESSION:17 | Claude-Sonnet-4.6]
     ADDED ADMIN: Full-screen admin dashboard — read-only all-projects overview
     ADDED ADMIN: Two-factor security: Firebase Auth (admin UID) + SHA-256 PIN challenge
@@ -3726,6 +3733,10 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   ══════════════════════════════════════════════════════════════════════════════════
   §16  SESSION LOG
   ══════════════════════════════════════════════════════════════════════════════════
+
+  [SESSION:18] tb reported console error: continueAsGuest is not defined. Root cause:
+    file was missing closing </script></body></html> tags — browser never executed the
+    JS block. Fixed by appending the three closing tags at end of file. No logic changes.
 
   [SESSION:17] tb asked for a secure admin account that shows all projects (public + private)
     in a grid, newest to oldest. Built two-factor admin: Firebase Auth (UID match) gates entry,
@@ -8729,3 +8740,6 @@ doSignOut = async function() {
   _exitAdminMode();
   await _origDoSignOutAdmin();
 };
+</script>
+</body>
+</html>
