@@ -3692,6 +3692,22 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     ADDED: NOTA_MANIFEST (this document) — §0-§15 — replaces old feature reference comment
     Manifest format: AI-primary, structured notation, self-updating instructions
 
+  [2026-03-31 | SESSION:32 | Claude-Sonnet-4.6]
+    FIXED BUG: COOP error on Google sign-in — `signInWithPopup` blocked by
+               Cross-Origin-Opener-Policy header, preventing popup close.
+    FIXED:     Switched `doGoogleSignIn` to `auth.signInWithRedirect` + added
+               `auth.getRedirectResult().catch()` on init to surface redirect errors.
+               `onAuthStateChanged` already handles the signed-in user after return.
+    FIXED BUG: "Sign out instead" button on admin PIN overlay did nothing —
+               `_exitAdminMode()` had `if (!_isAdminMode) return;` as its first line,
+               bailing before closing the PIN overlay or restoring header/main.
+               During PIN challenge `_isAdminMode` is still false, so the button
+               called doSignOut → _exitAdminMode (no-op) → auth.signOut, leaving
+               the UI broken (header hidden, PIN overlay still open, auth cleared).
+    FIXED:     Moved UI cleanup (close overlays, restore header/main, remove banner)
+               to run unconditionally before the `if (!_isAdminMode) return` guard.
+    VERSION:   v1.4.1
+
   [2026-03-31 | SESSION:31 | Claude-Sonnet-4.6]
     FIXED BUG: "Uncaught Error in snapshot listener: permission-denied" on sign-out.
                Root cause: P2 doSignOut patch called `await auth.signOut()` directly
@@ -6884,6 +6900,18 @@ firebase.initializeApp(FIREBASE_CONFIG);
 const auth = firebase.auth();
 const db   = firebase.firestore();
 
+/* ─── Handle Google redirect result (signInWithRedirect return) ─── */
+// Must be called once on load — resolves silently if no redirect pending.
+auth.getRedirectResult().catch(e => {
+  // Only surface real errors (not the "no redirect pending" no-op)
+  if (e && e.code && e.code !== 'auth/no-auth-event') {
+    const errorId = 'loginError';
+    document.getElementById('authOverlay').style.display = 'flex';
+    const el = document.getElementById(errorId);
+    if (el) el.textContent = friendlyAuthError(e);
+  }
+});
+
 /* ─── Current project state ─── */
 let _currentUser    = null;   // Firebase User object
 let _guestMode      = false;  // true when user chose to skip sign-in
@@ -6986,7 +7014,9 @@ async function doGoogleSignIn() {
   setAuthError(errorId, '');
   try {
     const provider = new firebase.auth.GoogleAuthProvider();
-    await auth.signInWithPopup(provider);
+    await auth.signInWithRedirect(provider);
+    // Page will redirect — execution stops here.
+    // onAuthStateChanged handles the signed-in user after redirect returns.
   } catch(e) {
     setAuthError(errorId, friendlyAuthError(e));
   }
@@ -9065,7 +9095,16 @@ function _enterAdminMode() {
 
 /* ─── Exit admin mode — called before sign-out ─── */
 function _exitAdminMode() {
-  if (!_isAdminMode) return;
+  // Always close PIN overlay and restore UI — catches the case where the user
+  // clicks "Sign out instead" during the PIN challenge before _isAdminMode is set.
+  document.getElementById('adminPinOverlay').classList.remove('open');
+  document.getElementById('adminOverlay').classList.remove('open');
+  document.querySelector('.header').style.display = '';
+  document.querySelector('.main').style.display   = '';
+  const banner = document.getElementById('adminBackBanner');
+  if (banner) banner.classList.remove('visible');
+
+  if (!_isAdminMode) return; // nothing else to tear down
   _isAdminMode      = false;
   _adminAllProjects = [];
   _adminUsernameMap = {};
@@ -9077,13 +9116,6 @@ function _exitAdminMode() {
   _collabProjId   = null;
   _currentProjId  = null;
   _isCollabViewer = false;
-  const banner = document.getElementById('adminBackBanner');
-  if (banner) banner.classList.remove('visible');
-  document.getElementById('adminOverlay').classList.remove('open');
-  document.getElementById('adminPinOverlay').classList.remove('open');
-  // Restore normal UI (onAuthStateChanged will re-hide when signed out)
-  document.querySelector('.header').style.display = '';
-  document.querySelector('.main').style.display   = '';
 }
 
 /* ─── Load all projects across all users ─── */
