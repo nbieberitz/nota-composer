@@ -1519,6 +1519,177 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
 }
 .desmos-close-btn:hover { border-color: var(--pink); color: var(--pink); }
 #desmosCalcContainer { flex: 1; position: relative; min-height: 0; }
+
+/* ─── PROJECT SHARE MODAL ─── */
+.share-overlay {
+  position: fixed; inset: 0; z-index: 9800;
+  background: rgba(4,4,14,0.88); backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity .18s;
+}
+.share-overlay.open { opacity: 1; pointer-events: all; }
+.share-modal {
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 14px; box-shadow: 0 8px 60px rgba(0,0,0,.8);
+  width: 480px; max-width: 96vw; max-height: 88vh;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.share-modal-hdr {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+  background: var(--surface2); flex-shrink: 0;
+}
+.share-modal-title {
+  font-family: 'Orbitron', sans-serif; font-size: 11px;
+  color: var(--cyan); letter-spacing: 3px;
+  text-shadow: 0 0 10px rgba(0,245,212,.4);
+}
+.share-body { padding: 18px 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 18px; }
+.share-body::-webkit-scrollbar { width: 5px; }
+.share-body::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+.share-section-title {
+  font-size: 9px; text-transform: uppercase; letter-spacing: 2px;
+  color: var(--text-muted); padding-bottom: 5px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+}
+.share-section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* Code invite block */
+.share-code-block {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 16px;
+}
+.share-code-row {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+}
+.share-code-display {
+  flex: 1; font-family: 'Orbitron', sans-serif; font-size: 22px;
+  letter-spacing: 5px; color: var(--yellow); text-align: center;
+  background: var(--surface3); border: 1px solid var(--yellow);
+  border-radius: 8px; padding: 10px 14px;
+  text-shadow: 0 0 12px rgba(255,214,10,.35);
+  cursor: pointer; transition: all .15s;
+}
+.share-code-display:hover { background: rgba(255,214,10,.07); }
+.share-code-hint { font-size: 9px; color: var(--text-muted); letter-spacing: .5px; text-align: center; }
+
+/* Access toggle */
+.share-access-row {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.share-access-label { font-size: 10px; color: var(--text-dim); letter-spacing: .5px; flex-shrink: 0; }
+.access-toggle {
+  display: flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden;
+}
+.access-btn {
+  background: none; border: none; cursor: pointer;
+  font-family: 'JetBrains Mono', monospace; font-size: 9px;
+  font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--text-muted); padding: 5px 12px; transition: all .15s;
+}
+.access-btn.active-view { background: var(--blue-dim); color: var(--blue); }
+.access-btn.active-edit { background: var(--green-dim); color: var(--green); }
+.access-btn:hover:not(.active-view):not(.active-edit) { color: var(--text); background: var(--surface3); }
+
+/* User invite row */
+.share-invite-row {
+  display: flex; gap: 8px; align-items: center;
+}
+.share-invite-input {
+  flex: 1; background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 12px;
+  padding: 8px 11px; border-radius: 7px; outline: none; transition: border-color .15s;
+  box-sizing: border-box;
+}
+.share-invite-input:focus { border-color: var(--cyan); box-shadow: 0 0 8px rgba(0,245,212,.15); }
+
+/* Collaborator list */
+.collab-list { display: flex; flex-direction: column; gap: 6px; }
+.collab-item {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 12px;
+}
+.collab-avatar {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--purple), var(--cyan));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 700; color: #fff; flex-shrink: 0;
+  text-transform: uppercase;
+}
+.collab-name { flex: 1; font-size: 11px; color: var(--text); }
+.collab-role {
+  font-size: 8px; letter-spacing: 1px; padding: 2px 7px;
+  border-radius: 4px; text-transform: uppercase;
+}
+.collab-role.owner { background: var(--yellow); color: #000; font-weight: 700; }
+.collab-role.editor { background: var(--green-dim); color: var(--green); border: 1px solid var(--green); }
+.collab-role.viewer { background: var(--blue-dim); color: var(--blue); border: 1px solid var(--blue); }
+.collab-access-select {
+  background: var(--surface3); border: 1px solid var(--border);
+  color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 9px;
+  padding: 3px 5px; border-radius: 4px; outline: none; cursor: pointer;
+  width: auto;
+}
+
+/* ─── PROJECT INVITE NOTIFICATION BADGE + BANNER ─── */
+.proj-invite-badge {
+  position: absolute; top: -4px; right: -4px;
+  background: var(--yellow); color: #000;
+  font-size: 8px; font-weight: 700;
+  min-width: 15px; height: 15px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 3px; pointer-events: none;
+  box-shadow: 0 0 8px rgba(255,214,10,.5);
+}
+
+/* ─── PROJECT INVITES MODAL ─── */
+.proj-invites-overlay {
+  position: fixed; inset: 0; z-index: 9700;
+  background: rgba(4,4,14,0.88); backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity .18s;
+}
+.proj-invites-overlay.open { opacity: 1; pointer-events: all; }
+.proj-invites-modal {
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 14px; box-shadow: 0 8px 60px rgba(0,0,0,.8);
+  width: 420px; max-width: 96vw; max-height: 82vh;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.proj-invites-hdr {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+  background: var(--surface2); flex-shrink: 0;
+}
+.proj-invites-title {
+  font-family: 'Orbitron', sans-serif; font-size: 11px;
+  color: var(--yellow); letter-spacing: 3px;
+  text-shadow: 0 0 10px rgba(255,214,10,.4);
+}
+.proj-invite-item {
+  padding: 14px 18px; border-bottom: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 8px;
+}
+.proj-invite-from { font-size: 12px; color: var(--text); }
+.proj-invite-from strong { color: var(--cyan); }
+.proj-invite-project { font-size: 10px; color: var(--text-dim); letter-spacing: .5px; }
+.proj-invite-access {
+  display: inline-flex; font-size: 8px; letter-spacing: 1px; padding: 2px 7px;
+  border-radius: 4px; text-transform: uppercase;
+}
+.proj-invite-access.editor { background: var(--green-dim); color: var(--green); border: 1px solid var(--green); }
+.proj-invite-access.viewer { background: var(--blue-dim); color: var(--blue); border: 1px solid var(--blue); }
+.proj-invite-actions { display: flex; gap: 8px; }
+
+/* ─── Shared project badge in proj list ─── */
+.proj-shared-badge {
+  font-size: 8px; color: var(--purple); border: 1px solid var(--purple);
+  padding: 1px 5px; border-radius: 3px; letter-spacing: .5px;
+  background: var(--purple-dim); flex-shrink: 0; align-self: flex-start; margin-top: 2px;
+}
 </style>
 </head>
 <body>
@@ -1896,6 +2067,7 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     <div class="proj-modal-footer">
       <button class="btn-sm" onclick="newProject()">+ New Project</button>
       <button class="btn-sm accent" onclick="saveProject()">💾 Save Current</button>
+      <button class="btn-sm" onclick="openShareModal()" id="shareProjBtn" style="display:none" title="Share current project">🔗 Share</button>
     </div>
   </div>
 </div>
@@ -1989,6 +2161,10 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
         <button class="btn-sm" onclick="toggleChatModal()" title="Direct Messages">💬 Chat</button>
         <span class="notif-badge" id="chatNotifBadge" style="display:none"></span>
       </div>
+      <div class="friends-btn-wrap" id="projInvitesBtnWrap" style="display:none">
+        <button class="btn-sm" onclick="openProjInvitesModal()" title="Project Invitations">📩 Invites</button>
+        <span class="notif-badge" id="projInvitesNotifBadge" style="display:none"></span>
+      </div>
     </div>
   </div>
   <div class="user-area" id="userArea">
@@ -2030,6 +2206,77 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
 
 </div>
 
+<!-- ════════ SHARE PROJECT MODAL ════════ -->
+<div class="share-overlay" id="shareOverlay" onclick="closeShareModal(event)">
+  <div class="share-modal">
+    <div class="share-modal-hdr">
+      <span class="share-modal-title">SHARE PROJECT</span>
+      <button class="kbd-close" onclick="closeShareModal()">×</button>
+    </div>
+    <div class="share-body">
+      <!-- Code invite -->
+      <div>
+        <div class="share-section-title">Invite by Code</div>
+        <div class="share-code-block">
+          <div class="share-code-row">
+            <div class="share-code-display" id="shareProjCode" onclick="copyShareCode()" title="Click to copy">——————</div>
+            <button class="btn-sm accent" onclick="copyShareCode()">📋 Copy</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap">
+            <span class="share-access-label">Code gives:</span>
+            <div class="access-toggle" id="codeAccessToggle">
+              <button class="access-btn active-view" onclick="setCodeAccess('viewer')">👁 Viewer</button>
+              <button class="access-btn" onclick="setCodeAccess('editor')">✏️ Editor</button>
+            </div>
+          </div>
+          <div class="share-code-hint">Anyone with this code can join as the selected role. Click the code to copy it.</div>
+          <div style="margin-top:10px">
+            <button class="btn-sm danger" onclick="regenerateShareCode()" style="font-size:9px">↻ New Code</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Invite by username -->
+      <div>
+        <div class="share-section-title">Invite by Username</div>
+        <div style="margin-bottom:10px">
+          <div class="share-invite-row">
+            <input class="share-invite-input" id="shareInviteInput" placeholder="@username" autocomplete="off"
+              onkeydown="if(event.key==='Enter')sendProjInvite()">
+            <div class="access-toggle" id="inviteAccessToggle">
+              <button class="access-btn active-view" onclick="setInviteAccess('viewer')">👁</button>
+              <button class="access-btn" onclick="setInviteAccess('editor')">✏️</button>
+            </div>
+            <button class="btn-sm accent" onclick="sendProjInvite()">Send</button>
+          </div>
+          <div id="shareInviteStatus" style="font-size:10px;margin-top:6px;min-height:14px;color:var(--text-dim)"></div>
+        </div>
+      </div>
+
+      <!-- Collaborators list -->
+      <div>
+        <div class="share-section-title">Collaborators</div>
+        <div class="collab-list" id="collabList">
+          <div style="color:var(--text-muted);font-size:11px;text-align:center;padding:12px">Loading…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ PROJECT INVITES MODAL ════════ -->
+<div class="proj-invites-overlay" id="projInvitesOverlay" onclick="closeProjInvitesModal(event)">
+  <div class="proj-invites-modal">
+    <div class="proj-invites-hdr">
+      <span class="proj-invites-title">PROJECT INVITATIONS</span>
+      <button class="kbd-close" onclick="closeProjInvitesModal()">×</button>
+    </div>
+    <div id="projInvitesList" style="flex:1;overflow-y:auto">
+      <div style="padding:30px;text-align:center;color:var(--text-muted);font-size:11px">Loading…</div>
+    </div>
+  </div>
+</div>
+
 <!-- ════════ DESMOS OVERLAY ════════ -->
 <div id="desmosOverlay">
   <div class="desmos-modal">
@@ -2046,7 +2293,7 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
 
 <script>
 /* ╔══════════════════════════════════════════════════════════════════════════════════╗
-   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2026-03-30 (SESSION:11)║
+   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2026-03-30 (SESSION:13)║
    ║  PURPOSE: Single source of truth for all AI tools reading/editing this file.   ║
    ║  FORMAT: dense structured notation > English prose. Symbols defined below.     ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝
@@ -2144,6 +2391,8 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     joinGroupOverlay   11000
     reportOverlay      11000
     projOverlay      9500
+    shareOverlay     9800   [P4] project share modal
+    projInvitesOverlay 9700 [P4] incoming project invitations modal
     friendsOverlay   9400
     chatOverlay      9300
     kbdOverlay       9000
@@ -2296,10 +2545,68 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   AUTO-SAVE: _autoSaveTimer. Fires 4000ms after last render() if user is logged in
     AND _currentProjId exists. Not triggered on new unsaved projects.
     @onProjectNameChange() → scheduleAutoSave if proj exists.
+    ◆ scheduleAutoSave patched in P4: if editing shared project as editor → calls
+      saveSharedProject() (writes to owner's Firestore path) instead.
 
   SAVE STATUS PILL: idle | saving(pulse) | saved(green,3s) | error(pink)
+    Extra states [P4]: '👁 View Only' (viewer on shared proj), '↔ Shared' (editor)
 
   PROJECTS MODAL: #projOverlay. @toggleProjModal() → if opening: @renderProjList()
+    renderProjList() patched in P4 to also show shared projects section + join-by-code row.
+    Share button (🔗 Share) in footer — visible only when _currentProjId is set.
+
+  ══════════════════════════════════════════════════════════════════════════════════
+  §5b  COLLABORATIVE PROJECTS  [P4] ✓
+  ══════════════════════════════════════════════════════════════════════════════════
+
+  SCHEMA:
+    #projectShares/{ownerUid}/projects/{projId}:
+      { code, codeAccess:'viewer'|'editor', collaborators:{uid:{username,role,joinedAt}},
+        ownerUid, ownerUsername, projName, createdAt }
+    #projectShareCodes/{code}:
+      { ownerUid, projId, access:'viewer'|'editor' }
+    #projectInvites/{inviteId}:
+      { fromUid, fromUsername, toUid, projId, ownerUid, projName,
+        access:'viewer'|'editor', status:'pending'|'accepted'|'declined', createdAt }
+    #sharedProjects/{uid}/list/{projId_ownerUid}:
+      { ownerUid, projId, projName, ownerUsername, access, joinedAt }
+
+  INVITE FLOWS:
+    CODE INVITE:  owner opens 🔗 Share → code displayed → anyone enters code in proj modal
+                  join-by-code row → @joinProjectByCode(code) → adds collaborator entry
+    USERNAME INVITE: owner types @username in share modal → @sendProjInvite() → writes
+                  #projectInvites doc → recipient sees 📩 Invites badge → opens modal →
+                  @acceptProjInvite() → adds to collaborators + sharedProjects, offers
+                  to open immediately. @declineProjInvite() → status='declined'.
+
+  ACCESS ROLES:
+    owner  → full control, can share/revoke, always edits their own Firestore path
+    editor → writes directly to #users/{ownerUid}/projects/{projId}, real-time listener
+    viewer → read-only real-time listener on owner's project doc, all mutations blocked
+
+  REAL-TIME COLLAB:
+    @startCollabListener(ownerUid, projId) → onSnapshot on owner's project doc
+      viewer: always replaces S.columns from snapshot, calls _baseRender()
+      editor: updates S.columns from snapshot (last-write-wins), calls _baseRender()
+    @stopCollabListener() → unsubscribes listener
+    All mutation fns (addNoteForLetter, addRest, deleteNote, updateNoteField,
+    izDrop, colDrop, newColDrop) → check _isCollabViewer → toast + return if true
+
+  GLOBAL VARS [P4]:
+    _shareCodeAccess:'viewer'|'editor'  _inviteAccess:'viewer'|'editor'
+    _shareData  _projInvites[]  _projInvitesUnsub  _sharedProjsUnsub
+    _sharedProjsList[]  _collabListener  _isCollabViewer:bool
+    _collabOwnerUid  _collabProjId
+
+  MONKEY-PATCH CHAIN [P4]:
+    scheduleAutoSave  ← routes collab editor saves to @saveSharedProject()
+    renderProjList    ← adds shared projects section + join-by-code row
+    onUserLogin       ← also calls @setupProjInviteListeners(uid)
+    doSignOut         ← also calls @stopCollabListener + @cleanupProjInviteListeners
+
+  BADGES/NOTIFICATIONS:
+    📩 Invites button (#projInvitesBtnWrap) — shown only when pending invites > 0
+    #projInvitesNotifBadge (yellow) ← _projInvites.length
 
   ══════════════════════════════════════════════════════════════════════════════════
   §6  FRIENDS SYSTEM  [P1] ✓
@@ -2490,17 +2797,16 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   §10  FUTURE GOALS  [GOAL]
   ══════════════════════════════════════════════════════════════════════════════════
 
-  [GOAL][HIGH] COLLABORATIVE PROJECTS
-    User can create a "public project", share via 6-digit code or direct invite.
-    Other users join → see the same composer in real-time, can add/edit notes.
-    Likely implementation: project has a sharedWith:[uid] list + Firestore real-time
-    listener on project doc. Presence via heartbeat docs or Firebase RTDB.
-    ◆ This is the MOST REQUESTED feature. Do this next after P3 is stable.
+  [GOAL][DONE→P4] COLLABORATIVE PROJECTS
+    ✓ Share via 6-digit per-project code (viewer or editor access)
+    ✓ Direct invite by username with accept/decline notification
+    ✓ Live real-time editing (last-write-wins via Firestore onSnapshot)
+    ✓ Viewer-only mode (all mutations blocked client-side)
+    ✓ Shared projects appear in recipient's Projects list tagged "Shared"
+    ✓ Access control per collaborator (owner can change viewer↔editor or remove)
 
-  [GOAL][HIGH] PROJECT INVITE BY USERNAME
-    From the project, owner can type a username → sends a project invite (similar
-    to friend request UX). Recipient sees notification + accept/decline.
-    Schema: #projectInvites/{inviteId} { projId, fromUid, toUid, status }
+  [GOAL][DONE→P4] PROJECT INVITE BY USERNAME
+    ✓ Done — see §5b. Recipient sees 📩 badge, can accept/decline, open immediately.
 
   [GOAL][MED] ADMIN / MODERATION DASHBOARD
     Hidden page (admin-only UID whitelist) that shows:
@@ -2575,13 +2881,17 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   setupChatListeners()     ← patched to also call setupGroupListeners (P3)
   cleanupFriendListeners() ← patched to also call cleanupChatListeners (P2)
   cleanupChatListeners()   ← patched to also call cleanupGroupListeners (P3)
-  doSignOut()              ← patched to call cleanupFriendListeners + close modals
+  doSignOut()              ← patched to call cleanupFriendListeners + close modals (P2)
+                           ← patched again in P4 to also stopCollabListener + cleanup invites
   renderFriendsList()      ← patched to add 💬/🚫/⚠️ buttons (P2)
   doFindUser()             ← patched to show block/unblock/report (P2)
   toggleChatModal()        ← patched to support tab state + group auto-select (P3)
+  scheduleAutoSave()       ← patched in P4: routes collab editor saves to saveSharedProject()
+  renderProjList()         ← patched in P4: adds shared projects + join-by-code row
+  onUserLogin()            ← patched in P4: also starts proj invite listeners
 
   ◆ Each patch saves _orig prefix of the previous version. Chain is:
-    P3_patch calls P2_patch calls original (or P1 version).
+    P4_patch calls P3_patch calls P2_patch calls original (or P1 version).
     Future patches: always save _orig, call it inside new version.
 
   ══════════════════════════════════════════════════════════════════════════════════
@@ -2634,6 +2944,37 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   [2025-06 | SESSION:3 | Claude-Sonnet-4.6]
     ADDED: NOTA_MANIFEST (this document) — §0-§15 — replaces old feature reference comment
     Manifest format: AI-primary, structured notation, self-updating instructions
+
+  [2026-03-30 | SESSION:13 | Claude-Sonnet-4.6]
+    ADDED P4: Collaborative Projects — full share/invite system
+    ADDED P4: 🔗 Share button in Projects modal footer (owner only, when project is saved)
+    ADDED P4: Share modal (#shareOverlay) — 6-digit per-project code with viewer/editor toggle,
+              invite by @username with access toggle, collaborator list with role editor + remove
+    ADDED P4: Project Invitations modal (#projInvitesOverlay) — pending invite list,
+              accept (adds to Projects + offers open-now) / decline
+    ADDED P4: 📩 Invites button in header (#projInvitesBtnWrap) — yellow badge, only shown
+              when pending invites exist
+    ADDED P4: Real-time collab listener — editors write to owner's Firestore path via
+              @saveSharedProject(); viewers receive live onSnapshot updates, all mutations blocked
+    ADDED P4: Join-by-code row injected into Projects modal footer (6-digit input + Join btn)
+    ADDED P4: Shared projects section in Projects modal (purple header, role badge, Leave btn)
+    ADDED P4: Firestore collections: #projectShares, #projectShareCodes, #projectInvites,
+              #sharedProjects
+    ADDED P4: @ensureShareDoc, @genShareCode, @openShareModal, @closeShareModal,
+              @setCodeAccess, @setInviteAccess, @copyShareCode, @regenerateShareCode,
+              @sendProjInvite, @updateCollabAccess, @removeCollab, @renderCollabList,
+              @joinProjectByCode, @doJoinProjByCode, @setupProjInviteListeners,
+              @cleanupProjInviteListeners, @updateProjInvitesBadge, @openProjInvitesModal,
+              @closeProjInvitesModal, @renderProjInvitesList, @acceptProjInvite,
+              @declineProjInvite, @openSharedProject, @startCollabListener,
+              @stopCollabListener, @saveSharedProject, @leaveSharedProject
+    ADDED P4: Viewer guards in addNoteForLetter, addRest, deleteNote, updateNoteField,
+              izDrop, colDrop, newColDrop → _safeForViewer() check
+    ADDED P4: CSS — .share-overlay, .share-modal, .share-code-block, .share-code-display,
+              .access-toggle, .access-btn, .collab-list, .collab-item, .collab-role,
+              .proj-invites-overlay, .proj-invite-item, .proj-shared-badge,
+              .proj-invite-badge, .share-invite-row, .collab-avatar, .collab-access-select
+    UPDATED: §5 → §5b added. §10 goals marked DONE. §13 patch chain extended.
 
   [2026-03-30 | SESSION:12 | Claude-Sonnet-4.6]
     FIXED: Desmos overlay was rendering in dark mode — removed backgroundColor:'#141428'
@@ -2758,6 +3099,11 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   §16  SESSION LOG
   ══════════════════════════════════════════════════════════════════════════════════
 
+  [SESSION:13] tb confirmed: code invite is per-project (owner generates), conflicts = last-write-wins,
+    viewer access = live read-only. Built P4 in full: share modal with code + username invite,
+    collab listener for real-time edits, project invites notification system, shared projects
+    section in proj list, viewer mutation guards, join-by-code in proj modal. Manifest updated.
+
   [SESSION:11] tb reported Desmos embed was missing lines: tone expressions and ticker
     not being auto-moved into the calculator. Fixed _syncToDesmos() to push ticker
     (type:'ticker') first, then tone expressions from S.extraLines. Stored d/c on S.
@@ -2819,6 +3165,741 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     with a prominent boxed warning and step-by-step "how to start a session" guide.
 
 */ /* ── end of NOTA_MANIFEST ── */
+
+/* ═══════════════════════════════════════════════════════════
+   P4 — COLLABORATIVE PROJECTS
+   Firestore schema:
+     #projectShares/{projOwnerId}/projects/{projId}:
+       { code, codeAccess:'viewer'|'editor', collaborators:{uid:{username,role,joinedAt}}, ownerUid, ownerUsername, projName }
+     #projectShareCodes/{code}:
+       { ownerUid, projId, access:'viewer'|'editor' }
+     #projectInvites/{inviteId}:
+       { fromUid, fromUsername, toUid, projId, ownerUid, projName, access:'viewer'|'editor', status:'pending'|'accepted'|'declined', createdAt }
+     #sharedProjects/{uid}/list/{projId}:
+       { ownerUid, projName, access:'viewer'|'editor', joinedAt }
+     #sharedProjData/{ownerUid}/projects/{projId}:  ← real-time project data mirror
+       same schema as #users/{uid}/projects/{projId}
+══════════════════════════════════════════════════════════ */
+
+/* ─── Firestore ref helpers ─── */
+function projSharesRef(ownerUid, projId) {
+  return db.collection('projectShares').doc(ownerUid).collection('projects').doc(projId);
+}
+function projShareCodesRef() { return db.collection('projectShareCodes'); }
+function projInvitesRef()    { return db.collection('projectInvites'); }
+function sharedProjectsRef(uid) { return db.collection('sharedProjects').doc(uid).collection('list'); }
+function sharedProjDataRef(ownerUid, projId) {
+  return db.collection('sharedProjData').doc(ownerUid).collection('projects').doc(projId);
+}
+
+/* ─── Global collaboration state ─── */
+let _shareCodeAccess  = 'viewer';   // access set for code invite
+let _inviteAccess     = 'viewer';   // access set for username invite
+let _shareData        = null;       // current project's share doc data
+let _projInvites      = [];         // incoming pending project invites
+let _projInvitesUnsub = null;
+let _sharedProjsUnsub = null;
+let _sharedProjsList  = [];         // shared projects from others
+let _collabListener   = null;       // real-time listener for collab editing
+let _isCollabViewer   = false;      // true when viewing someone else's project as viewer
+let _collabOwnerUid   = null;       // ownerUid of currently open shared project
+let _collabProjId     = null;       // projId of currently open shared project
+
+/* ─── Generate a 6-char alphanumeric share code ─── */
+function genShareCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
+/* ─── Ensure share doc exists for a project ─── */
+async function ensureShareDoc(ownerUid, projId, projName) {
+  const ref = projSharesRef(ownerUid, projId);
+  const snap = await ref.get();
+  if (snap.exists) return snap.data();
+  // Generate unique code
+  let code, tries = 0;
+  do {
+    code = genShareCode();
+    tries++;
+    const cSnap = await projShareCodesRef().doc(code).get();
+    if (!cSnap.exists) break;
+  } while (tries < 10);
+  const data = {
+    code, codeAccess: 'viewer',
+    collaborators: {},
+    ownerUid, ownerUsername: _userProfile.username, projName,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+  };
+  const batch = db.batch();
+  batch.set(ref, data);
+  batch.set(projShareCodesRef().doc(code), { ownerUid, projId, access: 'viewer' });
+  await batch.commit();
+  return data;
+}
+
+/* ─── Open share modal ─── */
+async function openShareModal() {
+  if (!_currentUser || !_currentProjId) {
+    showToast('Save the project first before sharing.', 'var(--yellow)');
+    return;
+  }
+  // Close proj modal if open
+  const po = document.getElementById('projOverlay');
+  if (po.classList.contains('open')) po.classList.remove('open');
+
+  document.getElementById('shareOverlay').classList.add('open');
+  document.getElementById('shareInviteInput').value = '';
+  document.getElementById('shareInviteStatus').textContent = '';
+  _shareCodeAccess = 'viewer';
+  _inviteAccess    = 'viewer';
+  updateCodeAccessUI();
+  updateInviteAccessUI();
+  document.getElementById('shareProjCode').textContent = '……';
+  document.getElementById('collabList').innerHTML = '<div style="color:var(--text-muted);font-size:11px;text-align:center;padding:12px">Loading…</div>';
+
+  const projName = document.getElementById('projNameInput').value.trim() || 'Untitled';
+  // Sync project name in share doc if it changed
+  try {
+    _shareData = await ensureShareDoc(_currentUser.uid, _currentProjId, projName);
+    document.getElementById('shareProjCode').textContent = _shareData.code;
+    _shareCodeAccess = _shareData.codeAccess || 'viewer';
+    updateCodeAccessUI();
+    renderCollabList();
+  } catch(e) {
+    console.error('openShareModal:', e);
+    showToast('Error loading share settings.', 'var(--pink)');
+  }
+}
+
+function closeShareModal(e) {
+  if (e && e.target !== document.getElementById('shareOverlay')) return;
+  document.getElementById('shareOverlay').classList.remove('open');
+}
+
+/* ─── Access toggle UI ─── */
+function setCodeAccess(role) {
+  _shareCodeAccess = role;
+  updateCodeAccessUI();
+  // Persist to Firestore
+  if (_shareData && _currentProjId && _currentUser) {
+    const ref = projSharesRef(_currentUser.uid, _currentProjId);
+    const codeRef = projShareCodesRef().doc(_shareData.code);
+    const batch = db.batch();
+    batch.update(ref, { codeAccess: role });
+    batch.update(codeRef, { access: role });
+    batch.commit().catch(e => console.error('setCodeAccess:', e));
+  }
+}
+
+function updateCodeAccessUI() {
+  const btns = document.querySelectorAll('#codeAccessToggle .access-btn');
+  btns[0].className = 'access-btn' + (_shareCodeAccess === 'viewer' ? ' active-view' : '');
+  btns[1].className = 'access-btn' + (_shareCodeAccess === 'editor' ? ' active-edit' : '');
+}
+
+function setInviteAccess(role) {
+  _inviteAccess = role;
+  updateInviteAccessUI();
+}
+
+function updateInviteAccessUI() {
+  const btns = document.querySelectorAll('#inviteAccessToggle .access-btn');
+  btns[0].className = 'access-btn' + (_inviteAccess === 'viewer' ? ' active-view' : '');
+  btns[1].className = 'access-btn' + (_inviteAccess === 'editor' ? ' active-edit' : '');
+}
+
+/* ─── Copy share code ─── */
+function copyShareCode() {
+  const code = document.getElementById('shareProjCode').textContent;
+  if (!code || code === '……') return;
+  navigator.clipboard.writeText(code).then(() => showToast(`Code "${code}" copied!`)).catch(() => {
+    prompt('Copy this invite code:', code);
+  });
+}
+
+/* ─── Regenerate code ─── */
+async function regenerateShareCode() {
+  if (!_shareData || !_currentProjId || !_currentUser) return;
+  if (!confirm('Generate a new code? The old code will stop working.')) return;
+  const oldCode = _shareData.code;
+  let code, tries = 0;
+  do {
+    code = genShareCode();
+    tries++;
+    const cSnap = await projShareCodesRef().doc(code).get();
+    if (!cSnap.exists) break;
+  } while (tries < 10);
+  const batch = db.batch();
+  batch.delete(projShareCodesRef().doc(oldCode));
+  batch.set(projShareCodesRef().doc(code), { ownerUid: _currentUser.uid, projId: _currentProjId, access: _shareCodeAccess });
+  batch.update(projSharesRef(_currentUser.uid, _currentProjId), { code });
+  await batch.commit();
+  _shareData.code = code;
+  document.getElementById('shareProjCode').textContent = code;
+  showToast('New code generated!');
+}
+
+/* ─── Send project invite by username ─── */
+async function sendProjInvite() {
+  const input = document.getElementById('shareInviteInput');
+  const statusEl = document.getElementById('shareInviteStatus');
+  const val = input.value.trim().replace(/^@/, '');
+  if (!val) return;
+  statusEl.style.color = 'var(--text-dim)';
+  statusEl.textContent = 'Looking up @' + val + '…';
+
+  try {
+    const uSnap = await usernamesRef().doc(val.toLowerCase()).get();
+    if (!uSnap.exists) { statusEl.style.color = 'var(--pink)'; statusEl.textContent = `✗ @${val} not found.`; return; }
+    const { uid: toUid, username: toUsername } = uSnap.data();
+    if (toUid === _currentUser.uid) { statusEl.style.color = 'var(--pink)'; statusEl.textContent = "✗ That's you."; return; }
+
+    // Check not already a collaborator
+    if (_shareData?.collaborators?.[toUid]) {
+      statusEl.style.color = 'var(--yellow)'; statusEl.textContent = `@${toUsername} is already a collaborator.`; return;
+    }
+
+    const projName = document.getElementById('projNameInput').value.trim() || 'Untitled';
+    // Check if invite already pending
+    const existing = await projInvitesRef()
+      .where('fromUid', '==', _currentUser.uid)
+      .where('toUid', '==', toUid)
+      .where('projId', '==', _currentProjId)
+      .where('status', '==', 'pending')
+      .get();
+    if (!existing.empty) { statusEl.style.color = 'var(--yellow)'; statusEl.textContent = `Invite already sent to @${toUsername}.`; return; }
+
+    await projInvitesRef().add({
+      fromUid: _currentUser.uid,
+      fromUsername: _userProfile.username,
+      toUid,
+      projId: _currentProjId,
+      ownerUid: _currentUser.uid,
+      projName,
+      access: _inviteAccess,
+      status: 'pending',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    input.value = '';
+    statusEl.style.color = 'var(--green)';
+    statusEl.textContent = `✓ Invite sent to @${toUsername}!`;
+    setTimeout(() => { statusEl.textContent = ''; }, 3000);
+  } catch(e) {
+    statusEl.style.color = 'var(--pink)';
+    statusEl.textContent = 'Error sending invite.';
+    console.error('sendProjInvite:', e);
+  }
+}
+
+/* ─── Update collaborator access ─── */
+async function updateCollabAccess(uid, newRole) {
+  if (!_currentProjId || !_currentUser) return;
+  try {
+    await projSharesRef(_currentUser.uid, _currentProjId).update({
+      [`collaborators.${uid}.role`]: newRole,
+    });
+    // Also update their sharedProjects entry
+    await sharedProjectsRef(uid).doc(_currentProjId).update({ access: newRole });
+    showToast('Access updated.');
+    _shareData.collaborators[uid].role = newRole;
+  } catch(e) { showToast('Error updating access.', 'var(--pink)'); console.error(e); }
+}
+
+/* ─── Remove collaborator ─── */
+async function removeCollab(uid, username) {
+  if (!confirm(`Remove @${username} from this project?`)) return;
+  try {
+    // Remove from collaborators map
+    await projSharesRef(_currentUser.uid, _currentProjId).update({
+      [`collaborators.${uid}`]: firebase.firestore.FieldValue.delete(),
+    });
+    // Remove from their sharedProjects list
+    await sharedProjectsRef(uid).doc(_currentProjId).delete();
+    delete _shareData.collaborators[uid];
+    renderCollabList();
+    showToast(`@${username} removed.`);
+  } catch(e) { showToast('Error removing collaborator.', 'var(--pink)'); console.error(e); }
+}
+
+/* ─── Render collaborator list in share modal ─── */
+function renderCollabList() {
+  const el = document.getElementById('collabList');
+  if (!_shareData) { el.innerHTML = ''; return; }
+  const collabs = _shareData.collaborators || {};
+  const items = Object.entries(collabs);
+
+  const ownerHtml = `
+    <div class="collab-item">
+      <div class="collab-avatar">${escapeHtml((_shareData.ownerUsername || 'O').slice(0,2).toUpperCase())}</div>
+      <span class="collab-name">@${escapeHtml(_shareData.ownerUsername || '?')} <span style="font-size:9px;color:var(--text-muted)">(you)</span></span>
+      <span class="collab-role owner">Owner</span>
+    </div>`;
+
+  if (!items.length) {
+    el.innerHTML = ownerHtml + '<div style="color:var(--text-muted);font-size:10px;text-align:center;padding:10px;letter-spacing:.5px">No collaborators yet</div>';
+    return;
+  }
+  el.innerHTML = ownerHtml + items.map(([uid, info]) => `
+    <div class="collab-item">
+      <div class="collab-avatar">${escapeHtml((info.username || 'U').slice(0,2).toUpperCase())}</div>
+      <span class="collab-name">@${escapeHtml(info.username || '?')}</span>
+      <select class="collab-access-select" onchange="updateCollabAccess('${uid}',this.value)">
+        <option value="viewer"${info.role==='viewer'?' selected':''}>👁 Viewer</option>
+        <option value="editor"${info.role==='editor'?' selected':''}>✏️ Editor</option>
+      </select>
+      <button class="btn-sm danger" onclick="removeCollab('${uid}','${escapeHtml(info.username||'?')}')" style="font-size:9px;padding:3px 7px">✕</button>
+    </div>`).join('');
+}
+
+/* ─── Join project by code ─── */
+async function joinProjectByCode(code) {
+  if (!_currentUser) return;
+  const clean = code.trim().toUpperCase();
+  if (!clean) return;
+  try {
+    const cSnap = await projShareCodesRef().doc(clean).get();
+    if (!cSnap.exists) { showToast('Invalid or expired project code.', 'var(--pink)'); return; }
+    const { ownerUid, projId, access } = cSnap.data();
+    if (ownerUid === _currentUser.uid) { showToast("That's your own project!", 'var(--yellow)'); return; }
+
+    // Already a collaborator?
+    const shareSnap = await projSharesRef(ownerUid, projId).get();
+    if (!shareSnap.exists) { showToast('Project no longer available.', 'var(--pink)'); return; }
+    const shareData = shareSnap.data();
+    if (shareData.collaborators?.[_currentUser.uid]) {
+      showToast('You already have access to this project.', 'var(--yellow)');
+      return;
+    }
+
+    // Get project name
+    const projSnap = await db.collection('users').doc(ownerUid).collection('projects').doc(projId).get();
+    const projName = projSnap.exists ? (projSnap.data().name || 'Untitled') : 'Untitled';
+
+    const batch = db.batch();
+    batch.update(projSharesRef(ownerUid, projId), {
+      [`collaborators.${_currentUser.uid}`]: {
+        username: _userProfile.username,
+        role: access,
+        joinedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      }
+    });
+    batch.set(sharedProjectsRef(_currentUser.uid).doc(projId + '_' + ownerUid), {
+      ownerUid, projId, projName,
+      ownerUsername: shareData.ownerUsername,
+      access,
+      joinedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    await batch.commit();
+    showToast(`✓ Joined "${projName}"!`);
+    // Refresh projects list if open
+    if (document.getElementById('projOverlay').classList.contains('open')) renderProjList();
+  } catch(e) {
+    showToast('Error joining project.', 'var(--pink)');
+    console.error('joinProjectByCode:', e);
+  }
+}
+
+/* ─── Project Invites — real-time listener ─── */
+function setupProjInviteListeners(uid) {
+  if (_projInvitesUnsub) { _projInvitesUnsub(); _projInvitesUnsub = null; }
+  if (_sharedProjsUnsub) { _sharedProjsUnsub(); _sharedProjsUnsub = null; }
+
+  // Listen for incoming project invites
+  _projInvitesUnsub = projInvitesRef()
+    .where('toUid', '==', uid)
+    .where('status', '==', 'pending')
+    .onSnapshot(snap => {
+      _projInvites = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      updateProjInvitesBadge();
+      // Refresh list if modal is open
+      if (document.getElementById('projInvitesOverlay').classList.contains('open')) {
+        renderProjInvitesList();
+      }
+    });
+
+  // Listen for shared projects
+  _sharedProjsUnsub = sharedProjectsRef(uid)
+    .orderBy('joinedAt', 'desc')
+    .onSnapshot(snap => {
+      _sharedProjsList = snap.docs.map(d => ({ listId: d.id, ...d.data() }));
+    });
+}
+
+function cleanupProjInviteListeners() {
+  if (_projInvitesUnsub) { _projInvitesUnsub(); _projInvitesUnsub = null; }
+  if (_sharedProjsUnsub) { _sharedProjsUnsub(); _sharedProjsUnsub = null; }
+  _projInvites = []; _sharedProjsList = [];
+}
+
+function updateProjInvitesBadge() {
+  const count = _projInvites.length;
+  const badge = document.getElementById('projInvitesNotifBadge');
+  const wrap  = document.getElementById('projInvitesBtnWrap');
+  if (wrap) wrap.style.display = count > 0 ? 'flex' : '';
+  if (badge) {
+    badge.style.display = count > 0 ? 'flex' : 'none';
+    badge.textContent = count > 0 ? count : '';
+  }
+}
+
+/* ─── Open/close project invites modal ─── */
+function openProjInvitesModal() {
+  document.getElementById('projInvitesOverlay').classList.add('open');
+  renderProjInvitesList();
+}
+function closeProjInvitesModal(e) {
+  if (e && e.target !== document.getElementById('projInvitesOverlay')) return;
+  document.getElementById('projInvitesOverlay').classList.remove('open');
+}
+
+function renderProjInvitesList() {
+  const el = document.getElementById('projInvitesList');
+  if (!_projInvites.length) {
+    el.innerHTML = '<div style="padding:30px;text-align:center;color:var(--text-muted);font-size:11px;line-height:2">No pending project invitations.</div>';
+    return;
+  }
+  el.innerHTML = _projInvites.map(inv => {
+    const role = inv.access === 'editor' ? 'editor' : 'viewer';
+    return `
+      <div class="proj-invite-item">
+        <div class="proj-invite-from"><strong>@${escapeHtml(inv.fromUsername || '?')}</strong> invited you to a project:</div>
+        <div class="proj-invite-project">📁 ${escapeHtml(inv.projName || 'Untitled')}</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="proj-invite-access ${role}">${role === 'editor' ? '✏️ Editor' : '👁 Viewer'}</span>
+          <span style="font-size:9px;color:var(--text-muted)">access</span>
+        </div>
+        <div class="proj-invite-actions">
+          <button class="btn-sm accent" onclick="acceptProjInvite('${inv.id}','${inv.ownerUid}','${inv.projId}','${escapeHtml(inv.projName||'Untitled')}','${escapeHtml(inv.fromUsername||'?')}','${role}')">✓ Accept</button>
+          <button class="btn-sm danger" onclick="declineProjInvite('${inv.id}')">✗ Decline</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+/* ─── Accept project invite ─── */
+async function acceptProjInvite(inviteId, ownerUid, projId, projName, fromUsername, access) {
+  if (!_currentUser) return;
+  try {
+    const shareSnap = await projSharesRef(ownerUid, projId).get();
+    if (!shareSnap.exists) {
+      await projInvitesRef().doc(inviteId).update({ status: 'declined' });
+      showToast('Project no longer available.', 'var(--pink)');
+      return;
+    }
+    const shareData = shareSnap.data();
+    const batch = db.batch();
+    // Mark invite accepted
+    batch.update(projInvitesRef().doc(inviteId), { status: 'accepted' });
+    // Add to collaborators
+    batch.update(projSharesRef(ownerUid, projId), {
+      [`collaborators.${_currentUser.uid}`]: {
+        username: _userProfile.username,
+        role: access,
+        joinedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      }
+    });
+    // Add to sharedProjects
+    batch.set(sharedProjectsRef(_currentUser.uid).doc(projId + '_' + ownerUid), {
+      ownerUid, projId, projName,
+      ownerUsername: shareData.ownerUsername,
+      access,
+      joinedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    await batch.commit();
+    showToast(`✓ Joined "${projName}"! It's been added to your projects.`);
+    // Offer to open immediately
+    const shouldOpen = confirm(`You've joined "${projName}" by @${fromUsername}.\nOpen it now?`);
+    if (shouldOpen) {
+      closeProjInvitesModal();
+      openSharedProject(ownerUid, projId);
+    }
+  } catch(e) {
+    showToast('Error accepting invite.', 'var(--pink)');
+    console.error('acceptProjInvite:', e);
+  }
+}
+
+/* ─── Decline project invite ─── */
+async function declineProjInvite(inviteId) {
+  try {
+    await projInvitesRef().doc(inviteId).update({ status: 'declined' });
+    showToast('Invitation declined.');
+  } catch(e) { showToast('Error declining invite.', 'var(--pink)'); console.error(e); }
+}
+
+/* ─── Open a shared project (another owner's project) ─── */
+async function openSharedProject(ownerUid, projId) {
+  try {
+    const doc = await db.collection('users').doc(ownerUid).collection('projects').doc(projId).get();
+    if (!doc.exists) { showToast('Project not found.', 'var(--pink)'); return; }
+    // Check access
+    const shareSnap = await projSharesRef(ownerUid, projId).get();
+    const access = shareSnap.exists ? (shareSnap.data()?.collaborators?.[_currentUser.uid]?.role || 'viewer') : 'viewer';
+    _isCollabViewer  = (access === 'viewer');
+    _collabOwnerUid  = ownerUid;
+    _collabProjId    = projId;
+    _currentProjId   = null; // Not our project
+
+    // Load the data
+    const d = doc.data();
+    const pd = d.data || {};
+    S.columns = typeof pd.columns === 'string' ? JSON.parse(pd.columns) : (pd.columns || [[]]);
+    S.tsNum   = pd.tsNum   || 4;
+    S.tsDenom = pd.tsDenom || 4;
+    S.keySig  = pd.keySig  || 'C';
+    S.zoom    = pd.zoom    || 120;
+    document.getElementById('tsNum').value   = S.tsNum;
+    document.getElementById('tsDenom').value = S.tsDenom;
+    document.getElementById('keySig').value  = S.keySig;
+    document.getElementById('zoomLbl').textContent = S.zoom;
+    const maxId = Math.max(0, ...S.columns.flat().map(n => n.id || 0));
+    _nextId = maxId + 1;
+    selection.clear(); S.expanded = new Set();
+
+    // Show project name (with owner tag)
+    const shareData = shareSnap.exists ? shareSnap.data() : {};
+    document.getElementById('projNameInput').value = d.name || 'Untitled';
+    setSaveStatus('saved', access === 'viewer' ? '👁 View Only' : '↔ Shared');
+
+    // Disable editing if viewer
+    if (_isCollabViewer) {
+      document.getElementById('projNameInput').readOnly = true;
+      document.getElementById('shareProjBtn').style.display = 'none';
+    } else {
+      document.getElementById('projNameInput').readOnly = false;
+    }
+
+    render();
+
+    // Start real-time listener for live updates
+    startCollabListener(ownerUid, projId);
+
+    if (document.getElementById('projOverlay').classList.contains('open')) {
+      document.getElementById('projOverlay').classList.remove('open');
+    }
+    showToast(`Opened "${d.name || 'Untitled'}" ${access === 'viewer' ? '(view only)' : '(editor)'}`);
+  } catch(e) {
+    showToast('Error opening project.', 'var(--pink)');
+    console.error('openSharedProject:', e);
+  }
+}
+
+/* ─── Start real-time collaboration listener ─── */
+function startCollabListener(ownerUid, projId) {
+  stopCollabListener();
+  _collabListener = db.collection('users').doc(ownerUid).collection('projects').doc(projId)
+    .onSnapshot(snap => {
+      if (!snap.exists) { showToast('Project was deleted by owner.', 'var(--pink)'); stopCollabListener(); return; }
+      const d = snap.data();
+      const pd = d.data || {};
+      const incoming = typeof pd.columns === 'string' ? JSON.parse(pd.columns) : (pd.columns || [[]]);
+      // Only update if we're a viewer OR if someone else made the change (avoid overwriting own edits in flight)
+      if (_isCollabViewer) {
+        S.columns = incoming;
+        S.tsNum   = pd.tsNum   || S.tsNum;
+        S.tsDenom = pd.tsDenom || S.tsDenom;
+        S.keySig  = pd.keySig  || S.keySig;
+        S.zoom    = pd.zoom    || S.zoom;
+        document.getElementById('tsNum').value   = S.tsNum;
+        document.getElementById('tsDenom').value = S.tsDenom;
+        document.getElementById('keySig').value  = S.keySig;
+        document.getElementById('zoomLbl').textContent = S.zoom;
+        const maxId = Math.max(0, ...S.columns.flat().map(n => n.id || 0));
+        _nextId = maxId + 1;
+        _baseRender(); // call base render, skip auto-save
+      } else {
+        // Editor: merge incoming — last write wins, just update S silently
+        // Only update if the snapshot is newer than our last save
+        S.columns = incoming;
+        const maxId = Math.max(0, ...S.columns.flat().map(n => n.id || 0));
+        _nextId = Math.max(_nextId, maxId + 1);
+        _baseRender();
+      }
+    });
+}
+
+function stopCollabListener() {
+  if (_collabListener) { _collabListener(); _collabListener = null; }
+}
+
+/* ─── Save to shared project (editor writes to owner's path) ─── */
+async function saveSharedProject() {
+  if (!_collabOwnerUid || !_collabProjId || _isCollabViewer) return;
+  setSaveStatus('saving', '● Saving…');
+  try {
+    const data = {
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      data: {
+        columns: JSON.stringify(S.columns),
+        tsNum: S.tsNum, tsDenom: S.tsDenom, keySig: S.keySig, zoom: S.zoom,
+      }
+    };
+    await db.collection('users').doc(_collabOwnerUid).collection('projects').doc(_collabProjId).update(data);
+    setSaveStatus('saved', '✓ Saved');
+  } catch(e) {
+    setSaveStatus('error', '✗ Save failed');
+    console.error('saveSharedProject:', e);
+  }
+}
+
+/* ─── Patch render to handle collab auto-save ─── */
+const _origSchedAutoSave = scheduleAutoSave;
+scheduleAutoSave = function() {
+  // If we're editing a shared project as editor, save there instead
+  if (_collabOwnerUid && _collabProjId && !_isCollabViewer) {
+    clearTimeout(_autoSaveTimer);
+    setSaveStatus('saving', '● Saving…');
+    _autoSaveTimer = setTimeout(saveSharedProject, AUTO_SAVE_DELAY);
+    return;
+  }
+  _origSchedAutoSave();
+};
+
+/* ─── Render projects list — patch to include shared projects ─── */
+const _origRenderProjList = renderProjList;
+renderProjList = async function() {
+  const el = document.getElementById('projList');
+  // Show share btn only when a project is active
+  const shareBtn = document.getElementById('shareProjBtn');
+  if (shareBtn) shareBtn.style.display = _currentProjId ? 'block' : 'none';
+
+  if (!_currentUser) { el.innerHTML = '<div class="proj-empty">Sign in to see your projects.</div>'; return; }
+  el.innerHTML = '<div class="proj-empty">Loading…</div>';
+  try {
+    const [snap, sharedSnap] = await Promise.all([
+      db.collection('users').doc(_currentUser.uid).collection('projects').orderBy('updatedAt', 'desc').get(),
+      sharedProjectsRef(_currentUser.uid).orderBy('joinedAt', 'desc').get(),
+    ]);
+
+    let html = '';
+
+    // Own projects
+    if (!snap.empty) {
+      html += `<div style="font-size:8px;text-transform:uppercase;letter-spacing:2px;color:var(--text-muted);padding:4px 2px 6px">My Projects</div>`;
+      html += snap.docs.map(doc => {
+        const d = doc.data();
+        const date = d.updatedAt?.toDate ? d.updatedAt.toDate().toLocaleString() : '—';
+        const isActive = doc.id === _currentProjId;
+        return `
+          <div class="proj-item${isActive ? ' active' : ''}">
+            <div class="proj-item-info">
+              <div class="proj-item-name" id="pname_${doc.id}">${escapeHtml(d.name || 'Untitled')}</div>
+              <div class="proj-item-date">${date}</div>
+            </div>
+            <div class="proj-item-actions">
+              <button class="btn-sm" onclick="startRenameProject('${doc.id}', this)" title="Rename">✏️</button>
+              <button class="btn-sm accent" onclick="loadProjById('${doc.id}')" title="Open">Open</button>
+              <button class="btn-sm danger" onclick="deleteProject('${doc.id}', '${escapeHtml(d.name || 'Untitled')}')">🗑</button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    // Shared projects
+    const sharedDocs = sharedSnap.docs;
+    if (sharedDocs.length > 0) {
+      html += `<div style="font-size:8px;text-transform:uppercase;letter-spacing:2px;color:var(--purple);padding:10px 2px 6px;border-top:1px solid var(--border);margin-top:6px">Shared With Me</div>`;
+      html += sharedDocs.map(doc => {
+        const d = doc.data();
+        const isActive = (_collabOwnerUid === d.ownerUid && _collabProjId === d.projId);
+        const roleLabel = d.access === 'editor' ? '✏️ Editor' : '👁 Viewer';
+        return `
+          <div class="proj-item${isActive ? ' active' : ''}">
+            <div class="proj-item-info">
+              <div class="proj-item-name">${escapeHtml(d.projName || 'Untitled')}</div>
+              <div class="proj-item-date">by @${escapeHtml(d.ownerUsername || '?')} · <span class="proj-shared-badge">${roleLabel}</span></div>
+            </div>
+            <div class="proj-item-actions">
+              <button class="btn-sm accent" onclick="openSharedProject('${d.ownerUid}','${d.projId}')" title="Open">Open</button>
+              <button class="btn-sm danger" onclick="leaveSharedProject('${doc.id}','${d.ownerUid}','${d.projId}','${escapeHtml(d.projName||'Untitled')}')" title="Leave">Leave</button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    if (!html) {
+      html = `<div class="proj-empty">No saved projects yet.<br><span style="color:var(--text-muted);font-size:10px">Click <strong style="color:var(--cyan)">💾 Save Current</strong> to save this composition.</span></div>`;
+    }
+    el.innerHTML = html;
+
+    // Show join-by-code row at the bottom
+    let footer = el.parentElement.querySelector('.proj-join-row');
+    if (!footer) {
+      footer = document.createElement('div');
+      footer.className = 'proj-join-row';
+      footer.style.cssText = 'padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:center;background:var(--surface2);flex-shrink:0';
+      footer.innerHTML = `
+        <input id="projJoinCodeInput" placeholder="Enter 6-digit code" maxlength="6" style="flex:1;background:var(--surface3);border:1px solid var(--border);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;padding:6px 10px;border-radius:6px;outline:none;letter-spacing:3px;text-transform:uppercase" onkeydown="if(event.key==='Enter')doJoinProjByCode()">
+        <button class="btn-sm accent" onclick="doJoinProjByCode()" style="white-space:nowrap">🔗 Join</button>`;
+      el.parentElement.insertBefore(footer, el.parentElement.querySelector('.proj-modal-footer'));
+    }
+  } catch(e) {
+    el.innerHTML = `<div class="proj-empty" style="color:var(--pink)">Error loading projects.</div>`;
+    console.error(e);
+  }
+};
+
+function doJoinProjByCode() {
+  const input = document.getElementById('projJoinCodeInput');
+  if (!input) return;
+  const code = input.value.trim().toUpperCase();
+  if (!code) return;
+  input.value = '';
+  joinProjectByCode(code);
+}
+
+/* ─── Leave shared project ─── */
+async function leaveSharedProject(listId, ownerUid, projId, projName) {
+  if (!confirm(`Leave "${projName}"?`)) return;
+  try {
+    const batch = db.batch();
+    batch.delete(sharedProjectsRef(_currentUser.uid).doc(listId));
+    // Remove from collaborators
+    batch.update(projSharesRef(ownerUid, projId), {
+      [`collaborators.${_currentUser.uid}`]: firebase.firestore.FieldValue.delete(),
+    });
+    await batch.commit();
+    // If this project is currently open, reset
+    if (_collabOwnerUid === ownerUid && _collabProjId === projId) {
+      stopCollabListener();
+      _collabOwnerUid = null; _collabProjId = null; _isCollabViewer = false;
+      newProject();
+    }
+    showToast(`Left "${projName}".`);
+    renderProjList();
+  } catch(e) { showToast('Error leaving project.', 'var(--pink)'); console.error(e); }
+}
+
+/* ─── Patch onUserLogin to also start proj invite listeners ─── */
+const _origOnUserLogin = onUserLogin;
+onUserLogin = async function(user) {
+  await _origOnUserLogin(user);
+  setupProjInviteListeners(user.uid);
+  // Show invite button if there are already pending invites (onSnapshot will handle it)
+  document.getElementById('projInvitesBtnWrap').style.display = '';
+};
+
+/* ─── Patch doSignOut to cleanup ─── */
+const _origDoSignOut = doSignOut;
+doSignOut = async function() {
+  stopCollabListener();
+  cleanupProjInviteListeners();
+  _collabOwnerUid = null; _collabProjId = null; _isCollabViewer = false;
+  document.getElementById('projInvitesBtnWrap').style.display = 'none';
+  document.getElementById('projNameInput').readOnly = false;
+  await _origDoSignOut();
+};
+
+/* ─── Block editing mutations when viewer ─── */
+// Wrap pushUndo to no-op for viewers (edits shouldn't stick)
+const _origPushUndo = pushUndo;
+const _safeForViewer = () => {
+  if (_isCollabViewer) { showToast('You have view-only access.', 'var(--blue)'); return true; }
+  return false;
+};
+
 
 
 
@@ -3377,6 +4458,7 @@ function letterPitch(letter) {
 }
 
 function addNoteForLetter(letter) {
+  if (_safeForViewer()) return;
   const pitch = letterPitch(letter);
   if (pitch === null) return;
   pushUndo();
@@ -3390,6 +4472,7 @@ function addNoteForLetter(letter) {
 }
 
 function addRest() {
+  if (_safeForViewer()) return;
   pushUndo();
   const dur = 'quarter';
   const target = resolveAddTarget(dur);
@@ -3400,6 +4483,7 @@ function addRest() {
 }
 
 function deleteNote(id, col) {
+  if (_safeForViewer()) return;
   pushUndo();
   selection.delete(id);
   if (col === 0) {
@@ -3419,6 +4503,7 @@ function deleteNote(id, col) {
 }
 
 function updateNoteField(id, col, field, val) {
+  if (_safeForViewer()) return;
   pushUndo();
   const note = S.columns[col]?.find(n=>n.id===id);
   if (!note) return;
@@ -4008,6 +5093,7 @@ function izLeave(e) { e.currentTarget.classList.remove('over'); }
 function izDrop(e) {
   e.preventDefault(); e.stopPropagation();
   if (!drag.active) return;
+  if (_safeForViewer()) return;
   const before = parseInt(e.currentTarget.dataset.before);
   const tCol   = parseInt(e.currentTarget.dataset.col);
   e.currentTarget.classList.remove('over');
@@ -4094,6 +5180,7 @@ function colLeave(e, ci) {
 function colDrop(e, ci) {
   e.preventDefault(); e.stopPropagation();
   if (!drag.active) return;
+  if (_safeForViewer()) return;
   e.currentTarget.classList.remove('drag-over');
   const ghost = document.getElementById('colGhost' + ci);
   if (ghost) ghost.style.display = 'none';
@@ -4183,6 +5270,7 @@ function newColLeave(e) { document.getElementById('newColZone')?.classList.remov
 function newColDrop(e) {
   e.preventDefault(); e.stopPropagation();
   if (!drag.active) return;
+  if (_safeForViewer()) return;
   document.getElementById('newColZone')?.classList.remove('over');
 
   const srcNote = S.columns[drag.col]?.find(n=>n.id===drag.id);
