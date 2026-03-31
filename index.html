@@ -3692,6 +3692,18 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     ADDED: NOTA_MANIFEST (this document) — §0-§15 — replaces old feature reference comment
     Manifest format: AI-primary, structured notation, self-updating instructions
 
+  [2026-03-31 | SESSION:33 | Claude-Sonnet-4.6]
+    REVERTED: SESSION:32 switched doGoogleSignIn to signInWithRedirect, which caused
+              "just refreshes page" — the redirect flow navigates the tab away and
+              Firebase's redirect-back state wasn't completing auth in this setup.
+    ROOT CAUSE ANALYSIS: The original COOP console warning ("would block window.close")
+              is non-fatal. The popup auth DID complete successfully; the browser just
+              couldn't close the popup window cleanly. This is a cosmetic warning only.
+    FIXED:    Reverted to signInWithPopup. Added explicit suppression of
+              auth/popup-closed-by-user (normal cancel — not an error). Removed
+              getRedirectResult() call added in SESSION:32 (no longer applicable).
+    VERSION:  v1.4.1 (no bump)
+
   [2026-03-31 | SESSION:32 | Claude-Sonnet-4.6]
     FIXED BUG: COOP error on Google sign-in — `signInWithPopup` blocked by
                Cross-Origin-Opener-Policy header, preventing popup close.
@@ -6900,18 +6912,6 @@ firebase.initializeApp(FIREBASE_CONFIG);
 const auth = firebase.auth();
 const db   = firebase.firestore();
 
-/* ─── Handle Google redirect result (signInWithRedirect return) ─── */
-// Must be called once on load — resolves silently if no redirect pending.
-auth.getRedirectResult().catch(e => {
-  // Only surface real errors (not the "no redirect pending" no-op)
-  if (e && e.code && e.code !== 'auth/no-auth-event') {
-    const errorId = 'loginError';
-    document.getElementById('authOverlay').style.display = 'flex';
-    const el = document.getElementById(errorId);
-    if (el) el.textContent = friendlyAuthError(e);
-  }
-});
-
 /* ─── Current project state ─── */
 let _currentUser    = null;   // Firebase User object
 let _guestMode      = false;  // true when user chose to skip sign-in
@@ -7012,13 +7012,16 @@ async function doRegister() {
 async function doGoogleSignIn() {
   const errorId = _activeAuthTab === 'register' ? 'regError' : 'loginError';
   setAuthError(errorId, '');
+  const provider = new firebase.auth.GoogleAuthProvider();
   try {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    await auth.signInWithRedirect(provider);
-    // Page will redirect — execution stops here.
-    // onAuthStateChanged handles the signed-in user after redirect returns.
+    await auth.signInWithPopup(provider);
+    // Note: browsers with Cross-Origin-Opener-Policy will log a benign warning
+    // about window.close() being blocked — this does NOT affect auth completion.
   } catch(e) {
-    setAuthError(errorId, friendlyAuthError(e));
+    // auth/popup-closed-by-user is a normal cancel — don't show an error
+    if (e.code !== 'auth/popup-closed-by-user') {
+      setAuthError(errorId, friendlyAuthError(e));
+    }
   }
 }
 
