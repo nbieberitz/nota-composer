@@ -9468,6 +9468,11 @@ async function _adminWipeFirestore(btn, progEl, errEl) {
     btn.textContent    = 'Done ✓';
     showToast('Firestore wiped.', 'var(--pink)');
     setTimeout(() => { closeAdminNukeModal(); location.reload(); }, 1500);
+  } catch (e) {
+    errEl.textContent  = 'Error: ' + (e.message || e);
+    btn.disabled       = false;
+    btn.textContent    = '☢ Execute';
+    console.error('_adminWipeFirestore:', e);
   }
 }
 
@@ -9509,6 +9514,11 @@ async function _adminWipeAuth(btn, progEl, errEl) {
     btn.textContent    = 'Done ✓';
     showToast('All auth users wiped.', 'var(--pink)');
     setTimeout(() => { closeAdminNukeModal(); location.reload(); }, 1500);
+  } catch (e) {
+    errEl.textContent  = 'Error: ' + (e.message || e);
+    btn.disabled       = false;
+    btn.textContent    = '☢ Execute';
+    console.error('_adminWipeAuth:', e);
   }
 }
 
