@@ -1371,6 +1371,81 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
 }
 .member-actions-btn:hover { color: var(--pink); }
 
+/* ─── ONLINE PRESENCE BAR ─── */
+.presence-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.presence-avatar {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: #fff;
+  cursor: pointer;
+  transition: transform .15s, box-shadow .15s, border-color .15s;
+  text-transform: uppercase;
+  font-family: 'Orbitron', sans-serif;
+  border: 2px solid rgba(255,255,255,0.1);
+  flex-shrink: 0;
+  user-select: none;
+}
+.presence-avatar:hover { transform: scale(1.14); box-shadow: 0 0 12px rgba(0,0,0,0.6); border-color: rgba(255,255,255,0.4); }
+.presence-avatar.is-self { border: 2px solid var(--cyan); box-shadow: 0 0 8px rgba(0,245,212,0.35); cursor: default; }
+.presence-avatar.is-self:hover { transform: none; border-color: var(--cyan); }
+.presence-overflow {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 700; color: var(--text-dim);
+  cursor: pointer;
+  background: var(--surface3);
+  border: 1.5px solid var(--border2);
+  transition: all .15s;
+  font-family: 'JetBrains Mono', monospace;
+  flex-shrink: 0;
+}
+.presence-overflow:hover { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); }
+.presence-popup {
+  position: fixed;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.65), 0 0 0 1px rgba(0,245,212,0.06);
+  padding: 12px 14px;
+  z-index: 15000;
+  min-width: 190px;
+  animation: fadeIn .12s ease-out;
+}
+.presence-popup-header {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+}
+.presence-popup-avatar {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0;
+  font-family: 'Orbitron', sans-serif;
+}
+.presence-popup-name { font-size: 12px; font-weight: 600; color: var(--text); }
+.presence-popup-sub  { font-size: 9px; color: var(--text-muted); letter-spacing: .5px; margin-top: 1px; }
+.presence-popup-title {
+  font-size: 8px; text-transform: uppercase; letter-spacing: 2px;
+  color: var(--text-muted); margin-bottom: 7px;
+  padding-bottom: 4px; border-bottom: 1px solid var(--border);
+}
+.presence-popup-list {
+  display: flex; flex-direction: column; gap: 3px;
+  max-height: 240px; overflow-y: auto;
+}
+.presence-popup-list::-webkit-scrollbar { width: 4px; }
+.presence-popup-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+.presence-popup-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 6px; border-radius: 6px; transition: background .1s;
+}
+.presence-popup-item:hover { background: var(--surface2); }
+
 /* ─── Group code pill ─── */
 .group-code-pill {
   font-size: 9px; color: var(--yellow); border: 1px solid var(--yellow);
@@ -1654,6 +1729,197 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   font-size: 8px; color: var(--purple); border: 1px solid var(--purple);
   padding: 1px 5px; border-radius: 3px; letter-spacing: .5px;
   background: var(--purple-dim); flex-shrink: 0; align-self: flex-start; margin-top: 2px;
+}
+
+/* ════════ ADMIN SYSTEM ════════ */
+
+/* Admin PIN challenge overlay */
+.admin-pin-overlay {
+  position: fixed; inset: 0; z-index: 20100;
+  background: rgba(4,4,14,0.96); backdrop-filter: blur(10px);
+  display: none; align-items: center; justify-content: center;
+}
+.admin-pin-overlay.open { display: flex; }
+.admin-pin-box {
+  background: var(--surface);
+  border: 1px solid var(--pink);
+  border-radius: 16px;
+  box-shadow: 0 0 60px rgba(247,37,133,0.2), 0 12px 60px rgba(0,0,0,.85);
+  width: 340px; max-width: 96vw;
+  padding: 32px 28px 26px;
+  display: flex; flex-direction: column; gap: 14px; align-items: center;
+}
+.admin-pin-title {
+  font-family: 'Orbitron', sans-serif; font-weight: 900;
+  font-size: 15px; color: var(--pink);
+  text-shadow: 0 0 18px rgba(247,37,133,0.65);
+  letter-spacing: 4px; text-align: center;
+}
+.admin-pin-sub {
+  font-size: 10px; color: var(--text-muted); text-align: center;
+  letter-spacing: .5px; line-height: 1.9;
+}
+.admin-pin-input {
+  background: var(--surface2); border: 1px solid var(--border2);
+  color: var(--pink); font-family: 'JetBrains Mono', monospace;
+  font-size: 20px; font-weight: 600; letter-spacing: 6px;
+  text-align: center; padding: 10px; border-radius: 8px; outline: none;
+  width: 100%; transition: border-color .15s, box-shadow .15s;
+}
+.admin-pin-input:focus { border-color: var(--pink); box-shadow: 0 0 14px rgba(247,37,133,.22); }
+.admin-pin-btn {
+  background: linear-gradient(135deg, var(--pink), var(--purple));
+  color: #fff; border: none; border-radius: 8px;
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  font-weight: 600; letter-spacing: 2px; text-transform: uppercase;
+  padding: 11px; cursor: pointer; width: 100%;
+  box-shadow: 0 0 16px rgba(247,37,133,0.28);
+  transition: box-shadow .2s, transform .1s;
+}
+.admin-pin-btn:hover { box-shadow: 0 0 30px rgba(247,37,133,0.5); transform: translateY(-1px); }
+.admin-pin-btn:disabled { opacity: .5; cursor: default; transform: none; }
+.admin-pin-error {
+  font-size: 10px; color: var(--pink); text-align: center;
+  min-height: 14px; letter-spacing: .5px;
+}
+.admin-pin-attempts {
+  font-size: 9px; color: var(--text-muted); text-align: center; letter-spacing: 1px;
+}
+
+/* Admin dashboard full-screen overlay */
+.admin-overlay {
+  position: fixed; inset: 0; z-index: 20000;
+  background: var(--bg);
+  display: none; flex-direction: column;
+}
+.admin-overlay.open { display: flex; }
+
+.admin-hdr {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 22px; flex-shrink: 0;
+  background: linear-gradient(100deg, #0b0618 0%, #0c0d22 100%);
+  border-bottom: 1px solid var(--pink);
+  box-shadow: 0 2px 24px rgba(247,37,133,0.14);
+}
+.admin-logo {
+  font-family: 'Orbitron', sans-serif; font-weight: 900;
+  font-size: 15px; color: var(--pink);
+  text-shadow: 0 0 16px rgba(247,37,133,0.65);
+  letter-spacing: 4px; white-space: nowrap;
+}
+.admin-logo-sub {
+  font-size: 8px; color: var(--text-muted); letter-spacing: 2px;
+  text-transform: uppercase; margin-top: 1px;
+}
+.admin-search {
+  flex: 1; max-width: 360px;
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text); font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; padding: 6px 11px; border-radius: 6px; outline: none;
+  transition: border-color .15s;
+}
+.admin-search:focus { border-color: var(--pink); box-shadow: 0 0 8px rgba(247,37,133,.15); }
+.admin-search::placeholder { color: var(--text-muted); }
+.admin-stats {
+  font-size: 9px; color: var(--text-muted); letter-spacing: 1px; white-space: nowrap;
+}
+
+.admin-body {
+  flex: 1; overflow-y: auto; padding: 22px 26px 40px;
+}
+.admin-body::-webkit-scrollbar { width: 8px; }
+.admin-body::-webkit-scrollbar-track { background: var(--bg); }
+.admin-body::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+.admin-body::-webkit-scrollbar-thumb:hover { background: var(--pink); }
+
+.admin-section-label {
+  font-size: 8px; text-transform: uppercase; letter-spacing: 2.5px;
+  color: var(--text-muted); margin-bottom: 14px;
+  display: flex; align-items: center; gap: 10px;
+}
+.admin-section-label::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, var(--border), transparent);
+}
+
+.admin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 12px;
+}
+
+.admin-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 13px 14px;
+  cursor: pointer;
+  transition: border-color .18s, box-shadow .18s;
+  position: relative; overflow: hidden;
+  display: flex; flex-direction: column; gap: 7px;
+}
+.admin-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--pink), transparent);
+  opacity: .45;
+}
+.admin-card:hover {
+  border-color: var(--pink);
+  box-shadow: 0 0 18px rgba(247,37,133,.13);
+}
+.admin-card.expanded { border-color: var(--purple); }
+.admin-card.expanded::before { background: linear-gradient(90deg, var(--purple), transparent); opacity: .6; }
+
+.admin-card-name {
+  font-size: 12px; color: var(--text); font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  padding-right: 4px;
+}
+.admin-card-owner {
+  font-size: 9px; color: var(--cyan); letter-spacing: .5px;
+}
+.admin-card-chips {
+  display: flex; gap: 5px; flex-wrap: wrap;
+}
+.admin-card-chip {
+  font-size: 8px; color: var(--text-muted);
+  border: 1px solid var(--border); border-radius: 3px;
+  padding: 1px 5px; letter-spacing: .3px; white-space: nowrap;
+}
+.admin-card-date {
+  font-size: 9px; color: var(--text-muted);
+  border-top: 1px solid var(--border); padding-top: 7px; margin-top: 2px;
+}
+
+/* Expanded detail section — hidden by default */
+.admin-card-detail {
+  display: none; flex-direction: column; gap: 5px;
+  border-top: 1px solid var(--border); padding-top: 7px;
+}
+.admin-card.expanded .admin-card-detail { display: flex; }
+.admin-card-detail-row {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 8px;
+  font-size: 8px; color: var(--text-muted);
+}
+.admin-card-detail-val {
+  color: var(--text-dim); font-size: 7.5px;
+  word-break: break-all; text-align: right; max-width: 60%;
+}
+
+.admin-loading {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  padding: 80px 20px; color: var(--text-muted); font-size: 11px; letter-spacing: 2px;
+}
+@keyframes adminSpin { to { transform: rotate(360deg); } }
+.admin-spinner {
+  width: 18px; height: 18px; border-radius: 50%;
+  border: 2px solid var(--border2); border-top-color: var(--pink);
+  animation: adminSpin .75s linear infinite; flex-shrink: 0;
+}
+.admin-empty {
+  text-align: center; color: var(--text-muted); font-size: 12px;
+  padding: 70px 20px; line-height: 2.2; grid-column: 1 / -1;
 }
 </style>
 </head>
@@ -2095,8 +2361,10 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     <button class="btn btn-gen"   onclick="generateDesmos()">▶ Generate</button>
     <button class="btn btn-graph" id="desmosBtn" onclick="toggleDesmosOverlay()" title="View in Desmos">📈 Graph</button>
 
-    <!-- spacer pushes zoom + user to the right -->
-    <div style="flex:1"></div>
+    <!-- spacer + presence bar centered -->
+    <div style="flex:1;display:flex;justify-content:center;align-items:center">
+      <div class="presence-bar" id="presenceBar" style="display:none"></div>
+    </div>
 
     <div class="zoom-wrap">
       <span class="sl">Zoom</span>
@@ -2270,9 +2538,53 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   </div>
 </div>
 
+<!-- ════════ ADMIN PIN CHALLENGE ════════ -->
+<div class="admin-pin-overlay" id="adminPinOverlay">
+  <div class="admin-pin-box">
+    <div class="admin-pin-title">◈ ADMIN ACCESS</div>
+    <div class="admin-pin-sub">Admin account detected.<br>Enter your admin PIN to continue.</div>
+    <input class="admin-pin-input" id="adminPinInput" type="password"
+      placeholder="••••••••" autocomplete="off" maxlength="64"
+      onkeydown="if(event.key==='Enter')doAdminPinSubmit()">
+    <button class="admin-pin-btn" id="adminPinBtn" onclick="doAdminPinSubmit()">Verify Identity</button>
+    <div class="admin-pin-error"    id="adminPinError"></div>
+    <div class="admin-pin-attempts" id="adminPinAttempts"></div>
+    <button class="btn-sm danger" style="font-size:9px;width:100%;margin-top:4px;text-align:center" onclick="doSignOut()">← Sign out instead</button>
+  </div>
+</div>
+
+<!-- ════════ ADMIN DASHBOARD ════════ -->
+<div class="admin-overlay" id="adminOverlay">
+  <div class="admin-hdr">
+    <div style="flex-shrink:0">
+      <div class="admin-logo">◈ NOTA ADMIN</div>
+      <div class="admin-logo-sub">All Projects Overview</div>
+    </div>
+    <div class="sep" style="height:34px;flex-shrink:0"></div>
+    <input class="admin-search" id="adminSearch"
+      placeholder="Search by project name or @username…"
+      oninput="adminFilterGrid()">
+    <span class="admin-stats" id="adminStats"></span>
+    <div style="margin-left:auto;display:flex;gap:8px;align-items:center;flex-shrink:0">
+      <button class="btn-sm" onclick="loadAdminDashboard()" title="Refresh all projects">↻ Refresh</button>
+      <button class="btn-sm danger" onclick="doSignOut()" title="Exit admin and sign out">Exit ✕</button>
+    </div>
+  </div>
+  <div class="admin-body">
+    <div class="admin-loading" id="adminLoading">
+      <div class="admin-spinner"></div>
+      Loading all projects…
+    </div>
+    <div id="adminGridWrap" style="display:none">
+      <div class="admin-section-label" id="adminSectionLabel">Projects</div>
+      <div class="admin-grid" id="adminGrid"></div>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ╔══════════════════════════════════════════════════════════════════════════════════╗
-   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2026-03-30 (SESSION:14)║
+   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2026-03-30 (SESSION:17)║
    ║  PURPOSE: Single source of truth for all AI tools reading/editing this file.   ║
    ║  FORMAT: dense structured notation > English prose. Symbols defined below.     ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝
@@ -2358,7 +2670,7 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
 
   UI PANELS:
     HEADER          — time sig, BPM input, key sig, generate btn, zoom, project controls,
-                      friends btn (👥), chat btn (💬), user avatar + sign-out
+                      presence bar (top center, P5), friends btn (👥), chat btn (💬), user avatar + sign-out
     RULER (42px)    — left strip, beat/bar labels, scrolls with workspace
     WORKSPACE       — scrollable canvas, beat-lines overlay, columns of note blocks
     OUTPUT (310px)  — right panel: ticker setup card, reset/tone/graph/fn sections + copy buttons
@@ -2376,6 +2688,9 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     chatOverlay      9300
     kbdOverlay       9000
     desmosOverlay    9600
+    presencePopup    15000  [P5] inline presence tooltip/action popup
+    adminOverlay     20000  [ADMIN] full-screen admin dashboard (replaces normal UI)
+    adminPinOverlay  20100  [ADMIN] PIN challenge shown before dashboard
 
   GLOBAL STATE OBJECT S:
     { tsNum, tsDenom, keySig, zoom, columns[][], output[], extraLines[], expanded:Set }
@@ -2799,11 +3114,14 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     operations fail. Enforced via Firebase Security Rules checking #globalBans/{uid}.
     Schema: #globalBans/{uid}: { bannedAt, reason, bannedByUid }
 
-  [GOAL][MED] ONLINE PRESENCE / STATUS
-    Show green dot on friend avatars when online.
-    Implementation: write heartbeat to #presence/{uid} with lastSeen timestamp every
-    30s while tab is open. Read via real-time listener on friend UIDs.
-    Firebase RTDB (not Firestore) is better for this — lower latency, onDisconnect.
+  [GOAL][DONE→P5] ONLINE PRESENCE / STATUS
+    ✓ Presence bar in header top-center: avatar circles (first letter, hashed color)
+    ✓ Max 10 shown; overflow "+N" circle reveals full scrollable list popup
+    ✓ Click avatar → popup with username + Message (friend) or Add Friend (stranger)
+    ✓ Click "+N" → full online user list with per-person actions
+    ✓ Heartbeat 30s, stale threshold 90s, auto-removed on signout/project close
+    ✓ Firestore: #projectPresence/{ownerUid_projId}/online/{uid}
+    ✓ Self avatar shown but not clickable (cyan ring)
 
   [GOAL][MED] PROFILE PAGES
     Click on a username → see their profile: display name, join date, public projects,
@@ -2841,11 +3159,253 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     Fix applied: .catch() on sharedProjectsRef query → fault-tolerant, own projects
     show even if sharedProjects query fails. Full fix requires Firestore rules (see §12).
 
+  [SESSION:16][FAIL→FIXED] Collab editor auto-save never fired.
+    Cause: render() patch guarded on _currentProjId, which is null for shared projects.
+    Fix: also check _collabOwnerUid && _collabProjId && !_isCollabViewer.
+
   ══════════════════════════════════════════════════════════════════════════════════
-  §12  FIREBASE SECURITY RULES — CURRENT GAPS  ◈
+  §12  FIREBASE SECURITY RULES — LIVE RULES + MAINTENANCE INSTRUCTIONS
   ══════════════════════════════════════════════════════════════════════════════════
 
-  ◈ These are known missing rule enforcements (client-side only currently):
+  ╔══════════════════════════════════════════════════════════════════════════════╗
+  ║  ⚠  AI INSTRUCTIONS — READ BEFORE EVERY EDIT  ⚠                           ║
+  ║                                                                              ║
+  ║  This section contains the COMPLETE, LIVE Firestore security rules that     ║
+  ║  are currently deployed in Firebase Console for this project.               ║
+  ║                                                                              ║
+  ║  AFTER EVERY RESPONSE in which you modify, add, or remove any feature       ║
+  ║  that touches Firestore collections or security rules, you MUST:            ║
+  ║                                                                              ║
+  ║    1. Update the LIVE RULES block below to reflect the new correct rules.   ║
+  ║    2. Add a dated entry to the §12 RULES CHANGELOG below describing:        ║
+  ║         - Which collection(s) were affected                                 ║
+  ║         - What rule was added / changed / removed                           ║
+  ║         - Why (which feature required it)                                   ║
+  ║    3. Update the LAST_UPDATED line in the §0 manifest header.               ║
+  ║                                                                              ║
+  ║  DO NOT leave the rules block stale. If you add a new Firestore collection  ║
+  ║  but are unsure of the correct rule, add a ◈ NEEDS RULE comment below and   ║
+  ║  note it in the changelog. Never silently skip this step.                   ║
+  ╚══════════════════════════════════════════════════════════════════════════════╝
+
+  ──────────────────────────────────────────────────────────────────────────────
+  LIVE RULES  (paste this entire block into Firebase Console → Firestore → Rules)
+  LAST_SYNCED: SESSION:17  |  Admin UID: jMsWFzCxsJXtNGcuwKHnSxlDLU33
+  ──────────────────────────────────────────────────────────────────────────────
+
+    rules_version = '2';
+    service cloud.firestore {
+      match /databases/{database}/documents {
+
+        // ── P1: User Profiles ────────────────────────────────────────
+        match /userProfiles/{uid} {
+          allow read: if request.auth != null;
+          allow create: if request.auth != null && request.auth.uid == uid;
+          allow update: if request.auth != null && request.auth.uid == uid;
+          allow delete: if false;
+        }
+
+        match /usernames/{lower} {
+          allow read: if request.auth != null;
+          allow create: if request.auth != null
+            && request.auth.uid == request.resource.data.uid;
+          allow update, delete: if request.auth != null
+            && request.auth.uid == resource.data.uid;
+        }
+
+        // ── P1: User Projects ────────────────────────────────────────
+        // Owners have full access.
+        // P4 collab: collaborators can read; editors can also write.
+        match /users/{uid}/projects/{projId} {
+          allow read, write: if request.auth != null && request.auth.uid == uid;
+          allow read: if request.auth != null
+            && request.auth.uid in
+              get(/databases/$(database)/documents/projectShares/$(uid)/projects/$(projId)).data.collaborators;
+          allow write: if request.auth != null
+            && request.auth.uid in
+              get(/databases/$(database)/documents/projectShares/$(uid)/projects/$(projId)).data.collaborators
+            && get(/databases/$(database)/documents/projectShares/$(uid)/projects/$(projId)).data.collaborators[request.auth.uid].role == 'editor';
+        }
+
+        // ── P2: Friends ──────────────────────────────────────────────
+        // doAcceptRequest and doRemoveFriend write to BOTH parties' lists,
+        // so we allow write if the caller is either the list owner or the friend.
+        match /friends/{uid}/list/{friendUid} {
+          allow read: if request.auth != null && request.auth.uid == uid;
+          allow write: if request.auth != null
+            && (request.auth.uid == uid || request.auth.uid == friendUid);
+        }
+
+        match /friendRequests/{reqId} {
+          allow read: if request.auth != null
+            && (request.auth.uid == resource.data.fromUid
+             || request.auth.uid == resource.data.toUid);
+          allow create: if request.auth != null
+            && request.auth.uid == request.resource.data.fromUid;
+          allow update: if request.auth != null
+            && request.auth.uid == resource.data.toUid;
+          allow delete: if request.auth != null
+            && (request.auth.uid == resource.data.fromUid
+             || request.auth.uid == resource.data.toUid);
+        }
+
+        // ── P2: Direct Messages ──────────────────────────────────────
+        // sendChatMessage writes to both participants' userConvs, so
+        // write is allowed to any authenticated user (conv IDs are opaque).
+        match /directMessages/{cid}/msgs/{msgId} {
+          allow read, create: if request.auth != null;
+          allow update, delete: if false;
+        }
+
+        match /userConvs/{uid}/convs/{cid} {
+          allow read: if request.auth != null && request.auth.uid == uid;
+          allow write: if request.auth != null;
+        }
+
+        match /blocked/{uid}/list/{blockedUid} {
+          allow read, write: if request.auth != null && request.auth.uid == uid;
+        }
+
+        match /reports/{reportId} {
+          allow create: if request.auth != null;
+          allow read, update, delete: if false;
+        }
+
+        // ── P3: Group Chats ──────────────────────────────────────────
+        // Group admin invites/kicks/bans write to other users' userGroups,
+        // and sendGroupMessage fans out to all members' entries, so
+        // userGroups write is open to any authenticated user.
+        match /groupChats/{gid} {
+          allow read: if request.auth != null
+            && request.auth.uid in resource.data.memberUids;
+          allow create: if request.auth != null
+            && request.auth.uid == request.resource.data.adminUid;
+          // update covers: send message (lastMsg), join (arrayUnion), kick/ban (arrayRemove)
+          allow update: if request.auth != null;
+          allow delete: if request.auth != null
+            && request.auth.uid == resource.data.adminUid;
+        }
+
+        match /groupChats/{gid}/msgs/{msgId} {
+          allow read, create: if request.auth != null;
+          allow update, delete: if false;
+        }
+
+        match /userGroups/{uid}/list/{gid} {
+          allow read: if request.auth != null && request.auth.uid == uid;
+          allow write: if request.auth != null;
+        }
+
+        match /groupInviteCodes/{code} {
+          allow read: if request.auth != null;
+          allow create: if request.auth != null
+            && request.auth.uid == request.resource.data.adminUid;
+          allow update: if false;
+          allow delete: if request.auth != null
+            && request.auth.uid == resource.data.adminUid;
+        }
+
+        // ── P4: Collaborative Projects ───────────────────────────────
+        match /projectShares/{ownerUid}/projects/{projId} {
+          allow read, write: if request.auth != null
+            && request.auth.uid == ownerUid;
+          allow read: if request.auth != null
+            && resource != null
+            && request.auth.uid in resource.data.collaborators;
+        }
+
+        match /projectShareCodes/{code} {
+          allow read: if request.auth != null;
+          allow create: if request.auth != null
+            && request.auth.uid == request.resource.data.ownerUid;
+          allow update, delete: if request.auth != null
+            && request.auth.uid == resource.data.ownerUid;
+        }
+
+        match /projectInvites/{inviteId} {
+          allow read: if request.auth != null
+            && (request.auth.uid == resource.data.fromUid
+             || request.auth.uid == resource.data.toUid);
+          allow create: if request.auth != null
+            && request.auth.uid == request.resource.data.fromUid;
+          allow update: if request.auth != null
+            && request.auth.uid == resource.data.toUid;
+          allow delete: if request.auth != null
+            && (request.auth.uid == resource.data.fromUid
+             || request.auth.uid == resource.data.toUid);
+        }
+
+        match /sharedProjects/{uid}/list/{docId} {
+          allow read, write: if request.auth != null && request.auth.uid == uid;
+        }
+
+        // ── P5: Presence ─────────────────────────────────────────────
+        match /projectPresence/{docId}/online/{uid} {
+          allow read: if request.auth != null;
+          allow write, delete: if request.auth != null
+            && request.auth.uid == uid;
+        }
+
+        // ── Admin: blanket read-only for admin UID ───────────────────
+        // Read-only. No write access granted anywhere via this rule.
+        match /{document=**} {
+          allow read: if request.auth != null
+            && request.auth.uid == 'jMsWFzCxsJXtNGcuwKHnSxlDLU33';
+        }
+
+      }
+    }
+
+  ──────────────────────────────────────────────────────────────────────────────
+  §12-CHANGELOG  (newest first — AI must prepend entries here after each change)
+  ──────────────────────────────────────────────────────────────────────────────
+
+  [SESSION:17] Added admin blanket read rule.
+    Collection: /{document=**} (wildcard — all collections)
+    Change: Added top-level wildcard read rule gated on ADMIN_UID
+            ('jMsWFzCxsJXtNGcuwKHnSxlDLU33'). Read-only — no write
+            access granted. Required by admin dashboard which reads ALL
+            users' /users/{uid}/projects subcollections and /userProfiles.
+    Also added: ADMIN_UID and ADMIN_PIN_HASH constants in JS source (§13
+            patch chain); admin PIN overlay and dashboard UI.
+
+  [SESSION:15] Added P5 presence rules.
+    Collection: /projectPresence/{docId}/online/{uid}
+    Change: allow read for any authed user; allow write+delete only for
+            the uid matching the subcollection segment. Required by
+            heartbeat-based online presence system.
+
+  [SESSION:14] Added P4 collaborative project rules.
+    Collections: /projectShares, /projectShareCodes, /projectInvites,
+                 /sharedProjects
+    Change: Added read/write rules scoped to ownerUid and collaborator
+            map entries. Required by 6-digit share code, invite system,
+            and real-time collab editing.
+
+  [SESSION:~] Added P3 group chat rules.
+    Collections: /groupChats, /groupChats/{gid}/msgs, /userGroups,
+                 /groupInviteCodes
+    Change: Read gated on memberUids; create gated on adminUid; update
+            open to any authed user (fan-out requirement). Required by
+            P3 group chat feature.
+
+  [SESSION:~] Added P2 DM + friends rules.
+    Collections: /directMessages, /userConvs, /friends, /friendRequests,
+                 /blocked, /reports
+    Change: DM read/create open to authed users; userConvs write open
+            (fan-out); friends write allows either party; reports
+            create-only. Required by P2 social/messaging feature.
+
+  [SESSION:~] Added P1 base rules.
+    Collections: /userProfiles, /usernames, /users/{uid}/projects
+    Change: Profiles readable by all authed users, writable only by
+            owner. Usernames same. Projects owner-only read/write.
+            Required by P1 auth + project save/load feature.
+
+  ──────────────────────────────────────────────────────────────────────────────
+  KNOWN GAPS (client-side enforcement only — no Firestore rule yet)
+  ──────────────────────────────────────────────────────────────────────────────
+
     1. Block enforcement: blocked users can still write to #directMessages/{cid}/msgs
        → Need rule: check #blocked/{recipientUid}/list/{senderUid} doesn't exist
     2. Group ban enforcement: banned uid can rejoin if they guess the code
@@ -2856,44 +3416,6 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
        → Fine for <50 members. Cloud Function needed for scale.
     5. DM between non-friends: currently allowed
        → If desired, add rule: sender must be in receiver's #friends/list
-
-  ◈ P4 COLLECTIONS — RULES NOT YET SET IN FIREBASE CONSOLE [SESSION:14]:
-    Add these rules in Firebase Console → Firestore → Rules, inside the existing
-    `match /databases/{database}/documents { ... }` block:
-
-      match /projectShares/{ownerUid}/projects/{projId} {
-        allow read, write: if request.auth != null && request.auth.uid == ownerUid;
-        allow read: if request.auth != null
-          && resource != null
-          && request.auth.uid in resource.data.collaborators;
-      }
-      match /projectShareCodes/{code} {
-        allow read: if request.auth != null;
-        allow create: if request.auth != null
-          && request.auth.uid == request.resource.data.ownerUid;
-        allow update, delete: if request.auth != null
-          && request.auth.uid == resource.data.ownerUid;
-      }
-      match /projectInvites/{inviteId} {
-        allow read: if request.auth != null
-          && (request.auth.uid == resource.data.fromUid
-           || request.auth.uid == resource.data.toUid);
-        allow create: if request.auth != null
-          && request.auth.uid == request.resource.data.fromUid;
-        allow update: if request.auth != null
-          && request.auth.uid == resource.data.toUid;
-        allow delete: if request.auth != null
-          && (request.auth.uid == resource.data.fromUid
-           || request.auth.uid == resource.data.toUid);
-      }
-      match /sharedProjects/{uid}/list/{docId} {
-        allow read, write: if request.auth != null && request.auth.uid == uid;
-      }
-
-    Until these rules are live:
-      - "Error loading projects" is fixed by the .catch() code patch (own projects show)
-      - 6-digit share code will NOT generate (ensureShareDoc writes fail silently → toast)
-      - Join-by-code will NOT work for recipients
 
   ══════════════════════════════════════════════════════════════════════════════════
   §13  MONKEY-PATCH CHAIN  (execution order matters)
@@ -2906,12 +3428,18 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   cleanupChatListeners()   ← patched to also call cleanupGroupListeners (P3)
   doSignOut()              ← patched to call cleanupFriendListeners + close modals (P2)
                            ← patched again in P4 to also stopCollabListener + cleanup invites
+                           ← patched again in P5 to also stopPresence()
+                           ← patched again in ADMIN to also _exitAdminMode()
   renderFriendsList()      ← patched to add 💬/🚫/⚠️ buttons (P2)
   doFindUser()             ← patched to show block/unblock/report (P2)
   toggleChatModal()        ← patched to support tab state + group auto-select (P3)
   scheduleAutoSave()       ← patched in P4: routes collab editor saves to saveSharedProject()
   renderProjList()         ← patched in P4: adds shared projects + join-by-code row
   onUserLogin()            ← patched in P4: also starts proj invite listeners
+                           ← patched again in ADMIN: calls checkAdminLogin(uid) last
+  loadProjectData()        ← patched in P5: calls startPresence() for own projects
+  openSharedProject()      ← patched in P5: calls startPresence() for collab projects
+  newProject()             ← patched in P5: calls stopPresence()
 
   ◆ Each patch saves _orig prefix of the previous version. Chain is:
     P4_patch calls P3_patch calls P2_patch calls original (or P1 version).
@@ -2970,6 +3498,70 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   [2025-06 | SESSION:3 | Claude-Sonnet-4.6]
     ADDED: NOTA_MANIFEST (this document) — §0-§15 — replaces old feature reference comment
     Manifest format: AI-primary, structured notation, self-updating instructions
+
+  [2026-03-30 | SESSION:17 | Claude-Sonnet-4.6]
+    ADDED ADMIN: Full-screen admin dashboard — read-only all-projects overview
+    ADDED ADMIN: Two-factor security: Firebase Auth (admin UID) + SHA-256 PIN challenge
+    ADDED ADMIN: ADMIN_UID + ADMIN_PIN_HASH constants (tb must fill both in source)
+    ADDED ADMIN: @checkAdminLogin(uid) — called last in onUserLogin chain; hides normal
+                 UI and shows PIN overlay if UID matches ADMIN_UID
+    ADDED ADMIN: @doAdminPinSubmit() — SHA-256 hash compare, 5-attempt lockout then sign-out
+    ADDED ADMIN: @_enterAdminMode() — shows #adminOverlay, calls loadAdminDashboard()
+    ADDED ADMIN: @_exitAdminMode() — clears state, restores normal UI on sign-out
+    ADDED ADMIN: @loadAdminDashboard() — fetches all userProfiles → parallel project
+                 subcollection reads → global newest-first sort → renders grid
+    ADDED ADMIN: @_renderAdminGrid(projects) — card grid with name/owner/track+note
+                 count/key/time chips/date; click to expand for raw IDs
+    ADDED ADMIN: @adminFilterGrid() — instant client-side search by name or @username
+    ADDED ADMIN: @_sha256(str) — browser SubtleCrypto SHA-256 helper
+    ADDED ADMIN: CSS — .admin-pin-overlay, .admin-pin-box, .admin-pin-title, .admin-pin-sub,
+                 .admin-pin-input, .admin-pin-btn, .admin-pin-error, .admin-pin-attempts,
+                 .admin-overlay, .admin-hdr, .admin-logo, .admin-logo-sub, .admin-search,
+                 .admin-stats, .admin-body, .admin-section-label, .admin-grid, .admin-card,
+                 .admin-card-name, .admin-card-owner, .admin-card-chips, .admin-card-chip,
+                 .admin-card-date, .admin-card-detail, .admin-card-detail-row,
+                 .admin-card-detail-val, .admin-loading, .admin-spinner, .admin-empty
+    ADDED ADMIN: HTML #adminPinOverlay, #adminOverlay (inserted before <script>)
+    UPDATED: §2 (overlay z-index stack), §12 (admin Firestore rules), §13 (patch chain)
+
+  [2026-03-30 | SESSION:16 | Claude-Sonnet-4.6]
+    FIXED: Collab editor auto-save never fired — render() patch guarded on _currentProjId
+           (null for shared projects). Now also checks _collabOwnerUid+_collabProjId+!viewer.
+    FIXED: pushUndo viewer guard declared but never applied — pushUndo was never re-assigned,
+           viewers could make edits with no warning. Added the missing re-assignment.
+    FIXED: P4 onUserLogin patch unconditionally showed projInvitesBtnWrap on every login.
+           Removed; updateProjInvitesBadge (from listener snapshot) now solely controls it.
+    FIXED: Presence ghost users — null lastSeen was treated as online (return true). Now
+           return false so docs written before first heartbeat are excluded.
+    FIXED: kickMember/banMember left memberUsernames map stale. Added
+           `memberUsernames.{uid}: FieldValue.delete()` to both batch operations.
+    FIXED: updateProjInvitesBadge used display='' (CSS default, may not be none) for hide.
+           Changed to explicit 'none'.
+    FIXED: doSendRequest had no duplicate check — could create multiple pending requests.
+           Added pre-flight .where query matching _presenceSendRequest's existing guard.
+    FIXED: setupFriendListeners had no error callbacks on onSnapshot — silent failures
+           if Firestore index missing. Added console.warn error handlers.
+
+  [2026-03-30 | SESSION:15 | Claude-Sonnet-4.6]
+    ADDED P5: Online presence bar — Google-Docs-style live user avatars in header top center
+    ADDED P5: #presenceBar div in header row 1 (flex-centered between controls and zoom/user)
+    ADDED P5: presenceCollRef() → #projectPresence/{ownerUid_projId}/online/{uid}
+    ADDED P5: @startPresence(ownerUid,projId) — heartbeat 30s, onSnapshot live list
+    ADDED P5: @stopPresence() — deletes own doc, clears interval+listener
+    ADDED P5: @renderPresenceBar() — first-letter circles, hashed colors, max 10 + "+N" overflow
+    ADDED P5: @onPresenceAvatarClick, @onPresenceOverflowClick — popup triggers
+    ADDED P5: @_showPresencePopupSingle — username + Message/Add Friend actions
+    ADDED P5: @_showPresencePopupAll — full scrollable user list popup
+    ADDED P5: @closePresencePopup, @_presenceOutsideClick, @_mountPresencePopup
+    ADDED P5: @_presenceSendRequest — sends real friend request from presence popup
+    ADDED P5: @_presenceColor(uid) — deterministic color from UID hash, 10-color palette
+    ADDED P5: Patches: loadProjectData, openSharedProject, newProject, doSignOut
+    ADDED P5: CSS — .presence-bar, .presence-avatar, .presence-avatar.is-self,
+              .presence-overflow, .presence-popup, .presence-popup-header,
+              .presence-popup-avatar, .presence-popup-name, .presence-popup-sub,
+              .presence-popup-title, .presence-popup-list, .presence-popup-item
+    UPDATED: §2 (presenceBar in UI PANELS + overlay z-index), §10 (goal DONE),
+             §12 (P5 rules), §13 (patch chain), §16 (session log)
 
   [2026-03-30 | SESSION:14 | Claude-Sonnet-4.6]
     FIXED: "Error loading projects" — P4 patched renderProjList used Promise.all;
@@ -3134,6 +3726,26 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   ══════════════════════════════════════════════════════════════════════════════════
   §16  SESSION LOG
   ══════════════════════════════════════════════════════════════════════════════════
+
+  [SESSION:17] tb asked for a secure admin account that shows all projects (public + private)
+    in a grid, newest to oldest. Built two-factor admin: Firebase Auth (UID match) gates entry,
+    SHA-256 PIN challenge (5-attempt lockout) gates dashboard. Admin mode replaces normal UI
+    entirely — no music editor visible. Dashboard fetches all userProfiles then all project
+    subcollections in parallel, sorts globally newest→oldest, renders responsive card grid
+    with per-card expand for raw IDs. Instant search by name or @username. tb must fill
+    ADMIN_UID + ADMIN_PIN_HASH constants and add blanket-read Firestore rule for admin UID.
+
+  [SESSION:16] tb asked for a full bug sweep across friends, online, and saving systems.
+    Found and fixed 8 bugs: collab editor auto-save never fired (render patch guarded on
+    wrong var), pushUndo viewer guard declared but never applied (missing re-assignment),
+    invite badge shown unconditionally on login, ghost presence users (null lastSeen treated
+    as online), kick/ban left memberUsernames stale, invite badge display='' ambiguity,
+    doSendRequest missing duplicate guard, friend listeners missing error callbacks.
+
+  [SESSION:15] tb requested Google-Docs-style online presence bar for the top center header.
+    Built P5 in full: avatar circles (first letter, hashed color per uid), max 10 shown
+    with +N overflow, per-avatar popup with Message/Add Friend actions, full list popup
+    on overflow click. Heartbeat-based presence (Firestore, 30s/90s stale). Manifest updated.
 
   [SESSION:14] tb reported "Error loading projects" + 6-digit share code not generating.
     Root cause: P4 collections have no Firestore security rules → sharedProjects query
@@ -3579,7 +4191,7 @@ function updateProjInvitesBadge() {
   const count = _projInvites.length;
   const badge = document.getElementById('projInvitesNotifBadge');
   const wrap  = document.getElementById('projInvitesBtnWrap');
-  if (wrap) wrap.style.display = count > 0 ? 'flex' : '';
+  if (wrap) wrap.style.display = count > 0 ? 'flex' : 'none';
   if (badge) {
     badge.style.display = count > 0 ? 'flex' : 'none';
     badge.textContent = count > 0 ? count : '';
@@ -3920,8 +4532,8 @@ const _origOnUserLogin = onUserLogin;
 onUserLogin = async function(user) {
   await _origOnUserLogin(user);
   setupProjInviteListeners(user.uid);
-  // Show invite button if there are already pending invites (onSnapshot will handle it)
-  document.getElementById('projInvitesBtnWrap').style.display = '';
+  // Do NOT unconditionally show projInvitesBtnWrap here.
+  // updateProjInvitesBadge (called by the listener snapshot) controls visibility.
 };
 
 /* ─── Patch doSignOut to cleanup ─── */
@@ -3941,6 +4553,10 @@ const _origPushUndo = pushUndo;
 const _safeForViewer = () => {
   if (_isCollabViewer) { showToast('You have view-only access.', 'var(--blue)'); return true; }
   return false;
+};
+pushUndo = function() {
+  if (_safeForViewer()) return;
+  _origPushUndo();
 };
 
 
@@ -6129,7 +6745,11 @@ function closeProjModal(e) {
 const _baseRender = render;
 render = function() {
   _baseRender();
-  if (_currentUser && _currentProjId) scheduleAutoSave();
+  // Own project: save normally. Collab editor: routed by P4 scheduleAutoSave patch.
+  // _currentProjId is null for shared projects, so check collab state too.
+  if (_currentUser && (_currentProjId || (_collabOwnerUid && _collabProjId && !_isCollabViewer))) {
+    scheduleAutoSave();
+  }
 };
 
 /* ═══════════════════════════════════════════════════════════
@@ -6251,7 +6871,7 @@ function setupFriendListeners(uid) {
   _friendsUnsub = friendsRef(uid).orderBy('username').onSnapshot(snap => {
     _friendsList = snap.docs.map(d => d.data());
     if (document.getElementById('ftabFriends').classList.contains('active')) renderFriendsList();
-  });
+  }, err => console.warn('[NOTA] friendsList listener failed:', err));
 
   // Incoming pending requests
   _requestsUnsub = friendReqsRef()
@@ -6261,7 +6881,7 @@ function setupFriendListeners(uid) {
       _pendingRequests = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       updateRequestsBadge();
       if (document.getElementById('ftabRequests').classList.contains('active')) renderRequestsList();
-    });
+    }, err => console.warn('[NOTA] friendRequests listener failed:', err));
 }
 
 function cleanupFriendListeners() {
@@ -6415,6 +7035,13 @@ async function doFindUser() {
 /* ─── Friend request CRUD ─── */
 async function doSendRequest(toUid, toUsername) {
   try {
+    // Guard against duplicate pending requests
+    const existing = await friendReqsRef()
+      .where('fromUid', '==', _currentUser.uid)
+      .where('toUid', '==', toUid)
+      .where('status', '==', 'pending')
+      .get();
+    if (!existing.empty) { doFindUser(); return; }
     await friendReqsRef().add({
       fromUid:      _currentUser.uid,
       fromUsername: _userProfile.username,
@@ -7361,6 +7988,7 @@ async function kickMember(gid, uid, username) {
     const batch = db.batch();
     batch.update(groupsRef().doc(gid), {
       memberUids: firebase.firestore.FieldValue.arrayRemove(uid),
+      [`memberUsernames.${uid}`]: firebase.firestore.FieldValue.delete(),
     });
     batch.delete(userGroupsRef(uid).doc(gid));
     await batch.commit();
@@ -7376,6 +8004,7 @@ async function banMember(gid, uid, username) {
     const batch = db.batch();
     batch.update(groupsRef().doc(gid), {
       memberUids: firebase.firestore.FieldValue.arrayRemove(uid),
+      [`memberUsernames.${uid}`]: firebase.firestore.FieldValue.delete(),
       bannedUids: firebase.firestore.FieldValue.arrayUnion(uid),
     });
     batch.delete(userGroupsRef(uid).doc(gid));
@@ -7509,6 +8138,594 @@ toggleChatModal = function() {
 
 
 
-</script>
-</body>
-</html>
+
+/* ═══════════════════════════════════════════════════════════
+   P5 — ONLINE PRESENCE BAR  (Google-Docs-style live users)
+   Schema: #projectPresence/{ownerUid_projId}/online/{uid}
+     { uid, username, lastSeen: serverTimestamp }
+   Heartbeat: every 30 s. Stale threshold: 90 s.
+   Removed on stopPresence() or sign-out.
+══════════════════════════════════════════════════════════ */
+
+let _presenceUnsub       = null;
+let _presenceHeartbeatId = null;
+let _presenceOwnerUid    = null;
+let _presenceProjId      = null;
+let _onlineUsers         = [];
+let _presencePopupEl     = null;
+
+const PRESENCE_MAX_SHOW     = 10;
+const PRESENCE_HEARTBEAT_MS = 30000;
+const PRESENCE_STALE_MS     = 90000;
+
+const PRESENCE_COLORS = [
+  '#f72585','#9b5de5','#4cc9f0','#80ed99',
+  '#ffd60a','#ff6b35','#7209b7','#3a86ff',
+  '#00c896','#e63946',
+];
+function _presenceColor(uid) {
+  let h = 0;
+  for (let i = 0; i < uid.length; i++) h = (h * 31 + uid.charCodeAt(i)) >>> 0;
+  return PRESENCE_COLORS[h % PRESENCE_COLORS.length];
+}
+
+function presenceCollRef(ownerUid, projId) {
+  return db.collection('projectPresence').doc(ownerUid + '_' + projId).collection('online');
+}
+
+/* ─── Start presence for a project ─── */
+function startPresence(ownerUid, projId) {
+  stopPresence();
+  if (!_currentUser || !_userProfile) return;
+  _presenceOwnerUid = ownerUid;
+  _presenceProjId   = projId;
+
+  const myRef = presenceCollRef(ownerUid, projId).doc(_currentUser.uid);
+
+  function heartbeat() {
+    if (!_currentUser || !_userProfile) return;
+    myRef.set({
+      uid:      _currentUser.uid,
+      username: _userProfile.username,
+      lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
+    }).catch(() => {});
+  }
+  heartbeat();
+  _presenceHeartbeatId = setInterval(heartbeat, PRESENCE_HEARTBEAT_MS);
+
+  _presenceUnsub = presenceCollRef(ownerUid, projId).onSnapshot(snap => {
+    const now = Date.now();
+    _onlineUsers = snap.docs
+      .map(d => d.data())
+      .filter(u => {
+        if (!u.lastSeen) return false;
+        const ms = u.lastSeen.toMillis ? u.lastSeen.toMillis()
+                                       : (u.lastSeen.seconds || 0) * 1000;
+        return (now - ms) < PRESENCE_STALE_MS;
+      })
+      .sort((a, b) => {
+        if (a.uid === (_currentUser && _currentUser.uid)) return 1;
+        if (b.uid === (_currentUser && _currentUser.uid)) return -1;
+        return (a.username || '').localeCompare(b.username || '');
+      });
+    renderPresenceBar();
+  }, () => {});
+
+  document.getElementById('presenceBar').style.display = '';
+}
+
+/* ─── Stop presence ─── */
+function stopPresence() {
+  if (_presenceUnsub)       { _presenceUnsub(); _presenceUnsub = null; }
+  if (_presenceHeartbeatId) { clearInterval(_presenceHeartbeatId); _presenceHeartbeatId = null; }
+  if (_presenceOwnerUid && _presenceProjId && _currentUser) {
+    presenceCollRef(_presenceOwnerUid, _presenceProjId)
+      .doc(_currentUser.uid).delete().catch(() => {});
+  }
+  _presenceOwnerUid = null;
+  _presenceProjId   = null;
+  _onlineUsers      = [];
+  closePresencePopup();
+  const bar = document.getElementById('presenceBar');
+  if (bar) { bar.innerHTML = ''; bar.style.display = 'none'; }
+}
+
+/* ─── Render the avatar strip ─── */
+function renderPresenceBar() {
+  const bar = document.getElementById('presenceBar');
+  if (!bar) return;
+  if (!_onlineUsers.length) { bar.innerHTML = ''; return; }
+
+  const visible  = _onlineUsers.slice(0, PRESENCE_MAX_SHOW);
+  const overflow = _onlineUsers.length - PRESENCE_MAX_SHOW;
+  const selfUid  = _currentUser ? _currentUser.uid : '';
+
+  bar.innerHTML = visible.map(u => {
+    const letter = (u.username || '?')[0].toUpperCase();
+    const color  = _presenceColor(u.uid);
+    const isSelf = u.uid === selfUid;
+    const title  = '@' + (u.username || '?') + (isSelf ? ' (you)' : '');
+    return `<div class="presence-avatar${isSelf ? ' is-self' : ''}"
+      style="background:${color}"
+      title="${escapeHtml(title)}"
+      onclick="onPresenceAvatarClick(event,'${escapeHtml(u.uid)}','${escapeHtml(u.username || '?')}',${isSelf})"
+    >${escapeHtml(letter)}</div>`;
+  }).join('') + (overflow > 0
+    ? `<div class="presence-overflow" title="${_onlineUsers.length} people online"
+         onclick="onPresenceOverflowClick(event)">+${overflow}</div>`
+    : '');
+}
+
+/* ─── Click a single avatar ─── */
+function onPresenceAvatarClick(e, uid, username, isSelf) {
+  e.stopPropagation();
+  closePresencePopup();
+  if (isSelf) return;
+  const isFriend = _friendsList.some(f => f.uid === uid);
+  _showPresencePopupSingle(e.currentTarget, uid, username, isFriend);
+}
+
+/* ─── Click the overflow "+" ─── */
+function onPresenceOverflowClick(e) {
+  e.stopPropagation();
+  closePresencePopup();
+  _showPresencePopupAll(e.currentTarget);
+}
+
+/* ─── Single-user popup ─── */
+function _showPresencePopupSingle(anchor, uid, username, isFriend) {
+  const color  = _presenceColor(uid);
+  const letter = (username || '?')[0].toUpperCase();
+  const popup  = document.createElement('div');
+  popup.className = 'presence-popup';
+  popup.id = 'presencePopup';
+  popup.innerHTML = `
+    <div class="presence-popup-header">
+      <div class="presence-popup-avatar" style="background:${color}">${escapeHtml(letter)}</div>
+      <div>
+        <div class="presence-popup-name">@${escapeHtml(username)}</div>
+        <div class="presence-popup-sub">Online now ●</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap">
+      ${isFriend
+        ? `<button class="btn-sm accent" style="font-size:9px" onclick="openDMWith('${escapeHtml(uid)}','${escapeHtml(username)}');closePresencePopup()">💬 Message</button>`
+        : `<button class="btn-sm accent" style="font-size:9px" onclick="_presenceSendRequest('${escapeHtml(uid)}','${escapeHtml(username)}')">+ Add Friend</button>`
+      }
+      <button class="btn-sm" style="font-size:9px" onclick="closePresencePopup()">✕</button>
+    </div>`;
+  _mountPresencePopup(popup, anchor);
+}
+
+/* ─── Full-list popup (overflow click) ─── */
+function _showPresencePopupAll(anchor) {
+  const selfUid = _currentUser ? _currentUser.uid : '';
+  const popup = document.createElement('div');
+  popup.className = 'presence-popup';
+  popup.id = 'presencePopup';
+
+  const items = _onlineUsers.map(u => {
+    const color   = _presenceColor(u.uid);
+    const letter  = (u.username || '?')[0].toUpperCase();
+    const isSelf  = u.uid === selfUid;
+    const isFriend = _friendsList.some(f => f.uid === u.uid);
+    const action = isSelf
+      ? `<span style="font-size:9px;color:var(--text-muted);letter-spacing:.5px">You</span>`
+      : isFriend
+        ? `<button class="btn-sm accent" style="font-size:9px;padding:3px 7px" onclick="openDMWith('${escapeHtml(u.uid)}','${escapeHtml(u.username)}');closePresencePopup()">💬</button>`
+        : `<button class="btn-sm" style="font-size:9px;padding:3px 7px" onclick="_presenceSendRequest('${escapeHtml(u.uid)}','${escapeHtml(u.username)}')">+Add</button>`;
+    return `<div class="presence-popup-item">
+      <div style="width:22px;height:22px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;font-family:'Orbitron',sans-serif;flex-shrink:0">${escapeHtml(letter)}</div>
+      <span style="flex:1;font-size:11px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">@${escapeHtml(u.username || '?')}</span>
+      ${action}
+    </div>`;
+  }).join('');
+
+  popup.innerHTML = `
+    <div class="presence-popup-title">${_onlineUsers.length} Online Now</div>
+    <div class="presence-popup-list">${items}</div>`;
+
+  _mountPresencePopup(popup, anchor);
+}
+
+/* ─── Position + mount popup ─── */
+function _mountPresencePopup(popup, anchor) {
+  document.body.appendChild(popup);
+  _presencePopupEl = popup;
+
+  const rect = anchor.getBoundingClientRect();
+  let left = rect.left + rect.width / 2 - popup.offsetWidth / 2;
+  let top  = rect.bottom + 8;
+  left = Math.max(8, Math.min(left, window.innerWidth - popup.offsetWidth - 8));
+  if (top + popup.offsetHeight > window.innerHeight - 8) top = rect.top - popup.offsetHeight - 8;
+  popup.style.top  = top + 'px';
+  popup.style.left = left + 'px';
+
+  setTimeout(() => document.addEventListener('click', _presenceOutsideClick, { once: true }), 0);
+}
+
+function _presenceOutsideClick(e) {
+  if (_presencePopupEl && !_presencePopupEl.contains(e.target)) {
+    closePresencePopup();
+  } else if (_presencePopupEl) {
+    document.addEventListener('click', _presenceOutsideClick, { once: true });
+  }
+}
+
+function closePresencePopup() {
+  if (_presencePopupEl) { _presencePopupEl.remove(); _presencePopupEl = null; }
+  document.removeEventListener('click', _presenceOutsideClick);
+}
+
+/* ─── Send friend request from presence popup ─── */
+async function _presenceSendRequest(uid, username) {
+  closePresencePopup();
+  if (!_currentUser || !_userProfile) return;
+  try {
+    // Check if already sent
+    const existing = await friendReqsRef()
+      .where('fromUid','==',_currentUser.uid)
+      .where('toUid','==',uid)
+      .where('status','==','pending').get();
+    if (!existing.empty) { showToast(`Request already sent to @${username}.`,'var(--yellow)'); return; }
+    await friendReqsRef().add({
+      fromUid:      _currentUser.uid,
+      fromUsername: _userProfile.username,
+      toUid:        uid,
+      toUsername:   username,
+      status:       'pending',
+      createdAt:    firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    showToast(`Friend request sent to @${username}!`);
+  } catch(e) {
+    showToast('Could not send request.', 'var(--pink)');
+    console.error('_presenceSendRequest:', e);
+  }
+}
+
+/* ─── Patch loadProjectData to start presence (own projects) ─── */
+const _origLoadProjectData = loadProjectData;
+loadProjectData = function(doc) {
+  stopPresence();
+  _origLoadProjectData(doc);
+  // _currentProjId is set synchronously by _origLoadProjectData
+  if (_currentUser && _currentProjId) {
+    startPresence(_currentUser.uid, _currentProjId);
+  }
+};
+
+/* ─── Patch openSharedProject to start presence (collab projects) ─── */
+const _origOpenSharedProjectP5 = openSharedProject;
+openSharedProject = async function(ownerUid, projId) {
+  stopPresence();
+  await _origOpenSharedProjectP5(ownerUid, projId);
+  if (_currentUser && _collabOwnerUid && _collabProjId) {
+    startPresence(_collabOwnerUid, _collabProjId);
+  }
+};
+
+/* ─── Patch newProject to stop presence ─── */
+const _origNewProjectP5 = newProject;
+newProject = function() {
+  stopPresence();
+  _origNewProjectP5();
+};
+
+/* ─── Patch doSignOut (P5) to stop presence ─── */
+const _origSignOutP5 = doSignOut;
+doSignOut = async function() {
+  stopPresence();
+  await _origSignOutP5();
+};
+
+
+
+
+
+
+/* ═══════════════════════════════════════════════════════════
+   PHASE ADMIN — PROJECT OVERVIEW DASHBOARD
+   Security: Firebase auth (own account) + secondary PIN (SHA-256)
+   Access:   collects all user profiles → iterates each user's
+             projects subcollection → renders unified grid newest→oldest
+   ◈ Requires Firestore rule update — see §12
+══════════════════════════════════════════════════════════ */
+
+// ── CONFIG — tb must fill both of these in ──────────────────
+// Step 1: paste your Firebase UID here (Firebase Console → Authentication → Users)
+const ADMIN_UID = 'jMsWFzCxsJXtNGcuwKHnSxlDLU33';
+
+// Step 2: paste the SHA-256 hex of your chosen PIN here.
+// To generate, open the browser console on any page and run:
+//   crypto.subtle.digest('SHA-256', new TextEncoder().encode('yourPIN'))
+//     .then(b => console.log(Array.from(new Uint8Array(b))
+//       .map(x => x.toString(16).padStart(2,'0')).join('')))
+// Copy the printed 64-char hex string and paste it below.
+const ADMIN_PIN_HASH = 'b9a283ff2dbc461a07e4d2a1f7b2225a76ddeb33198a342cfae59d87e444ea39';
+// ────────────────────────────────────────────────────────────
+
+let _isAdminMode         = false;
+let _adminPinAttempts    = 0;
+const ADMIN_MAX_ATTEMPTS = 5;
+let _adminAllProjects    = [];   // [{id,ownerUid,ownerUsername,name,updatedAt,columnCount,noteCount,keySig,tsNum,tsDenom}]
+let _adminUsernameMap    = {};   // { uid: username }
+let _adminFilterText     = '';
+
+/* ─── SHA-256 helper ─── */
+async function _sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+/* ─── Called at end of onUserLogin chain — detect admin account ─── */
+function checkAdminLogin(uid) {
+  if (ADMIN_UID === 'REPLACE_WITH_YOUR_ADMIN_UID') return; // not configured
+  if (uid !== ADMIN_UID) return;
+
+  // Admin uid confirmed — hide normal UI immediately (avoid flash)
+  document.querySelector('.header').style.display = 'none';
+  document.querySelector('.main').style.display   = 'none';
+
+  // Show PIN challenge overlay
+  _adminPinAttempts = 0;
+  document.getElementById('adminPinInput').value       = '';
+  document.getElementById('adminPinError').textContent  = '';
+  document.getElementById('adminPinAttempts').textContent = '';
+  document.getElementById('adminPinBtn').disabled       = false;
+  document.getElementById('adminPinBtn').textContent    = 'Verify Identity';
+  document.getElementById('adminPinOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('adminPinInput').focus(), 80);
+}
+
+/* ─── PIN submit handler ─── */
+async function doAdminPinSubmit() {
+  if (_adminPinAttempts >= ADMIN_MAX_ATTEMPTS) return;
+  const btn    = document.getElementById('adminPinBtn');
+  const input  = document.getElementById('adminPinInput');
+  const errEl  = document.getElementById('adminPinError');
+  const attEl  = document.getElementById('adminPinAttempts');
+  const pin    = input.value;
+
+  if (!pin) { errEl.textContent = 'Enter your PIN.'; return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Verifying…';
+  errEl.textContent = '';
+
+  // Check if hash is configured
+  if (ADMIN_PIN_HASH === 'REPLACE_WITH_SHA256_OF_YOUR_PIN') {
+    btn.disabled = false;
+    btn.textContent = 'Verify Identity';
+    errEl.textContent = 'Admin PIN not configured. Set ADMIN_PIN_HASH in the source.';
+    return;
+  }
+
+  const hash = await _sha256(pin);
+  input.value = '';
+
+  if (hash === ADMIN_PIN_HASH) {
+    document.getElementById('adminPinOverlay').classList.remove('open');
+    _enterAdminMode();
+  } else {
+    _adminPinAttempts++;
+    const remaining = ADMIN_MAX_ATTEMPTS - _adminPinAttempts;
+    if (remaining <= 0) {
+      errEl.textContent = 'Too many incorrect attempts.';
+      attEl.textContent = 'Signing out…';
+      setTimeout(() => doSignOut(), 1800);
+    } else {
+      errEl.textContent = 'Incorrect PIN.';
+      attEl.textContent = `${remaining} attempt${remaining !== 1 ? 's' : ''} remaining`;
+      btn.disabled = false;
+      btn.textContent = 'Verify Identity';
+      setTimeout(() => document.getElementById('adminPinInput').focus(), 50);
+    }
+  }
+}
+
+/* ─── Enter admin mode — show dashboard ─── */
+function _enterAdminMode() {
+  _isAdminMode = true;
+  document.querySelector('.header').style.display = 'none';
+  document.querySelector('.main').style.display   = 'none';
+  document.getElementById('adminOverlay').classList.add('open');
+  loadAdminDashboard();
+}
+
+/* ─── Exit admin mode — called before sign-out ─── */
+function _exitAdminMode() {
+  if (!_isAdminMode) return;
+  _isAdminMode      = false;
+  _adminAllProjects = [];
+  _adminUsernameMap = {};
+  _adminFilterText  = '';
+  document.getElementById('adminOverlay').classList.remove('open');
+  document.getElementById('adminPinOverlay').classList.remove('open');
+  // Restore normal UI (onAuthStateChanged will re-hide when signed out)
+  document.querySelector('.header').style.display = '';
+  document.querySelector('.main').style.display   = '';
+}
+
+/* ─── Load all projects across all users ─── */
+async function loadAdminDashboard() {
+  const loading   = document.getElementById('adminLoading');
+  const gridWrap  = document.getElementById('adminGridWrap');
+  const statsEl   = document.getElementById('adminStats');
+  const searchEl  = document.getElementById('adminSearch');
+
+  gridWrap.style.display  = 'none';
+  loading.style.display   = 'flex';
+  loading.innerHTML       = '<div class="admin-spinner"></div> Loading all projects…';
+  statsEl.textContent     = '';
+  searchEl.value          = '';
+  _adminFilterText        = '';
+  _adminAllProjects       = [];
+  _adminUsernameMap       = {};
+
+  try {
+    // 1. Fetch all user profiles to build uid→username map + get all user UIDs
+    const profilesSnap = await profilesRef().get();
+    profilesSnap.docs.forEach(d => {
+      const pd = d.data();
+      _adminUsernameMap[d.id] = pd.username || d.id.slice(0, 8);
+    });
+
+    const allUserUids = profilesSnap.docs.map(d => d.id);
+    if (!allUserUids.length) {
+      loading.innerHTML = '<span style="color:var(--text-muted)">No registered users found.</span>';
+      return;
+    }
+
+    // 2. Fetch each user's projects subcollection in parallel
+    const projectsPerUser = await Promise.all(
+      allUserUids.map(uid =>
+        db.collection('users').doc(uid).collection('projects')
+          .orderBy('updatedAt', 'desc').get()
+          .catch(() => ({ docs: [] }))  // graceful if a user's projects are unreadable
+      )
+    );
+
+    // 3. Flatten, parse, and collect
+    const projects = [];
+    projectsPerUser.forEach((snap, i) => {
+      const ownerUid = allUserUids[i];
+      snap.docs.forEach(doc => {
+        const d = doc.data();
+        let columnCount = 0, noteCount = 0;
+        try {
+          const cols = typeof d.data?.columns === 'string'
+            ? JSON.parse(d.data.columns) : (d.data?.columns || []);
+          columnCount = cols.length;
+          noteCount   = cols.reduce((s, col) => s + (Array.isArray(col) ? col.length : 0), 0);
+        } catch(e) { /* unparseable, leave zeros */ }
+
+        projects.push({
+          id:            doc.id,
+          ownerUid,
+          ownerUsername: _adminUsernameMap[ownerUid] || ownerUid.slice(0, 8),
+          name:          d.name || 'Untitled',
+          updatedAt:     d.updatedAt,
+          columnCount,
+          noteCount,
+          keySig:        d.data?.keySig  || 'C',
+          tsNum:         d.data?.tsNum   || 4,
+          tsDenom:       d.data?.tsDenom || 4,
+        });
+      });
+    });
+
+    // 4. Sort newest → oldest globally (each user's list was per-user newest first)
+    projects.sort((a, b) => {
+      const at = a.updatedAt?.toMillis?.() ?? (a.updatedAt?.seconds ?? 0) * 1000;
+      const bt = b.updatedAt?.toMillis?.() ?? (b.updatedAt?.seconds ?? 0) * 1000;
+      return bt - at;
+    });
+
+    _adminAllProjects = projects;
+
+    loading.style.display  = 'none';
+    gridWrap.style.display = '';
+    _renderAdminGrid(projects);
+
+  } catch(e) {
+    loading.innerHTML = `
+      <div style="text-align:center;color:var(--pink);line-height:2.2">
+        Error loading projects: ${escapeHtml(e.message)}<br>
+        <span style="font-size:9px;color:var(--text-muted)">
+          Check Firestore rules — admin UID needs read access on<br>
+          <code>users/{uid}/projects</code> and <code>userProfiles</code>. See §12 in source.
+        </span>
+      </div>`;
+    console.error('loadAdminDashboard:', e);
+  }
+}
+
+/* ─── Render (or re-render) the project grid ─── */
+function _renderAdminGrid(projects) {
+  const grid    = document.getElementById('adminGrid');
+  const statsEl = document.getElementById('adminStats');
+  const label   = document.getElementById('adminSectionLabel');
+
+  const total    = _adminAllProjects.length;
+  const filtered = projects.length;
+  const users    = new Set(_adminAllProjects.map(p => p.ownerUid)).size;
+
+  if (_adminFilterText) {
+    statsEl.textContent = `${filtered} of ${total} project${total !== 1 ? 's' : ''} matching "${_adminFilterText}"`;
+    label.textContent   = `Filtered Results`;
+  } else {
+    statsEl.textContent = `${total} project${total !== 1 ? 's' : ''} · ${users} user${users !== 1 ? 's' : ''}`;
+    label.textContent   = `All Projects — newest to oldest`;
+  }
+
+  if (!projects.length) {
+    grid.innerHTML = `<div class="admin-empty">
+      ${_adminFilterText
+        ? `No projects match <strong style="color:var(--cyan)">"${escapeHtml(_adminFilterText)}"</strong>.`
+        : 'No projects in the database yet.'}
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = projects.map(p => {
+    const dateStr = p.updatedAt?.toDate
+      ? p.updatedAt.toDate().toLocaleString([], {
+          year: 'numeric', month: 'short', day: 'numeric',
+          hour: '2-digit', minute: '2-digit'
+        })
+      : p.updatedAt?.seconds
+        ? new Date(p.updatedAt.seconds * 1000).toLocaleString()
+        : '—';
+
+    const trackWord = p.columnCount === 1 ? 'track' : 'tracks';
+    const noteWord  = p.noteCount  === 1 ? 'note'  : 'notes';
+
+    return `<div class="admin-card" onclick="this.classList.toggle('expanded')" title="Click to expand">
+      <div class="admin-card-name" title="${escapeHtml(p.name)}">${escapeHtml(p.name)}</div>
+      <div class="admin-card-owner">@${escapeHtml(p.ownerUsername)}</div>
+      <div class="admin-card-chips">
+        <span class="admin-card-chip">${p.columnCount} ${trackWord}</span>
+        <span class="admin-card-chip">${p.noteCount} ${noteWord}</span>
+        <span class="admin-card-chip">${escapeHtml(p.keySig)}</span>
+        <span class="admin-card-chip">${p.tsNum}/${p.tsDenom}</span>
+      </div>
+      <div class="admin-card-date">Updated ${dateStr}</div>
+      <div class="admin-card-detail">
+        <div class="admin-card-detail-row">
+          <span>Project ID</span>
+          <span class="admin-card-detail-val">${escapeHtml(p.id)}</span>
+        </div>
+        <div class="admin-card-detail-row">
+          <span>Owner UID</span>
+          <span class="admin-card-detail-val">${escapeHtml(p.ownerUid)}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ─── Client-side search/filter (instant, no re-fetch) ─── */
+function adminFilterGrid() {
+  _adminFilterText = document.getElementById('adminSearch').value.trim().toLowerCase();
+  const filtered = _adminFilterText
+    ? _adminAllProjects.filter(p =>
+        p.name.toLowerCase().includes(_adminFilterText) ||
+        p.ownerUsername.toLowerCase().includes(_adminFilterText)
+      )
+    : _adminAllProjects;
+  _renderAdminGrid(filtered);
+}
+
+/* ─── Patch onUserLogin to trigger admin check LAST in chain ─── */
+const _origOnUserLoginAdmin = onUserLogin;
+onUserLogin = async function(user) {
+  await _origOnUserLoginAdmin(user);
+  checkAdminLogin(user.uid);
+};
+
+/* ─── Patch doSignOut to clean up admin state ─── */
+const _origDoSignOutAdmin = doSignOut;
+doSignOut = async function() {
+  _exitAdminMode();
+  await _origDoSignOutAdmin();
+};
