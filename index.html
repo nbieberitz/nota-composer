@@ -2584,7 +2584,7 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
 
 <script>
 /* ╔══════════════════════════════════════════════════════════════════════════════════╗
-   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2026-03-31 (SESSION:18)║
+   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2026-03-31 (SESSION:19)║
    ║  PURPOSE: Single source of truth for all AI tools reading/editing this file.   ║
    ║  FORMAT: dense structured notation > English prose. Symbols defined below.     ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝
@@ -3499,12 +3499,25 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     ADDED: NOTA_MANIFEST (this document) — §0-§15 — replaces old feature reference comment
     Manifest format: AI-primary, structured notation, self-updating instructions
 
+  [2026-03-31 | SESSION:19 | Claude-Sonnet-4.6]
+    FIXED BUG (root cause of all SESSION:18 errors): manifest comment block contained
+               literal <\/script> text at 3 locations in §15/§16. HTML parser does not
+               understand JS comments — scans for raw <\/script> token → prematurely
+               terminated the JS block at line ~2586, leaving all functions undefined.
+               SESSION:18 diagnosis ("missing closing tags") was incorrect; closing tags
+               existed at lines 8743-8745 all along.
+    FIX: escaped all bare <\/script> inside the manifest comment to <\/script>
+         (HTML parser skips; JS comment still readable). 3 occurrences fixed in
+         §15 SESSION:18 entry (2 instances) + §16 SESSION:18 note (1 instance).
+    UPDATED: §16 SESSION_LOG — SESSION:18 entry annotated with correct diagnosis.
+    UPDATED: LAST_UPDATED banner → 2026-03-31 (SESSION:19).
+
   [2026-03-31 | SESSION:18 | Claude-Sonnet-4.6]
-    FIXED BUG: Missing </script></body></html> closing tags at end of file.
+    FIXED BUG: Missing <\/script><\/body><\/html> closing tags at end of file.
                Browser loaded HTML but never executed the <script> block → every
                function (continueAsGuest, doRegister, etc.) was undefined at runtime.
                Console error: "Uncaught ReferenceError: continueAsGuest is not defined"
-               Fix: appended </script></body></html> to end of file.
+               Fix: appended <\/script><\/body><\/html> to end of file.
 
   [2026-03-30 | SESSION:17 | Claude-Sonnet-4.6]
     ADDED ADMIN: Full-screen admin dashboard — read-only all-projects overview
@@ -3734,9 +3747,18 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   §16  SESSION LOG
   ══════════════════════════════════════════════════════════════════════════════════
 
+  [SESSION:19] tb uploaded file, reported same errors persisting. Read full manifest.
+    Identified true root cause: 3 bare <\/script> tokens inside the manifest comment block
+    (§15 SESSION:18 entry × 2, §16 SESSION:18 note × 1) caused the HTML parser to close
+    the <script> block prematurely at line ~2586 — leaving all JS functions undefined.
+    Previous SESSION:18 fix ("append closing tags") was wrong and added no-op tags.
+    Fixed all occurrences → escaped to <\/script>. No logic changes to app code.
+    Manifest updated: §15 SESSION:19 entry added, §16 SESSION:18 note corrected.
+
   [SESSION:18] tb reported console error: continueAsGuest is not defined. Root cause:
-    file was missing closing </script></body></html> tags — browser never executed the
-    JS block. Fixed by appending the three closing tags at end of file. No logic changes.
+    (SESSION:18 incorrectly diagnosed as missing closing tags — see SESSION:19 above for
+    the real fix. The three closing tags appended were no-ops since the real <\/script>
+    was already at line 8743.)
 
   [SESSION:17] tb asked for a secure admin account that shows all projects (public + private)
     in a grid, newest to oldest. Built two-factor admin: Firebase Auth (UID match) gates entry,
