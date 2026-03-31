@@ -2749,7 +2749,7 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
 
 <script>
 /* ╔══════════════════════════════════════════════════════════════════════════════════╗
-   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2026-03-31 (SESSION:26)║
+   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2026-03-31 (SESSION:27)║
    ║  PURPOSE: Single source of truth for all AI tools reading/editing this file.   ║
    ║  FORMAT: dense structured notation > English prose. Symbols defined below.     ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝
@@ -3692,6 +3692,17 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     ADDED: NOTA_MANIFEST (this document) — §0-§15 — replaces old feature reference comment
     Manifest format: AI-primary, structured notation, self-updating instructions
 
+  [2026-03-31 | SESSION:27 | Claude-Sonnet-4.6]
+    FIXED BUG: @_adminWipeFirestore — recursive approach also called doc.ref.listCollections()
+               inside _deleteCollectionRecursive, which is also Admin SDK only. Entire
+               recursive strategy replaced with two-phase collectionGroup approach:
+               Phase 1: delete all subcollection docs via db.collectionGroup() for each
+               known subcollection name (projects, list, msgs, convs, online) — covers
+               all instances regardless of parent doc, fully browser-compatible.
+               Phase 2: delete all top-level collection docs (now empty of subcollection
+               data) via db.collection(). Removed _deleteCollectionRecursive entirely.
+    VERSION:  v1.4.0 (no bump — bug fix only)
+
   [2026-03-31 | SESSION:26 | Claude-Sonnet-4.6]
     FIXED BUG: @_adminWipeFirestore — called db.listCollections() which is Firebase Admin
                SDK only, not available in the browser client SDK. Replaced with a hardcoded
@@ -4047,6 +4058,14 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   ══════════════════════════════════════════════════════════════════════════════════
   §16  SESSION LOG
   ══════════════════════════════════════════════════════════════════════════════════
+
+  [SESSION:27] nb reported Error: doc.ref.listCollections is not a function when triggering
+    ☢ Wipe DB. Root cause: _deleteCollectionRecursive called doc.ref.listCollections() on
+    every document to find subcollections — also Admin SDK only, not available in browser.
+    Entire recursive strategy scrapped. Replaced with two-phase collectionGroup approach:
+    Phase 1 uses db.collectionGroup() on known subcollection names (projects, list, msgs,
+    convs, online) to delete all subcollection docs across all parents in one pass.
+    Phase 2 deletes top-level collections normally. _deleteCollectionRecursive removed.
 
   [SESSION:26] nb deployed wipeAllAuthUsers Cloud Function (song-to-desmos, us-central1,
     Node.js 24 2nd Gen). Process: installed Node.js v24.14.1 + firebase-tools on Windows,
@@ -9365,40 +9384,48 @@ async function doAdminNukeConfirm() {
 async function _adminWipeFirestore(btn, progEl, errEl) {
   btn.textContent = 'Deleting…';
 
-  try {
-    progEl.textContent = 'Listing collections…';
+  const BATCH_SIZE = 400;
+  let totalDeleted = 0;
 
-    // Hardcoded top-level collections (db.listCollections() is Admin SDK only)
-    const collIds = [
+  // Helper: batch-delete all docs returned by a query ref
+  const deleteQuery = async (ref) => {
+    while (true) {
+      const snap = await ref.limit(BATCH_SIZE).get();
+      if (snap.empty) break;
+      const batch = db.batch();
+      snap.docs.forEach(doc => batch.delete(doc.ref));
+      await batch.commit();
+      totalDeleted += snap.docs.length;
+      if (snap.docs.length < BATCH_SIZE) break;
+    }
+  };
+
+  try {
+    // Step 1 — Delete subcollections via collectionGroup (browser-compatible,
+    // no listCollections needed). Covers all instances of each subcollection
+    // name regardless of which parent doc contains them.
+    const subcolls = ['projects', 'list', 'msgs', 'convs', 'online'];
+    for (let i = 0; i < subcolls.length; i++) {
+      progEl.textContent = `Deleting subcollection "${subcolls[i]}"… (${i+1}/${subcolls.length})`;
+      await deleteQuery(db.collectionGroup(subcolls[i]));
+    }
+
+    // Step 2 — Delete top-level collections (now empty of subcollection docs)
+    const topLevel = [
       'userProfiles', 'usernames', 'users', 'friends', 'friendRequests',
       'directMessages', 'userConvs', 'blocked', 'reports',
       'groupChats', 'userGroups', 'groupInviteCodes',
       'projectShares', 'projectShareCodes', 'projectInvites',
       'sharedProjects', 'projectPresence'
     ];
-
-    if (!collIds.length) {
-      progEl.textContent = 'Database is already empty.';
-      btn.textContent    = 'Done';
-      return;
+    for (let i = 0; i < topLevel.length; i++) {
+      progEl.textContent = `Deleting collection ${i+1}/${topLevel.length}: ${topLevel[i]}…`;
+      await deleteQuery(db.collection(topLevel[i]));
     }
 
-    let totalDeleted = 0;
-
-    for (let i = 0; i < collIds.length; i++) {
-      const collId = collIds[i];
-      progEl.textContent = `Deleting collection ${i+1}/${collIds.length}: ${collId}…`;
-
-      // Delete all docs in this collection (including subcollections) in batches
-      let deleted = await _deleteCollectionRecursive(collId);
-      totalDeleted += deleted;
-    }
-
-    progEl.textContent = `✓ Done. ${totalDeleted} document${totalDeleted !== 1 ? 's' : ''} deleted across ${collIds.length} collection${collIds.length !== 1 ? 's' : ''}.`;
+    progEl.textContent = `✓ Done. ${totalDeleted} document${totalDeleted !== 1 ? 's' : ''} deleted.`;
     btn.textContent    = 'Done ✓';
     showToast('Firestore wiped.', 'var(--pink)');
-
-    // Give user a moment to read the result, then close
     setTimeout(() => closeAdminNukeModal(), 3000);
 
   } catch(e) {
@@ -9407,38 +9434,6 @@ async function _adminWipeFirestore(btn, progEl, errEl) {
     btn.textContent    = '☢ Execute';
     console.error('_adminWipeFirestore:', e);
   }
-}
-
-/* Recursively delete all documents in a collection path */
-async function _deleteCollectionRecursive(collectionPath) {
-  const BATCH_SIZE = 400;
-  let totalDeleted = 0;
-
-  const processCollection = async (ref) => {
-    while (true) {
-      const snap = await ref.limit(BATCH_SIZE).get();
-      if (snap.empty) break;
-
-      // For each document, delete its subcollections first
-      for (const doc of snap.docs) {
-        const subColls = await doc.ref.listCollections();
-        for (const subColl of subColls) {
-          await processCollection(subColl);
-        }
-      }
-
-      // Batch delete the documents themselves
-      const batch = db.batch();
-      snap.docs.forEach(doc => batch.delete(doc.ref));
-      await batch.commit();
-      totalDeleted += snap.docs.length;
-
-      if (snap.docs.length < BATCH_SIZE) break;
-    }
-  };
-
-  await processCollection(db.collection(collectionPath));
-  return totalDeleted;
 }
 
 /* ─── Wipe ALL Auth users (via Cloud Function) ─── */
