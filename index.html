@@ -2749,7 +2749,7 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
 
 <script>
 /* ╔══════════════════════════════════════════════════════════════════════════════════╗
-   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2026-03-31 (SESSION:25)║
+   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2026-03-31 (SESSION:26)║
    ║  PURPOSE: Single source of truth for all AI tools reading/editing this file.   ║
    ║  FORMAT: dense structured notation > English prose. Symbols defined below.     ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝
@@ -3692,6 +3692,26 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     ADDED: NOTA_MANIFEST (this document) — §0-§15 — replaces old feature reference comment
     Manifest format: AI-primary, structured notation, self-updating instructions
 
+  [2026-03-31 | SESSION:26 | Claude-Sonnet-4.6]
+    FIXED BUG: @_adminWipeFirestore — called db.listCollections() which is Firebase Admin
+               SDK only, not available in the browser client SDK. Replaced with a hardcoded
+               array of all 17 known top-level Firestore collections derived from §12 rules:
+               userProfiles, usernames, users, friends, friendRequests, directMessages,
+               userConvs, blocked, reports, groupChats, userGroups, groupInviteCodes,
+               projectShares, projectShareCodes, projectInvites, sharedProjects,
+               projectPresence. SESSION:25 note "Fully dynamic — no hardcoded names" is
+               now superseded by this fix.
+    DEPLOYED: wipeAllAuthUsers Cloud Function to Firebase project song-to-desmos.
+              Function URL: https://wipeallauthusers-du2rtfjcpq-uc.a.run.app
+              Runtime: Node.js 24, region us-central1 (2nd Gen).
+              Deployed via Firebase CLI (firebase-tools) on Windows, Node.js v24.14.1.
+              Firebase project upgraded to Blaze (pay-as-you-go) plan to enable
+              Cloud Functions. $0 budget alert configured. Artifact Registry 1-day
+              cleanup policy set to prevent image accumulation charges.
+    FILLED:   WIPE_AUTH_URL constant now set to deployed Cloud Function URL (was
+              'REPLACE_WITH_YOUR_CLOUD_FUNCTION_URL' placeholder).
+    VERSION:  v1.4.0 (no version bump — bug fix + deployment only, no new features)
+
   [2026-03-31 | SESSION:25 | Claude-Sonnet-4.6]
     ADDED: ☢ Wipe DB button in admin header → @openAdminNukeModal('firestore')
     ADDED: ☢ Wipe Auth button in admin header → @openAdminNukeModal('auth')
@@ -4027,6 +4047,16 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   ══════════════════════════════════════════════════════════════════════════════════
   §16  SESSION LOG
   ══════════════════════════════════════════════════════════════════════════════════
+
+  [SESSION:26] nb deployed wipeAllAuthUsers Cloud Function (song-to-desmos, us-central1,
+    Node.js 24 2nd Gen). Process: installed Node.js v24.14.1 + firebase-tools on Windows,
+    ran firebase login, firebase init functions (JavaScript, no ESLint), replaced
+    functions/index.js with wipeAllAuthUsers.js, ran firebase deploy --only functions.
+    Firebase project upgraded to Blaze plan (credit card + billing account required for
+    Cloud Functions). $0 budget alert set. Artifact Registry 1-day image cleanup policy
+    configured. WIPE_AUTH_URL constant filled with deployed URL. Also fixed ☢ Wipe DB
+    bug: db.listCollections() does not exist in the browser SDK — replaced with hardcoded
+    list of all 17 collections from §12 Firestore rules.
 
   [SESSION:25] tb requested two admin nuke buttons: one to wipe all Firestore data,
     one to delete all Auth users, both gated behind admin PIN re-prompt. Built
