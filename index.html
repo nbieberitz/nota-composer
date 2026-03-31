@@ -2749,7 +2749,7 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
 
 <script>
 /* ╔══════════════════════════════════════════════════════════════════════════════════╗
-   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2026-03-31 (SESSION:27)║
+   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2026-03-31 (SESSION:28)║
    ║  PURPOSE: Single source of truth for all AI tools reading/editing this file.   ║
    ║  FORMAT: dense structured notation > English prose. Symbols defined below.     ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝
@@ -3539,10 +3539,10 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
             && request.auth.uid == uid;
         }
 
-        // ── Admin: blanket read-only for admin UID ───────────────────
-        // Read-only. No write access granted anywhere via this rule.
+        // ── Admin: blanket read + delete for admin UID ──────────────
+        // Read + delete only. No create/update access granted via this rule.
         match /{document=**} {
-          allow read: if request.auth != null
+          allow read, delete: if request.auth != null
             && request.auth.uid == 'jMsWFzCxsJXtNGcuwKHnSxlDLU33';
         }
 
@@ -3691,6 +3691,15 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   [2025-06 | SESSION:3 | Claude-Sonnet-4.6]
     ADDED: NOTA_MANIFEST (this document) — §0-§15 — replaces old feature reference comment
     Manifest format: AI-primary, structured notation, self-updating instructions
+
+  [2026-03-31 | SESSION:28 | Claude-Sonnet-4.6]
+    FIXED BUG: ☢ Wipe DB failing with "Missing or insufficient permissions" — admin
+               Firestore wildcard rule only allowed `read`, not `delete`. Wipe operation
+               reads docs then deletes them; read succeeded but delete was denied.
+    FIXED:    §12 admin wildcard rule updated: `allow read:` → `allow read, delete:`
+              nb must publish this rule change in Firebase Console → Firestore → Rules.
+    NOTE:     Rule does NOT grant create or update to admin — delete only added.
+    VERSION:  v1.4.0 (no bump — security rule fix only)
 
   [2026-03-31 | SESSION:27 | Claude-Sonnet-4.6]
     FIXED BUG: @_adminWipeFirestore — recursive approach also called doc.ref.listCollections()
@@ -4058,6 +4067,11 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   ══════════════════════════════════════════════════════════════════════════════════
   §16  SESSION LOG
   ══════════════════════════════════════════════════════════════════════════════════
+
+  [SESSION:28] nb reported "Missing or insufficient permissions" on ☢ Wipe DB. Root cause:
+    admin Firestore wildcard rule (§12) only granted `allow read` — delete was denied.
+    Fixed by updating rule to `allow read, delete`. nb must publish updated rules in
+    Firebase Console. §12 updated to reflect new rule. No code logic changes.
 
   [SESSION:27] nb reported Error: doc.ref.listCollections is not a function when triggering
     ☢ Wipe DB. Root cause: _deleteCollectionRecursive called doc.ref.listCollections() on
