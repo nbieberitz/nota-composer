@@ -29,8 +29,8 @@
   --green-dim: rgba(128,237,153,0.12);
   --yellow: #ffd60a;
   --text: #ced5f0;
-  --text-dim: #707898;
-  --text-muted: #3e4068;
+  --text-dim: #9aa3c8;
+  --text-muted: #6e75a0;
   --note-bg: #161632;
   --rest-bg: #121c16;
   --beat-line: rgba(76,201,240,0.10);
@@ -1921,6 +1921,45 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   text-align: center; color: var(--text-muted); font-size: 12px;
   padding: 70px 20px; line-height: 2.2; grid-column: 1 / -1;
 }
+
+/* Admin card open button */
+.admin-card-open-btn {
+  margin-top: 2px;
+  background: var(--pink-dim);
+  border: 1px solid var(--pink);
+  color: var(--pink);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; font-weight: 600; letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 5px 10px; border-radius: 5px;
+  cursor: pointer; width: 100%;
+  transition: background .15s, box-shadow .15s;
+}
+.admin-card-open-btn:hover {
+  background: rgba(247,37,133,.25);
+  box-shadow: 0 0 10px rgba(247,37,133,.3);
+}
+
+/* Admin-project back banner in normal header */
+#adminBackBanner {
+  display: none;
+  align-items: center; gap: 10px;
+  background: rgba(247,37,133,.12);
+  border-bottom: 1px solid rgba(247,37,133,.4);
+  padding: 5px 18px;
+  font-size: 10px; color: var(--pink); letter-spacing: 1px;
+  flex-shrink: 0;
+}
+#adminBackBanner.visible { display: flex; }
+.admin-back-btn {
+  background: var(--pink-dim); border: 1px solid var(--pink);
+  color: var(--pink); font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 600; letter-spacing: 1px;
+  padding: 4px 12px; border-radius: 5px; cursor: pointer;
+  transition: background .15s, box-shadow .15s;
+  white-space: nowrap;
+}
+.admin-back-btn:hover { background: rgba(247,37,133,.25); box-shadow: 0 0 8px rgba(247,37,133,.3); }
 </style>
 </head>
 <body>
@@ -2306,6 +2345,13 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
 <!-- ════════ HEADER ════════ -->
 <div class="header">
 
+  <!-- Admin project-view back banner -->
+  <div id="adminBackBanner">
+    <span>◈ ADMIN VIEW</span>
+    <span style="color:var(--text-dim);font-size:9px">Editing as admin — changes save directly to owner's project</span>
+    <button class="admin-back-btn" onclick="adminReturnToDashboard()">← Back to Dashboard</button>
+  </div>
+
   <!-- Row 1: Branding · Music settings · Actions · Zoom -->
   <div class="header-row">
     <div>
@@ -2584,7 +2630,7 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
 
 <script>
 /* ╔══════════════════════════════════════════════════════════════════════════════════╗
-   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2026-03-31 (SESSION:19)║
+   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2026-03-31 (SESSION:21)║
    ║  PURPOSE: Single source of truth for all AI tools reading/editing this file.   ║
    ║  FORMAT: dense structured notation > English prose. Symbols defined below.     ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝
@@ -3499,6 +3545,30 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     ADDED: NOTA_MANIFEST (this document) — §0-§15 — replaces old feature reference comment
     Manifest format: AI-primary, structured notation, self-updating instructions
 
+  [2026-03-31 | SESSION:21 | Claude-Sonnet-4.6]
+    ADDED: Admin can open any project for editing directly from dashboard cards.
+    ADDED: @adminOpenProject(ownerUid,projId,projName) — loads project into editor,
+           forces _isCollabViewer=false, skips presence (admin invisible), skips
+           share-doc access check, starts collab listener (live updates visible).
+    ADDED: @adminReturnToDashboard() — stops collab listener, clears collab state,
+           hides back banner, restores admin dashboard overlay.
+    ADDED: #adminBackBanner — pink strip shown in header during admin project-view,
+           shows "◈ ADMIN VIEW" label + "← Back to Dashboard" button.
+    ADDED: .admin-card-open-btn — "▶ Open Project" button on each admin card.
+    PATCHED: startPresence() — no-op when _isAdminMode=true (admin never writes
+             presence doc → invisible to other users online bar).
+    PATCHED: _exitAdminMode() — also stops collab listener + clears collab state
+             + removes adminBackBanner.visible on sign-out.
+    BEHAVIOR: Admin saves write directly to owner's project path via saveSharedProject()
+              (same as any collab editor). Admin never appears in presence bar or
+              collaborators list.
+
+  [2026-03-31 | SESSION:20 | Claude-Sonnet-4.6]
+    CHANGED: --text-dim #707898 → #9aa3c8 (was unreadably dim against dark bg)
+             --text-muted #3e4068 → #6e75a0 (was nearly invisible against dark bg)
+    SCOPE: CSS :root vars only — all usages (labels, secondary text, tabs, status,
+           section headers, kbd-desc, admin text, placeholders, etc.) inherit fix.
+
   [2026-03-31 | SESSION:19 | Claude-Sonnet-4.6]
     FIXED BUG (root cause of all SESSION:18 errors): manifest comment block contained
                literal <\/script> text at 3 locations in §15/§16. HTML parser does not
@@ -3746,6 +3816,18 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   ══════════════════════════════════════════════════════════════════════════════════
   §16  SESSION LOG
   ══════════════════════════════════════════════════════════════════════════════════
+
+  [SESSION:21] tb requested: admin can open projects from dashboard, always edits (never
+    viewer), admin not visible as collaborator or in presence bar. Implemented
+    adminOpenProject() — bypasses share-doc access check, forces editor mode, patches
+    startPresence() to skip when _isAdminMode. Admin uses saveSharedProject() path to
+    write changes. Added pink admin-back-banner to header with return button.
+    Patched _exitAdminMode to clean up collab state if admin was in project-view.
+
+  [SESSION:20] tb requested all dim/muted text and buttons be made more readable — nothing
+    should be hard to read regardless of importance. Fixed by raising both CSS vars:
+    --text-dim #707898→#9aa3c8, --text-muted #3e4068→#6e75a0. One-line change covers
+    every usage (labels, tabs, section headers, kbd descriptions, admin chips, etc.).
 
   [SESSION:19] tb uploaded file, reported same errors persisting. Read full manifest.
     Identified true root cause: 3 bare <\/script> tokens inside the manifest comment block
@@ -8572,6 +8654,14 @@ function _exitAdminMode() {
   _adminAllProjects = [];
   _adminUsernameMap = {};
   _adminFilterText  = '';
+  // Clean up if admin was in project-view
+  stopCollabListener();
+  _collabOwnerUid = null;
+  _collabProjId   = null;
+  _currentProjId  = null;
+  _isCollabViewer = false;
+  const banner = document.getElementById('adminBackBanner');
+  if (banner) banner.classList.remove('visible');
   document.getElementById('adminOverlay').classList.remove('open');
   document.getElementById('adminPinOverlay').classList.remove('open');
   // Restore normal UI (onAuthStateChanged will re-hide when signed out)
@@ -8713,7 +8803,7 @@ function _renderAdminGrid(projects) {
     const trackWord = p.columnCount === 1 ? 'track' : 'tracks';
     const noteWord  = p.noteCount  === 1 ? 'note'  : 'notes';
 
-    return `<div class="admin-card" onclick="this.classList.toggle('expanded')" title="Click to expand">
+    return `<div class="admin-card" onclick="this.classList.toggle('expanded')" title="Click to expand/collapse">
       <div class="admin-card-name" title="${escapeHtml(p.name)}">${escapeHtml(p.name)}</div>
       <div class="admin-card-owner">@${escapeHtml(p.ownerUsername)}</div>
       <div class="admin-card-chips">
@@ -8733,6 +8823,7 @@ function _renderAdminGrid(projects) {
           <span class="admin-card-detail-val">${escapeHtml(p.ownerUid)}</span>
         </div>
       </div>
+      <button class="admin-card-open-btn" onclick="event.stopPropagation();adminOpenProject('${escapeHtml(p.ownerUid)}','${escapeHtml(p.id)}','${escapeHtml(p.name)}')">▶ Open Project</button>
     </div>`;
   }).join('');
 }
@@ -8762,6 +8853,98 @@ doSignOut = async function() {
   _exitAdminMode();
   await _origDoSignOutAdmin();
 };
+
+/* ─── Patch startPresence — skip entirely when admin is in project-view ─── */
+const _origStartPresence = startPresence;
+startPresence = function(ownerUid, projId) {
+  if (_isAdminMode) return; // admin is invisible — no heartbeat, no presence doc
+  _origStartPresence(ownerUid, projId);
+};
+
+/* ─── Open a project from the admin dashboard ─── */
+async function adminOpenProject(ownerUid, projId, projName) {
+  try {
+    const doc = await db.collection('users').doc(ownerUid).collection('projects').doc(projId).get();
+    if (!doc.exists) { showToast('Project not found.', 'var(--pink)'); return; }
+
+    // Load project data directly — bypass share-doc access check, force editor
+    const d  = doc.data();
+    const pd = d.data || {};
+    S.columns = typeof pd.columns === 'string' ? JSON.parse(pd.columns) : (pd.columns || [[]]);
+    S.tsNum   = pd.tsNum   || 4;
+    S.tsDenom = pd.tsDenom || 4;
+    S.keySig  = pd.keySig  || 'C';
+    S.zoom    = pd.zoom    || 120;
+    document.getElementById('tsNum').value          = S.tsNum;
+    document.getElementById('tsDenom').value        = S.tsDenom;
+    document.getElementById('keySig').value         = S.keySig;
+    document.getElementById('zoomLbl').textContent  = S.zoom;
+    const maxId = Math.max(0, ...S.columns.flat().map(n => n.id || 0));
+    _nextId = maxId + 1;
+    selection.clear();
+    S.expanded = new Set();
+
+    // Set collab state — admin is always editor, never viewer
+    _collabOwnerUid  = ownerUid;
+    _collabProjId    = projId;
+    _currentProjId   = null;
+    _isCollabViewer  = false;
+
+    // Show project name
+    document.getElementById('projNameInput').value    = d.name || 'Untitled';
+    document.getElementById('projNameInput').readOnly = false;
+    setSaveStatus('saved', '◈ Admin Edit');
+
+    // Hide share button (admin shouldn't expose share UI on other people's projects)
+    const shareBtn = document.getElementById('shareProjBtn');
+    if (shareBtn) shareBtn.style.display = 'none';
+
+    // Hide project controls row (save/projects buttons) to keep UI clean
+    const projControls = document.getElementById('projControls');
+    if (projControls) projControls.style.display = 'none';
+
+    // Start real-time listener so admin sees live changes (but does NOT write presence)
+    startCollabListener(ownerUid, projId);
+
+    render();
+
+    // Switch from admin dashboard to normal editor
+    document.getElementById('adminOverlay').classList.remove('open');
+    document.querySelector('.header').style.display = '';
+    document.querySelector('.main').style.display   = '';
+    document.getElementById('adminBackBanner').classList.add('visible');
+
+    showToast(`Opened "${d.name || 'Untitled'}" as admin`);
+  } catch(e) {
+    showToast('Error opening project.', 'var(--pink)');
+    console.error('adminOpenProject:', e);
+  }
+}
+
+/* ─── Return from admin project-view back to the dashboard ─── */
+function adminReturnToDashboard() {
+  // Stop collab listener + presence (presence was never started, but clean up anyway)
+  stopCollabListener();
+  stopPresence();
+
+  // Clear collab state
+  _collabOwnerUid = null;
+  _collabProjId   = null;
+  _currentProjId  = null;
+  _isCollabViewer = false;
+
+  // Hide back banner, hide normal UI
+  document.getElementById('adminBackBanner').classList.remove('visible');
+  document.querySelector('.header').style.display = 'none';
+  document.querySelector('.main').style.display   = 'none';
+
+  // Restore project controls visibility for next normal use
+  const projControls = document.getElementById('projControls');
+  if (projControls && _currentUser) projControls.style.display = 'flex';
+
+  // Show admin dashboard
+  document.getElementById('adminOverlay').classList.add('open');
+}
 </script>
 </body>
 </html>
