@@ -549,6 +549,13 @@ select:focus { border-color: var(--cyan); }
   font-style: italic;
 }
 
+.out-swatch {
+  display: inline-block;
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
 .out-empty {
   color: var(--text-dim); font-size: 11px;
   text-align: center; padding: 30px 10px; line-height: 2;
@@ -2023,9 +2030,23 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
 
 </div>
 
+<!-- ════════ DESMOS OVERLAY ════════ -->
+<div id="desmosOverlay">
+  <div class="desmos-modal">
+    <div class="desmos-modal-hdr">
+      <div style="display:flex;align-items:baseline;gap:0">
+        <span class="desmos-modal-title">DESMOS PREVIEW</span>
+        <span class="desmos-modal-meta" id="desmosMeta">— hit ▶ Generate to populate</span>
+      </div>
+      <button class="desmos-close-btn" onclick="toggleDesmosOverlay()">✕ Close</button>
+    </div>
+    <div id="desmosCalcContainer"></div>
+  </div>
+</div>
+
 <script>
 /* ╔══════════════════════════════════════════════════════════════════════════════════╗
-   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2026-03-30            ║
+   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2026-03-30 (SESSION:11)║
    ║  PURPOSE: Single source of truth for all AI tools reading/editing this file.   ║
    ║  FORMAT: dense structured notation > English prose. Symbols defined below.     ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝
@@ -2208,6 +2229,8 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     c   = (60000 * b) / a   → ticker interval in ms
     d   = b                 → t increment per tick (t\to t+d)
     All displayed as decimals. No fractions.
+    ◆ S.tickerStep = d, S.tickerMs = c — stored on S after renderOutput() so that
+      _syncToDesmos() can read them when overlay is opened later without re-generating.
 
   OUTPUT PANEL SECTIONS (rendered by @renderOutput, stored in S.extraLines[]):
     TICKER SETUP CARD  — not copyable as a block; shows "Run t → t+d [copy] every c [copy] ms"
@@ -2612,12 +2635,67 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     ADDED: NOTA_MANIFEST (this document) — §0-§15 — replaces old feature reference comment
     Manifest format: AI-primary, structured notation, self-updating instructions
 
-  [2026-03-30 | SESSION:9 | Claude-Sonnet-4.6]
+  [2026-03-30 | SESSION:12 | Claude-Sonnet-4.6]
+    FIXED: Desmos overlay was rendering in dark mode — removed backgroundColor:'#141428'
+           from GraphingCalculator init options; Desmos defaults to light mode.
+    ADDED: Color correlation between output panel lines and Desmos expressions.
+           DESMOS_COLORS[] constant mirrors Desmos default sequence (red/blue/green/purple/orange/black).
+           generateDesmos() stores color on each line object.
+           _syncToDesmos() passes color: to each fn def + graph trace expression.
+           renderOutput() shows .out-swatch colored dot on tone, graph, and fn def lines.
+           tone/graph extraLines now carry trackIdx for swatch color lookup.
+    ADDED: CSS .out-swatch — 9px circle, flex-shrink:0
+
+
+    FIXED BUG#4 (critical): #desmosOverlay had inline style="display:none" which always
+           overrides the CSS class rule #desmosOverlay.open{display:flex} — inline styles
+           win over stylesheet rules regardless of specificity. classList.add('open') had
+           no visible effect. Fix: removed inline style; CSS #desmosOverlay{display:none}
+           already handles the hidden default state.
+    FIXED BUG#5 (secondary): _initDesmosCalc() had a fallthrough — if the script tag
+           already existed but _desmosCalc was still null (e.g. rapid double-click), the
+           function returned without calling callback(). Refactored to share _desmosInit
+           helper; existing script tag case now attaches {once:true} load listener.
+
+
+    FIXED BUG#1 (critical): #desmosOverlay HTML div was placed INSIDE the <script> block
+           (lines ~6252-6264 were after JS code but before <\/script>).
+           JS engine threw SyntaxError on `<div ...>` → entire script block failed to execute
+           → app completely non-functional. Fix: moved overlay div to HTML body, directly
+           before <script> tag (right after the main .main </div>).
+    FIXED BUG#3 (critical): NOTA_MANIFEST comment in SESSION:9 entry contained a literal
+           `<\/script>` string. HTML parser terminates the script block at that point
+           regardless of it being inside a JS block comment — browser sees everything
+           after as raw HTML. All functions defined past that line were undefined (e.g.
+           continueAsGuest, all Firebase/auth code). Fix: escaped to `<\/script>`.
+           ◆ RULE: NEVER write bare `<\/script>` inside a JS string, comment, or template
+             literal inside a <script> block. Always escape as `<\/script>`.
+
+ _syncToDesmos() graph trace LaTeX used unescaped `\left`/`\right`
+           in template literal. `\l` in JS template literal → drops backslash → `left`.
+           `\r` in JS template literal → carriage return character (U+000D) → `ight)`.
+           Fix: changed to `\\left` and `\\right` throughout that template literal.
+
+
     FIXED: Desmos script was loaded eagerly in <head>, registering global event listeners
            that blocked all login screen button clicks before the page was interactive.
            Fix: removed <script> from <head>; now lazy-loaded via document.createElement('script')
            on first toggleDesmosOverlay() call. _initDesmosCalc now takes a callback.
            Also added style="display:none" inline to #desmosOverlay as belt-and-suspenders.
+
+  [2026-03-30 | SESSION:11 | Claude-Sonnet-4.6]
+    FIXED: _syncToDesmos() was missing the ticker and tone expressions. Previously it
+           only pushed t=0, function defs, and graph traces into the Desmos embed.
+    ADDED: Tone expressions (group:'tone' entries from S.extraLines) pushed after fn
+           defs, one per track, with matching DESMOS_COLORS color.
+    ADDED: S.tickerStep and S.tickerMs fields on S object — set in renderOutput() so
+           _syncToDesmos() can access ticker values when opening overlay later.
+    FIXED: Ticker — state.expressions.ticker is a SEPARATE field from the list array.
+           Neither setExpressions({type:'ticker',...}) nor setExpression({type:'ticker',...})
+           work — both target the list. Fix: getState() → mutate state.expressions.ticker
+           → setState(state, {allowUndo:false}).
+           ◆ RULE: ticker → always inject via getState/setState, never via set*Expression.
+    CHANGED: §3 MUSIC ENGINE — documented S.tickerStep / S.tickerMs storage rule.
 
   [2026-03-30 | SESSION:8 | Claude-Sonnet-4.6]
     ADDED: Desmos Embed API integration (v1.10, public demo key)
@@ -2680,6 +2758,10 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   §16  SESSION LOG
   ══════════════════════════════════════════════════════════════════════════════════
 
+  [SESSION:11] tb reported Desmos embed was missing lines: tone expressions and ticker
+    not being auto-moved into the calculator. Fixed _syncToDesmos() to push ticker
+    (type:'ticker') first, then tone expressions from S.extraLines. Stored d/c on S.
+
   [SESSION:1] tb uploaded file. Goal: add chat, friend system, banning, reporting.
     Analysed existing code (auth, friends, projects all already present from P1).
     Built P2 (DMs, blocking, reporting) in one pass. tb approved, said "Continue".
@@ -2692,7 +2774,22 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     instruction to always update manifest, AI-optimized communication format.
     Result: this document (§0-§16).
 
-  [SESSION:9] Login screen buttons broken after SESSION:8. Root cause: Desmos
+  [SESSION:12] tb sent screenshot: Desmos overlay was dark, output lines had no color cues.
+    Fixed dark mode (removed custom backgroundColor). Added DESMOS_COLORS[] constant matching
+    Desmos default sequence; color stored on line objects, passed to setExpressions(), and
+    rendered as colored dot swatches on all per-track output panel rows.
+
+ Two bugs: (1) inline style="display:none"
+    on #desmosOverlay overrode the CSS .open{display:flex} rule — overlay never appeared.
+    (2) _initDesmosCalc() fell through silently if script tag existed but calc not ready.
+    Both fixed. node --check passes.
+
+ Diagnosed two bugs:
+    BUG#1: #desmosOverlay HTML was inside <script> block → SyntaxError → entire app dead.
+    BUG#2: \left/\right in _syncToDesmos template literal unescaped → garbled LaTeX traces.
+    Both fixed. Manifest updated.
+
+ Root cause: Desmos
     calculator.js loaded eagerly in <head>, intercepting global events before page
     was ready. Fixed by lazy-loading the script on first Graph button click.
 
@@ -2733,27 +2830,31 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
 let _desmosCalc = null;
 let _desmosOpen = false;
 
+// Desmos default expression color sequence — must stay in sync with output panel swatches
+const DESMOS_COLORS = ['#c74440','#2d70b3','#388c46','#6042a6','#fa7e19','#000000'];
+
 function _initDesmosCalc(callback) {
   if (_desmosCalc) { callback(); return; }
+  const _desmosInit = () => {
+    const container = document.getElementById('desmosCalcContainer');
+    _desmosCalc = Desmos.GraphingCalculator(container, {
+      keypad: false, expressions: true, settingsMenu: true,
+      zoomButtons: true, border: false,
+    });
+    callback();
+  };
   // Lazy-load the Desmos script only on first use
-  if (!document.getElementById('desmosScript')) {
-    const s = document.createElement('script');
-    s.id  = 'desmosScript';
-    s.src = 'https://www.desmos.com/api/v1.10/calculator.js?apiKey=dcb31709b452b1cf9dc26972add0fda6';
-    s.onload = () => {
-      const container = document.getElementById('desmosCalcContainer');
-      _desmosCalc = Desmos.GraphingCalculator(container, {
-        keypad: false,
-        expressions: true,
-        settingsMenu: true,
-        zoomButtons: true,
-        border: false,
-        backgroundColor: '#141428',
-      });
-      callback();
-    };
-    document.head.appendChild(s);
+  const existing = document.getElementById('desmosScript');
+  if (existing) {
+    // Script tag exists but calc not initialised yet — attach and wait
+    existing.addEventListener('load', _desmosInit, { once: true });
+    return;
   }
+  const s = document.createElement('script');
+  s.id  = 'desmosScript';
+  s.src = 'https://www.desmos.com/api/v1.10/calculator.js?apiKey=dcb31709b452b1cf9dc26972add0fda6';
+  s.onload = _desmosInit;
+  document.head.appendChild(s);
 }
 
 function toggleDesmosOverlay() {
@@ -2777,21 +2878,45 @@ function _syncToDesmos() {
   const exprs = [];
   let id = 1;
 
-  // t = 0  (the ticker variable)
+  // 1. t → 0  (initialises the ticker variable)
+  exprs.push({ id: String(id++), latex: 't\\to0' });
+
+  // 2. t = 0  (defines t as a variable)
   exprs.push({ id: String(id++), latex: 't=0' });
 
-  // Function definitions
-  (S.output || []).forEach(line => {
-    exprs.push({ id: String(id++), latex: line.latex });
+  // 3. Function definitions — assign each track its color
+  (S.output || []).forEach((line, i) => {
+    const color = DESMOS_COLORS[i % DESMOS_COLORS.length];
+    exprs.push({ id: String(id++), latex: line.latex, color });
   });
 
-  // Graph point traces  (t, fn(t))
-  (S.output || []).forEach(line => {
+  // 2. Tone expressions — one per track, same color as its function
+  (S.extraLines || []).filter(l => l.group === 'tone').forEach((line, i) => {
+    const color = DESMOS_COLORS[(line.trackIdx ?? i) % DESMOS_COLORS.length];
+    exprs.push({ id: String(id++), latex: line.copy, color });
+  });
+
+  // 3. Graph point traces  (t, fn(t)) — same color as their function
+  (S.output || []).forEach((line, i) => {
     const fn = line.fn.replace('(x)', '');
-    exprs.push({ id: String(id++), latex: `\left(t,${fn}\left(t\right)\right)` });
+    const color = DESMOS_COLORS[i % DESMOS_COLORS.length];
+    exprs.push({ id: String(id++), latex: `\\left(t,${fn}\\left(t\\right)\\right)`, color });
   });
 
   _desmosCalc.setExpressions(exprs);
+
+  // Ticker lives at state.expressions.ticker — a separate field from the list.
+  // setExpression({type:'ticker',...}) silently does nothing because it targets
+  // the list array. Must inject via getState() → mutate → setState().
+  if (S.tickerStep > 0) {
+    const state = _desmosCalc.getState();
+    state.expressions.ticker = {
+      handlerLatex: `t\\to t+${S.tickerStep}`,
+      minStepLatex: String(S.tickerMs),
+      open: true,
+    };
+    _desmosCalc.setState(state, { allowUndo: false });
+  }
 
   // Update meta label
   const meta = document.getElementById('desmosMeta');
@@ -2889,6 +3014,8 @@ let S = {
   output:   [],
   extraLines: [],
   expanded: new Set(), // note IDs manually expanded past their beat height
+  tickerStep: 0,       // d: t increment per tick (shortest note in beats)
+  tickerMs:   0,       // c: ticker interval in ms
 };
 
 let _nextId   = 1;
@@ -4188,7 +4315,8 @@ function generateDesmos() {
       const inner = parts.join(', ');
       const code  = `${fn}(x) = {${inner}}`;
       const latex = `${fn}(x) = \\left\\{${inner}\\right\\}`;
-      lines.push({ fn: fn+'(x)', code, latex });
+      const color = DESMOS_COLORS[ci % DESMOS_COLORS.length];
+      lines.push({ fn: fn+'(x)', code, latex, color });
     }
   });
 
@@ -4227,6 +4355,10 @@ function renderOutput(lines) {
   const c = Math.round((60000 * b) / bpm * 1000) / 1000;  // ms per tick
   const d = Math.round(b * 1000000) / 1000000;             // t increment per tick (= b)
 
+  // Store for _syncToDesmos()
+  S.tickerStep = d;
+  S.tickerMs   = c;
+
   // ── Store extra lines on S.output for copyAll ──
   // Extra lines: reset1, reset2, then tone×tracks, graph×tracks, then fn×tracks
   const extraLines = [];
@@ -4236,22 +4368,22 @@ function renderOutput(lines) {
   extraLines.push({ copy: 't=0',    show: 't = 0',            group: 'reset' });
 
   // tone lines  (one per track that has output)
-  lines.forEach(line => {
+  lines.forEach((line, i) => {
     const fn = line.fn.replace('(x)','');  // 'f', 'g', etc.
     extraLines.push({
       copy: `\\operatorname{tone}\\left(440\\cdot2^{\\frac{n}{12}}\\right)\\operatorname{with}n=${fn}\\left(t\\right)`,
       show: `tone(440·2^(n/12)) with n = ${fn}(t)`,
-      group: 'tone'
+      group: 'tone', trackIdx: i,
     });
   });
 
   // graph point lines
-  lines.forEach(line => {
+  lines.forEach((line, i) => {
     const fn = line.fn.replace('(x)','');
     extraLines.push({
       copy: `\\left(t,${fn}\\left(t\\right)\\right)`,
       show: `(t, ${fn}(t))`,
-      group: 'graph'
+      group: 'graph', trackIdx: i,
     });
   });
 
@@ -4291,8 +4423,10 @@ function renderOutput(lines) {
   const toneOffset = 2; // after the 2 reset lines
   html += `<div class="out-section">Tone Expressions</div>`;
   extraLines.filter(l => l.group === 'tone').forEach((line, i) => {
+    const color = DESMOS_COLORS[line.trackIdx % DESMOS_COLORS.length];
     html += `
     <div class="out-extra">
+      <span class="out-swatch" style="background:${color}"></span>
       <span class="out-extra-code">${escapeHtml(line.show)}</span>
       <button class="cbtn" style="flex-shrink:0" onclick="copyExtra(${toneOffset + i},this)">Copy</button>
     </div>`;
@@ -4302,8 +4436,10 @@ function renderOutput(lines) {
   const graphOffset = toneOffset + lines.length;
   html += `<div class="out-section">Graph Points</div>`;
   extraLines.filter(l => l.group === 'graph').forEach((line, i) => {
+    const color = DESMOS_COLORS[line.trackIdx % DESMOS_COLORS.length];
     html += `
     <div class="out-extra">
+      <span class="out-swatch" style="background:${color}"></span>
       <span class="out-extra-code">${escapeHtml(line.show)}</span>
       <button class="cbtn" style="flex-shrink:0" onclick="copyExtra(${graphOffset + i},this)">Copy</button>
     </div>`;
@@ -4314,7 +4450,10 @@ function renderOutput(lines) {
   html += lines.map((line, i) => `
     <div class="out-line">
       <div class="out-lhdr">
-        <span class="out-fn">${line.fn}</span>
+        <span style="display:flex;align-items:center;gap:6px">
+          <span class="out-swatch" style="background:${line.color}"></span>
+          <span class="out-fn">${line.fn}</span>
+        </span>
         <button class="cbtn" onclick="copyLine(${i},this)">Copy</button>
       </div>
       <div class="out-code" id="oc${i}">${escapeHtml(line.code)}</div>
@@ -6247,21 +6386,6 @@ toggleChatModal = function() {
 
 
 
-
-
-<!-- ════════ DESMOS OVERLAY ════════ -->
-<div id="desmosOverlay" style="display:none">
-  <div class="desmos-modal">
-    <div class="desmos-modal-hdr">
-      <div style="display:flex;align-items:baseline;gap:0">
-        <span class="desmos-modal-title">DESMOS PREVIEW</span>
-        <span class="desmos-modal-meta" id="desmosMeta">— hit ▶ Generate to populate</span>
-      </div>
-      <button class="desmos-close-btn" onclick="toggleDesmosOverlay()">✕ Close</button>
-    </div>
-    <div id="desmosCalcContainer"></div>
-  </div>
-</div>
 
 </script>
 </body>
