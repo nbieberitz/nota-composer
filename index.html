@@ -1,3 +1,4 @@
+<!-- NOTA v1.3.58 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2612,7 +2613,6 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
       oninput="adminFilterGrid()">
     <span class="admin-stats" id="adminStats"></span>
     <div style="margin-left:auto;display:flex;gap:8px;align-items:center;flex-shrink:0">
-      <button class="btn-sm" onclick="loadAdminDashboard()" title="Refresh all projects">↻ Refresh</button>
       <button class="btn-sm danger" onclick="doSignOut()" title="Exit admin and sign out">Exit ✕</button>
     </div>
   </div>
@@ -2630,7 +2630,7 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
 
 <script>
 /* ╔══════════════════════════════════════════════════════════════════════════════════╗
-   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2026-03-31 (SESSION:22)║
+   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2026-03-31 (SESSION:24)║
    ║  PURPOSE: Single source of truth for all AI tools reading/editing this file.   ║
    ║  FORMAT: dense structured notation > English prose. Symbols defined below.     ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝
@@ -2671,6 +2671,34 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   ║                                                                              ║
   ║  HOW TO KNOW WHAT SESSION NUMBER TO USE:                                    ║
   ║    Count the existing entries in §16 SESSION_LOG and increment by 1.        ║
+  ╚══════════════════════════════════════════════════════════════════════════════╝
+
+  ╔══════════════════════════════════════════════════════════════════════════════╗
+  ║  VERSION NAMING RULE — AUTO-UPDATE EVERY SESSION                            ║
+  ║                                                                              ║
+  ║  The version number lives on LINE 1 of this file: <!-- NOTA vX.Y.Z -->      ║
+  ║  After EVERY set of changes, you MUST update it in the same delivery.       ║
+  ║                                                                              ║
+  ║  VERSION FORMAT:  MAJOR . MINOR . PATCH                                     ║
+  ║                                                                              ║
+  ║  HOW TO DECIDE WHICH NUMBER TO INCREMENT:                                   ║
+  ║    PATCH  (+0.0.1) — small/isolated changes: bug fix, copy tweak, minor     ║
+  ║                      style adjustment, manifest-only update, single-fn fix. ║
+  ║    MINOR  (+0.1.0, reset patch to 0) — meaningful new behaviour or UI:      ║
+  ║                      new feature, new overlay/panel, new keyboard shortcut, ║
+  ║                      new Firebase schema, new output section, new mode.     ║
+  ║    MAJOR  (+1.0.0, reset minor+patch to 0) — fundamental architectural      ║
+  ║                      overhaul: replacing the music engine, switching auth   ║
+  ║                      provider, full UI redesign, breaking schema migration. ║
+  ║                                                                              ║
+  ║  RULE OF THUMB: if tb would describe the session as "we added X" → MINOR.  ║
+  ║    If "we fixed/tweaked X" → PATCH. If "we rewrote X from scratch" → MAJOR.║
+  ║    When unsure between two levels, pick the higher one.                     ║
+  ║                                                                              ║
+  ║  EXAMPLE: current = v1.3.56                                                 ║
+  ║    Fixed a copy bug            → v1.3.57                                    ║
+  ║    Added real-time BPM display → v1.4.0                                     ║
+  ║    Replaced Desmos engine      → v2.0.0                                     ║
   ╚══════════════════════════════════════════════════════════════════════════════╝
 
   ◆ CONTEXT: The user (tb) builds this incrementally across multiple chat sessions,
@@ -3545,6 +3573,29 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     ADDED: NOTA_MANIFEST (this document) — §0-§15 — replaces old feature reference comment
     Manifest format: AI-primary, structured notation, self-updating instructions
 
+  [2026-03-31 | SESSION:24 | Claude-Sonnet-4.6]
+    CHANGED: Admin dashboard ↻ Refresh button removed entirely.
+    ADDED: @_adminSilentRefresh() — background async fetch every 2s via setInterval.
+           Re-fetches all userProfiles + all project subcollections, re-sorts, and
+           calls _renderAdminGrid() preserving current _adminFilterText. No loading
+           spinner, no UI disruption. Errors swallowed silently (console.warn only).
+    ADDED: _adminRefreshInterval global (clearInterval handle).
+    PATCHED: _enterAdminMode() — starts setInterval(_adminSilentRefresh, 2000) after
+             loadAdminDashboard(). Clears any pre-existing interval before starting.
+    PATCHED: _exitAdminMode() — clears + nulls _adminRefreshInterval on exit/sign-out.
+    VERSION: v1.3.57 → v1.3.58 (minor-adjacent but no new UI mode; patch sufficient)
+
+  [2026-03-31 | SESSION:23 | Claude-Sonnet-4.6]
+    ADDED: <!-- NOTA vX.Y.Z --> version comment as line 1 of file (above <!DOCTYPE html>).
+    ADDED: VERSION NAMING RULE block in §0 — instructs all future AI tools to auto-update
+           the line-1 version after every session using MAJOR.MINOR.PATCH logic:
+           PATCH = bug fix / manifest-only / style tweak,
+           MINOR = new feature / overlay / schema / mode,
+           MAJOR = architectural overhaul / engine replacement / full redesign.
+           Block includes rule of thumb and concrete examples.
+    UPDATED: LAST_UPDATED banner → SESSION:23. §15/§16 entries added (this session).
+    VERSION: v1.3.56 → v1.3.57 (manifest + meta changes only, no app logic touched)
+
   [2026-03-31 | SESSION:22 | Claude-Sonnet-4.6]
     FIXED BUG: Collab editor (incl. admin) changes reverted ~3s after edit.
     ROOT CAUSE: startCollabListener editor branch always overwrote S.columns
@@ -3833,6 +3884,17 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   ══════════════════════════════════════════════════════════════════════════════════
   §16  SESSION LOG
   ══════════════════════════════════════════════════════════════════════════════════
+
+  [SESSION:24] tb requested: remove the admin Refresh button; replace with silent
+    background auto-refresh every 2s. Removed button from HTML. Added
+    _adminSilentRefresh() (async, silent, preserves filter). Wired start into
+    _enterAdminMode and teardown into _exitAdminMode. Bumped to v1.3.58.
+
+  [SESSION:23] tb requested: (1) version name on line 1 of file, (2) auto-versioning rule
+    added to manifest so future AI tools always update the version after changes.
+    Added <!-- NOTA v1.3.56 --> as absolute line 1. Added VERSION NAMING RULE block to §0
+    with MAJOR.MINOR.PATCH criteria, rule of thumb, and examples. Bumped to v1.3.57.
+    Manifest fully updated per §0 rules.
 
   [SESSION:22] tb reported admin edits revert ~3s after making them, save status never
     updates, changes don't persist. Root cause: startCollabListener editor branch
@@ -8595,6 +8657,7 @@ const ADMIN_MAX_ATTEMPTS = 5;
 let _adminAllProjects    = [];   // [{id,ownerUid,ownerUsername,name,updatedAt,columnCount,noteCount,keySig,tsNum,tsDenom}]
 let _adminUsernameMap    = {};   // { uid: username }
 let _adminFilterText     = '';
+let _adminRefreshInterval = null; // silent background auto-refresh timer
 
 /* ─── SHA-256 helper ─── */
 async function _sha256(str) {
@@ -8669,12 +8732,83 @@ async function doAdminPinSubmit() {
 }
 
 /* ─── Enter admin mode — show dashboard ─── */
+/* ─── Silent background refresh — re-fetches data without touching UI chrome ─── */
+async function _adminSilentRefresh() {
+  if (!_isAdminMode) return;
+  try {
+    const profilesSnap = await db.collection('userProfiles').get();
+    const usernameMap  = {};
+    profilesSnap.docs.forEach(d => { usernameMap[d.id] = d.data().username || d.id.slice(0,8); });
+
+    const allUserUids = profilesSnap.docs.map(d => d.id);
+    if (!allUserUids.length) return;
+
+    const BATCH = 10;
+    const batches = [];
+    for (let i = 0; i < allUserUids.length; i += BATCH)
+      batches.push(allUserUids.slice(i, i + BATCH));
+
+    const flatUids = batches.flatMap(b => b);
+    const projectsPerUser = await Promise.all(
+      flatUids.map(uid =>
+        db.collection('users').doc(uid).collection('projects')
+          .orderBy('updatedAt','desc').limit(200).get()
+      )
+    );
+
+    const projects = [];
+    projectsPerUser.forEach((snap, i) => {
+      const ownerUid = flatUids[i];
+      snap.docs.forEach(doc => {
+        const d = doc.data();
+        let columnCount = 0, noteCount = 0;
+        try {
+          const cols = typeof d.data?.columns === 'string'
+            ? JSON.parse(d.data.columns) : (d.data?.columns || []);
+          columnCount = cols.length;
+          noteCount   = cols.reduce((s, col) => s + (Array.isArray(col) ? col.length : 0), 0);
+        } catch(e) { /* unparseable */ }
+        projects.push({
+          id: doc.id, ownerUid,
+          ownerUsername: usernameMap[ownerUid] || ownerUid.slice(0,8),
+          name: d.name || 'Untitled',
+          updatedAt: d.updatedAt,
+          columnCount, noteCount,
+          keySig:  d.data?.keySig  || 'C',
+          tsNum:   d.data?.tsNum   || 4,
+          tsDenom: d.data?.tsDenom || 4,
+        });
+      });
+    });
+
+    projects.sort((a, b) => {
+      const at = a.updatedAt?.toMillis?.() ?? (a.updatedAt?.seconds ?? 0) * 1000;
+      const bt = b.updatedAt?.toMillis?.() ?? (b.updatedAt?.seconds ?? 0) * 1000;
+      return bt - at;
+    });
+
+    _adminAllProjects = projects;
+    _adminUsernameMap = usernameMap;
+    const filtered = _adminFilterText
+      ? projects.filter(p =>
+          p.name.toLowerCase().includes(_adminFilterText) ||
+          p.ownerUsername.toLowerCase().includes(_adminFilterText))
+      : projects;
+    _renderAdminGrid(filtered);
+  } catch(e) {
+    console.warn('_adminSilentRefresh:', e);
+  }
+}
+
 function _enterAdminMode() {
   _isAdminMode = true;
   document.querySelector('.header').style.display = 'none';
   document.querySelector('.main').style.display   = 'none';
   document.getElementById('adminOverlay').classList.add('open');
   loadAdminDashboard();
+  // Start silent background auto-refresh every 2 seconds
+  if (_adminRefreshInterval) clearInterval(_adminRefreshInterval);
+  _adminRefreshInterval = setInterval(_adminSilentRefresh, 2000);
 }
 
 /* ─── Exit admin mode — called before sign-out ─── */
@@ -8684,6 +8818,7 @@ function _exitAdminMode() {
   _adminAllProjects = [];
   _adminUsernameMap = {};
   _adminFilterText  = '';
+  if (_adminRefreshInterval) { clearInterval(_adminRefreshInterval); _adminRefreshInterval = null; }
   // Clean up if admin was in project-view
   stopCollabListener();
   _collabOwnerUid = null;
