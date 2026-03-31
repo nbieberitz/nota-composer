@@ -2630,7 +2630,7 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
 
 <script>
 /* ╔══════════════════════════════════════════════════════════════════════════════════╗
-   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2026-03-31 (SESSION:21)║
+   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2026-03-31 (SESSION:22)║
    ║  PURPOSE: Single source of truth for all AI tools reading/editing this file.   ║
    ║  FORMAT: dense structured notation > English prose. Symbols defined below.     ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝
@@ -3545,6 +3545,23 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     ADDED: NOTA_MANIFEST (this document) — §0-§15 — replaces old feature reference comment
     Manifest format: AI-primary, structured notation, self-updating instructions
 
+  [2026-03-31 | SESSION:22 | Claude-Sonnet-4.6]
+    FIXED BUG: Collab editor (incl. admin) changes reverted ~3s after edit.
+    ROOT CAUSE: startCollabListener editor branch always overwrote S.columns
+                with incoming snapshot data unconditionally. onSnapshot fires
+                immediately on any Firestore write (including our own pending
+                write), so the pre-save state snapshot arrived during the
+                AUTO_SAVE_DELAY window and clobbered local edits before they
+                were flushed. The comment "only update if newer" was aspirational
+                — no such check existed in the code.
+    FIX 1: Added { includeMetadataChanges: true } to onSnapshot options.
+            Skip snapshots where snap.metadata.hasPendingWrites || fromCache —
+            these are local echoes or offline stale data, never remote truth.
+    FIX 2: Editor branch now also returns early if _autoSaveTimer is non-null
+            (user is mid-edit, save not yet flushed) — prevents any remote
+            snapshot from reverting unsaved local changes during the debounce.
+    SCOPE: Fixes both collab editors and admin project-view equally.
+
   [2026-03-31 | SESSION:21 | Claude-Sonnet-4.6]
     ADDED: Admin can open any project for editing directly from dashboard cards.
     ADDED: @adminOpenProject(ownerUid,projId,projName) — loads project into editor,
@@ -3816,6 +3833,12 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   ══════════════════════════════════════════════════════════════════════════════════
   §16  SESSION LOG
   ══════════════════════════════════════════════════════════════════════════════════
+
+  [SESSION:22] tb reported admin edits revert ~3s after making them, save status never
+    updates, changes don't persist. Root cause: startCollabListener editor branch
+    unconditionally overwrote S.columns on every onSnapshot — including local pending
+    writes and snapshots arriving during the AUTO_SAVE_DELAY window. Fixed with
+    includeMetadataChanges + hasPendingWrites guard + _autoSaveTimer guard.
 
   [SESSION:21] tb requested: admin can open projects from dashboard, always edits (never
     viewer), admin not visible as collaborator or in presence bar. Implemented
@@ -4459,28 +4482,35 @@ async function openSharedProject(ownerUid, projId) {
 function startCollabListener(ownerUid, projId) {
   stopCollabListener();
   _collabListener = db.collection('users').doc(ownerUid).collection('projects').doc(projId)
-    .onSnapshot(snap => {
+    .onSnapshot({ includeMetadataChanges: true }, snap => {
       if (!snap.exists) { showToast('Project was deleted by owner.', 'var(--pink)'); stopCollabListener(); return; }
+
+      // hasPendingWrites = local echo of our own in-flight write — skip to avoid clobbering local state.
+      // fromCache = offline stale data — skip.
+      if (snap.metadata.hasPendingWrites || snap.metadata.fromCache) return;
+
       const d = snap.data();
       const pd = d.data || {};
       const incoming = typeof pd.columns === 'string' ? JSON.parse(pd.columns) : (pd.columns || [[]]);
-      // Only update if we're a viewer OR if someone else made the change (avoid overwriting own edits in flight)
+
       if (_isCollabViewer) {
+        // Viewers always accept confirmed remote state
         S.columns = incoming;
         S.tsNum   = pd.tsNum   || S.tsNum;
         S.tsDenom = pd.tsDenom || S.tsDenom;
         S.keySig  = pd.keySig  || S.keySig;
         S.zoom    = pd.zoom    || S.zoom;
-        document.getElementById('tsNum').value   = S.tsNum;
-        document.getElementById('tsDenom').value = S.tsDenom;
-        document.getElementById('keySig').value  = S.keySig;
-        document.getElementById('zoomLbl').textContent = S.zoom;
+        document.getElementById('tsNum').value          = S.tsNum;
+        document.getElementById('tsDenom').value        = S.tsDenom;
+        document.getElementById('keySig').value         = S.keySig;
+        document.getElementById('zoomLbl').textContent  = S.zoom;
         const maxId = Math.max(0, ...S.columns.flat().map(n => n.id || 0));
         _nextId = maxId + 1;
-        _baseRender(); // call base render, skip auto-save
+        _baseRender();
       } else {
-        // Editor: merge incoming — last write wins, just update S silently
-        // Only update if the snapshot is newer than our last save
+        // Editor: only apply a confirmed remote snapshot if we have no pending local save.
+        // _autoSaveTimer non-null means user is mid-edit — ignore to avoid reverting unsaved changes.
+        if (_autoSaveTimer) return;
         S.columns = incoming;
         const maxId = Math.max(0, ...S.columns.flat().map(n => n.id || 0));
         _nextId = Math.max(_nextId, maxId + 1);
