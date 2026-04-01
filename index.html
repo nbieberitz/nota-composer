@@ -1,4 +1,4 @@
-<!-- NOTA v1.4.2 -->
+<!-- NOTA v1.4.3 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2749,7 +2749,7 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
 
 <script>
 /* ╔══════════════════════════════════════════════════════════════════════════════════╗
-   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2026-03-31 (SESSION:36)║
+   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2026-03-31 (SESSION:37)║
    ║  PURPOSE: Single source of truth for all AI tools reading/editing this file.   ║
    ║  FORMAT: dense structured notation > English prose. Symbols defined below.     ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝
@@ -3693,6 +3693,22 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     ADDED: NOTA_MANIFEST (this document) — §0-§15 — replaces old feature reference comment
     Manifest format: AI-primary, structured notation, self-updating instructions
 
+  [2026-03-31 | SESSION:37 | Claude-Sonnet-4.6]
+    FIXED BUG: Admin (and collab editors) couldn't see live remote changes to tsNum,
+               tsDenom, keySig, zoom, or project name — editor branch of startCollabListener
+               only synced S.columns; all other fields were ignored on incoming snapshots.
+    FIXED BUG: Admin renames (projNameInput) not persisted — saveSharedProject did not
+               include `name` in the Firestore update payload.
+    FIXED BUG: onProjectNameChange() guarded on _currentProjId (null for admin/collab
+               editors) — renaming a project while in collab/admin mode never triggered
+               scheduleAutoSave.
+    FIXED:     startCollabListener editor branch now syncs all fields (columns, tsNum,
+               tsDenom, keySig, zoom, name) identically to the viewer branch.
+               saveSharedProject now writes `name` alongside `data`. onProjectNameChange
+               now also fires scheduleAutoSave when _collabOwnerUid+_collabProjId are set
+               and _isCollabViewer is false.
+    VERSION:   v1.4.3
+
   [2026-03-31 | SESSION:36 | Claude-Sonnet-4.6]
     FIXED BUG: New/unsaved projects never autosaved. scheduleAutoSave() guarded on
                _currentProjId — null for new projects — so render() hook never fired
@@ -4160,6 +4176,11 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   ══════════════════════════════════════════════════════════════════════════════════
   §16  SESSION LOG
   ══════════════════════════════════════════════════════════════════════════════════
+
+  [SESSION:37] tb reported admin can't see live changes or save changes in project-view.
+    Three bugs: (1) collab listener editor branch only synced columns — not other fields.
+    (2) saveSharedProject omitted `name` from write payload. (3) onProjectNameChange
+    guarded on _currentProjId (null for admin). All three fixed. v1.4.3.
 
   [SESSION:36] tb reported new/unsaved projects don't autosave until manual Save click.
     Fixed by removing _currentProjId guard from scheduleAutoSave() and updating the
@@ -4894,6 +4915,15 @@ function startCollabListener(ownerUid, projId) {
         // _autoSaveTimer non-null means user is mid-edit — ignore to avoid reverting unsaved changes.
         if (_autoSaveTimer) return;
         S.columns = incoming;
+        S.tsNum   = pd.tsNum   || S.tsNum;
+        S.tsDenom = pd.tsDenom || S.tsDenom;
+        S.keySig  = pd.keySig  || S.keySig;
+        S.zoom    = pd.zoom    || S.zoom;
+        document.getElementById('tsNum').value          = S.tsNum;
+        document.getElementById('tsDenom').value        = S.tsDenom;
+        document.getElementById('keySig').value         = S.keySig;
+        document.getElementById('zoomLbl').textContent  = S.zoom;
+        if (d.name) document.getElementById('projNameInput').value = d.name;
         const maxId = Math.max(0, ...S.columns.flat().map(n => n.id || 0));
         _nextId = Math.max(_nextId, maxId + 1);
         _baseRender();
@@ -4910,7 +4940,9 @@ async function saveSharedProject() {
   if (!_collabOwnerUid || !_collabProjId || _isCollabViewer) return;
   setSaveStatus('saving', '● Saving…');
   try {
+    const projName = (document.getElementById('projNameInput').value || '').trim() || 'Untitled';
     const data = {
+      name: projName,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
       data: {
         columns: JSON.stringify(S.columns),
@@ -7203,7 +7235,10 @@ function newProject() {
 }
 
 function onProjectNameChange() {
-  if (_currentProjId) scheduleAutoSave();
+  // Fire for own saved projects OR for collab/admin editors
+  if (_currentProjId || (_collabOwnerUid && _collabProjId && !_isCollabViewer)) {
+    scheduleAutoSave();
+  }
 }
 
 /* ─── Projects modal ─── */
