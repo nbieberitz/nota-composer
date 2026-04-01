@@ -1,4 +1,4 @@
-<!-- NOTA v1.4.8 -->
+<!-- NOTA v1.4.10 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2749,7 +2749,7 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
 
 <script>
 /* ╔══════════════════════════════════════════════════════════════════════════════════╗
-   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2026-04-01 (SESSION:42)║
+   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2026-04-01 (SESSION:43)║
    ║  PURPOSE: Single source of truth for all AI tools reading/editing this file.   ║
    ║  FORMAT: dense structured notation > English prose. Symbols defined below.     ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝
@@ -3563,7 +3563,17 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   §12-CHANGELOG  (newest first — AI must prepend entries here after each change)
   ──────────────────────────────────────────────────────────────────────────────
 
-  [SESSION:17] Added admin blanket read rule.
+  [SESSION:44] projectShares rules — allow new joiners to read + self-add.
+    Collection: /projectShares/{ownerUid}/projects/{projId}
+    Change: (1) add bare `allow read: if request.auth != null;` so any authed user
+            can read the share doc (needed to check existing access before joining).
+            (2) add `allow update:` for any authed user that adds exactly their own
+            uid to collaborators and touches no other fields (field-level guard using
+            .diff().affectedKeys().hasOnly(['collaborators']), size check, and
+            .hasAll([request.auth.uid])). Required by joinProjectByCode + acceptProjInvite.
+    STATUS: ◈ MUST be published in Firebase Console — not deployed yet.
+
+    [SESSION:17] Added admin blanket read rule.
     Collection: /{document=**} (wildcard — all collections)
     Change: Added top-level wildcard read rule gated on ADMIN_UID
             ('jEjlW2A0z4TBsLPltDMTlPlvee12'). Read-only — no write
@@ -3701,6 +3711,42 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   [2025-06 | SESSION:3 | Claude-Sonnet-4.6]
     ADDED: NOTA_MANIFEST (this document) — §0-§15 — replaces old feature reference comment
     Manifest format: AI-primary, structured notation, self-updating instructions
+
+  [2026-04-01 | SESSION:44 | Claude-Sonnet-4.6]
+    FIXED BUG: Project invitations broken — both code-join and username-invite accept paths
+               threw permission-denied errors when recipients tried to join.
+    ROOT CAUSE 1: Firestore rules for /projectShares/{ownerUid}/projects/{projId} only allowed
+               read by the owner or *existing* collaborators, and write only by the owner.
+               A new joiner is neither, so both the initial .get() (to check existing access)
+               and the batch.update() (to add themselves) were denied.
+    FIX 1:     Firestore rules update required in Firebase Console (see §12). New rule for
+               projectShares: allow read for any authed user; allow update for any authed user
+               adding only themselves under 'collaborators' (field-level guard). This unblocks
+               both joinProjectByCode and acceptProjInvite without exposing write-all access.
+    ROOT CAUSE 2: renderProjInvitesList injected inv.projName and inv.fromUsername directly
+               into onclick="acceptProjInvite(...)" attributes. escapeHtml() only escapes
+               & < > — not single quotes. A project name like "Tom's Song" produced broken
+               JS syntax, silently preventing the Accept button from working.
+    FIX 2:     Replaced multi-argument onclick with acceptProjInviteById(id) wrapper.
+               Wrapper looks up invite from _projInvites[] by Firestore auto-ID (no special
+               chars), then calls acceptProjInvite() with safe in-memory values. No user data
+               ever injected into onclick attributes. Applied directly in file.
+    VERSION:   v1.4.10
+
+    [2026-04-01 | SESSION:43 | Claude-Sonnet-4.6]
+    FIXED BUG: Admin dashboard silent refresh appeared broken after SESSION:42.
+               Two causes: (1) SESSION:42 patch called setupProjInviteListeners(adminUid)
+               before the ADMIN_UID guard — admin has no invites/sharedProjects, so the
+               onSnapshot listeners could error or interfere with the login chain.
+               (2) _adminSilentRefresh called _renderAdminGrid() but never showed
+               #adminGridWrap — so refreshed data was invisible if gridWrap was hidden
+               (e.g. after returning from a project-view and back to dashboard).
+    FIXED:     (1) Moved ADMIN_UID guard to TOP of SESSION:42 onUserLogin patch, before
+               setupProjInviteListeners — admin now exits immediately, no invite/shared
+               listeners set up, no auto-load attempted.
+               (2) _adminSilentRefresh now shows #adminGridWrap and hides #adminLoading
+               after successfully populating data.
+    VERSION:   v1.4.9
 
   [2026-04-01 | SESSION:42 | Claude-Sonnet-4.6]
     FIXED BUG: Admin edits not visible on owner/other devices immediately. Root cause:
@@ -4252,6 +4298,17 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   ══════════════════════════════════════════════════════════════════════════════════
   §16  SESSION LOG
   ══════════════════════════════════════════════════════════════════════════════════
+
+  [SESSION:44] tb reported invitations broken — errors when entering a valid code or
+    accepting by username. Two bugs: (1) Firestore rules blocked new joiners from reading
+    and updating projectShares (rules update in Firebase Console required — see §12).
+    (2) Single-quote injection in renderProjInvitesList broke Accept button for projects
+    with apostrophes in names. Fixed (2) in file; (1) documented for tb to deploy. v1.4.10.
+
+    [SESSION:43] tb reported admin dashboard refresh broken after SESSION:42. Two bugs:
+    (1) SESSION:42 patch called setupProjInviteListeners before ADMIN_UID guard — moved
+    guard to top of patch. (2) _adminSilentRefresh never showed gridWrap — added
+    gridWrap show + loading hide after successful fetch. v1.4.9.
 
   [SESSION:42] tb reported admin changes still not visible on other devices instantly.
     Root cause: _ownProjListener never started unless user manually opened a project —
@@ -4870,11 +4927,19 @@ function renderProjInvitesList() {
           <span style="font-size:9px;color:var(--text-muted)">access</span>
         </div>
         <div class="proj-invite-actions">
-          <button class="btn-sm accent" onclick="acceptProjInvite('${inv.id}','${inv.ownerUid}','${inv.projId}','${escapeHtml(inv.projName||'Untitled')}','${escapeHtml(inv.fromUsername||'?')}','${role}')">✓ Accept</button>
+          <button class="btn-sm accent" onclick="acceptProjInviteById('${inv.id}')">✓ Accept</button>
           <button class="btn-sm danger" onclick="declineProjInvite('${inv.id}')">✗ Decline</button>
         </div>
       </div>`;
   }).join('');
+}
+
+/* ─── Accept project invite by ID (safe wrapper — avoids single-quote injection in onclick) ─── */
+function acceptProjInviteById(id) {
+  const inv = _projInvites.find(i => i.id === id);
+  if (!inv) { showToast('Invite not found.', 'var(--pink)'); return; }
+  const role = inv.access === 'editor' ? 'editor' : 'viewer';
+  acceptProjInvite(inv.id, inv.ownerUid, inv.projId, inv.projName || 'Untitled', inv.fromUsername || '?', role);
 }
 
 /* ─── Accept project invite ─── */
@@ -5222,14 +5287,16 @@ async function leaveSharedProject(listId, ownerUid, projId, projName) {
 const _origOnUserLogin = onUserLogin;
 onUserLogin = async function(user) {
   await _origOnUserLogin(user);
+
+  // Skip all P4+ setup for admin — admin has no projects, invites, or shared projects.
+  if (user.uid === ADMIN_UID) return;
+
   setupProjInviteListeners(user.uid);
   // Do NOT unconditionally show projInvitesBtnWrap here.
   // updateProjInvitesBadge (called by the listener snapshot) controls visibility.
 
   // Auto-load the most recently updated project so _ownProjListener is immediately active.
   // This ensures admin edits and any remote changes are received from the moment of login.
-  // Skip for admin — admin has no own projects and uses adminOpenProject instead.
-  if (user.uid === ADMIN_UID) return;
   try {
     const snap = await db.collection('users').doc(user.uid).collection('projects')
       .orderBy('updatedAt', 'desc').limit(1).get();
@@ -9324,6 +9391,11 @@ async function _adminSilentRefresh() {
           p.name.toLowerCase().includes(_adminFilterText) ||
           p.ownerUsername.toLowerCase().includes(_adminFilterText))
       : projects;
+    // Show the grid wrap in case it was hidden (e.g. after returning from project-view)
+    const gw = document.getElementById('adminGridWrap');
+    if (gw) gw.style.display = '';
+    const ld = document.getElementById('adminLoading');
+    if (ld) ld.style.display = 'none';
     _renderAdminGrid(filtered);
   } catch(e) {
     console.warn('_adminSilentRefresh:', e);
