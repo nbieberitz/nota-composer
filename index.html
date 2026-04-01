@@ -3383,7 +3383,7 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
 
   ──────────────────────────────────────────────────────────────────────────────
   LIVE RULES  (paste this entire block into Firebase Console → Firestore → Rules)
-  LAST_SYNCED: SESSION:17  |  Admin UID: jEjlW2A0z4TBsLPltDMTlPlvee12
+  LAST_SYNCED: SESSION:35  |  Admin UID: jEjlW2A0z4TBsLPltDMTlPlvee12
   ──────────────────────────────────────────────────────────────────────────────
 
     rules_version = '2';
@@ -3539,10 +3539,10 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
             && request.auth.uid == uid;
         }
 
-        // ── Admin: blanket read + delete for admin UID ──────────────
-        // Read + delete only. No create/update access granted via this rule.
+        // ── Admin: blanket read + write + delete for admin UID ──────
+        // Full read/write/delete. Required for admin project editing via adminOpenProject.
         match /{document=**} {
-          allow read, delete: if request.auth != null
+          allow read, write, delete: if request.auth != null
             && request.auth.uid == 'jEjlW2A0z4TBsLPltDMTlPlvee12';
         }
 
@@ -3691,6 +3691,18 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   [2025-06 | SESSION:3 | Claude-Sonnet-4.6]
     ADDED: NOTA_MANIFEST (this document) — §0-§15 — replaces old feature reference comment
     Manifest format: AI-primary, structured notation, self-updating instructions
+
+  [2026-03-31 | SESSION:35 | Claude-Sonnet-4.6]
+    FIXED BUG: saveSharedProject: "Missing or insufficient permissions" when admin
+               edits another user's project. adminOpenProject sets _collabOwnerUid +
+               _collabProjId, so scheduleAutoSave routes to saveSharedProject which
+               calls .update() on users/{ownerUid}/projects/{projId}. The admin
+               wildcard Firestore rule only granted `read, delete` — not write.
+    FIXED:     §12 admin wildcard rule: `allow read, delete:` → `allow read, write, delete:`.
+               nb must republish rules in Firebase Console → Firestore → Rules.
+    NOTE:      `write` in Firestore rules covers create, update, and delete — the
+               explicit `delete` is now redundant but kept for clarity.
+    VERSION:   v1.4.1 (no bump — rules-only fix)
 
   [2026-03-31 | SESSION:34 | Claude-Sonnet-4.6]
     FIXED BUG: Admin was shown the "Choose your username" overlay when entering a
