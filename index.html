@@ -1,4 +1,4 @@
-<!-- NOTA v1.4.6 -->
+<!-- NOTA v1.4.7 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2749,7 +2749,7 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
 
 <script>
 /* ╔══════════════════════════════════════════════════════════════════════════════════╗
-   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2026-04-01 (SESSION:40)║
+   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2026-04-01 (SESSION:41)║
    ║  PURPOSE: Single source of truth for all AI tools reading/editing this file.   ║
    ║  FORMAT: dense structured notation > English prose. Symbols defined below.     ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝
@@ -3029,12 +3029,12 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     @newProject()     → reset S+UI, _currentProjId=null
     @startRenameProject(id,btn) → inline input in projList
 
-  AUTO-SAVE: _autoSaveTimer. Fires 4000ms after last render() if user is logged in.
-    Fires for BOTH new unsaved projects (_currentProjId=null) and existing projects.
-    For new projects, saveProject() calls .add() and sets _currentProjId automatically.
-    @onProjectNameChange() → scheduleAutoSave if logged in.
-    ◆ scheduleAutoSave patched in P4: if editing shared project as editor → calls
-      saveSharedProject() (writes to owner's Firestore path) instead.
+  AUTO-SAVE: _autoSaveTimer. Debounce 300ms after last render(). Fires for all logged-in
+    users. New projects: saveProject() calls .add() → sets _currentProjId.
+    Collab/admin editors: P4 patch routes to saveSharedProject().
+    ◆ No "Saving…" status during debounce (too noisy at 300ms). Status shown on write only.
+    ◆ _autoSaveTimer guard REMOVED from snapshot listeners — hasPendingWrites alone
+      is sufficient to protect local state at 300ms debounce.
 
   OWN-PROJECT LIVE LISTENER: _ownProjListener. Started in loadProjectData patch.
     Listens on users/{uid}/projects/{projId} with includeMetadataChanges.
@@ -3699,6 +3699,19 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     ADDED: NOTA_MANIFEST (this document) — §0-§15 — replaces old feature reference comment
     Manifest format: AI-primary, structured notation, self-updating instructions
 
+  [2026-04-01 | SESSION:41 | Claude-Sonnet-4.6]
+    CHANGED: AUTO_SAVE_DELAY 4000ms → 300ms. Edits now reach Firestore ~300ms after
+             the last change, making live sync near-instant across all clients.
+             Total lag: ~300ms debounce + ~100-300ms Firestore RTT ≈ under 1 second.
+    CHANGED: Removed _autoSaveTimer guard from startCollabListener editor branch and
+             startOwnProjListener. At 300ms debounce the hasPendingWrites guard alone
+             is sufficient — the timer guard was only needed to protect a 4-second stale
+             window and now only blocked legitimate remote updates.
+    CHANGED: Removed "Saving Changes…" / "Saving…" setSaveStatus calls from
+             scheduleAutoSave and P4 patch — at 300ms this would flash on every
+             keystroke. Status is shown only on actual Firestore write completion.
+    VERSION: v1.4.7
+
   [2026-04-01 | SESSION:40 | Claude-Sonnet-4.6]
     FIXED BUG: Admin UID could appear in other users' presence bars via stale Firestore
                docs from before the startPresence no-op patch was added.
@@ -4224,6 +4237,11 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   ══════════════════════════════════════════════════════════════════════════════════
   §16  SESSION LOG
   ══════════════════════════════════════════════════════════════════════════════════
+
+  [SESSION:41] tb requested near-instant live sync — all edits visible to all users
+    within 1 second. Changed AUTO_SAVE_DELAY 4000→300ms. Removed _autoSaveTimer guard
+    from both snapshot listeners (hasPendingWrites sufficient at 300ms). Removed noisy
+    "Saving…" status during debounce. Expected lag: ~300ms + Firestore RTT. v1.4.7.
 
   [SESSION:40] tb requested admin invisibility and always-on project auto-refresh.
     Presence: added ADMIN_UID filter in onSnapshot so stale docs never show. Added
@@ -4977,9 +4995,7 @@ function startCollabListener(ownerUid, projId) {
         _nextId = maxId + 1;
         _baseRender();
       } else {
-        // Editor: only apply a confirmed remote snapshot if we have no pending local save.
-        // _autoSaveTimer non-null means user is mid-edit — ignore to avoid reverting unsaved changes.
-        if (_autoSaveTimer) return;
+        // Editor: confirmed remote state — hasPendingWrites/fromCache already guarded above.
         S.columns = incoming;
         S.tsNum   = pd.tsNum   || S.tsNum;
         S.tsDenom = pd.tsDenom || S.tsDenom;
@@ -5009,8 +5025,6 @@ function startOwnProjListener(uid, projId) {
       if (!snap.exists) return; // project deleted — don't act; deleteProject() handles UI
       // Skip local in-flight writes and stale cache to avoid clobbering mid-edit state
       if (snap.metadata.hasPendingWrites || snap.metadata.fromCache) return;
-      // Skip if user is mid-edit (autosave timer pending)
-      if (_autoSaveTimer) return;
       const d  = snap.data();
       const pd = d.data || {};
       const incoming = typeof pd.columns === 'string' ? JSON.parse(pd.columns) : (pd.columns || [[]]);
@@ -5062,7 +5076,6 @@ scheduleAutoSave = function() {
   // If we're editing a shared project as editor, save there instead
   if (_collabOwnerUid && _collabProjId && !_isCollabViewer) {
     clearTimeout(_autoSaveTimer);
-    setSaveStatus('saving', '● Saving…');
     _autoSaveTimer = setTimeout(saveSharedProject, AUTO_SAVE_DELAY);
     return;
   }
@@ -7088,7 +7101,7 @@ let _currentUser    = null;   // Firebase User object
 let _guestMode      = false;  // true when user chose to skip sign-in
 let _currentProjId  = null;   // Firestore doc ID of loaded project
 let _autoSaveTimer  = null;
-const AUTO_SAVE_DELAY = 4000; // ms after last change
+const AUTO_SAVE_DELAY = 300; // ms debounce — coalesces rapid edits, writes almost immediately
 
 /* ─── Guest mode entry ─── */
 function continueAsGuest() {
@@ -7281,7 +7294,8 @@ async function saveProject() {
 function scheduleAutoSave() {
   if (!_currentUser) return;
   clearTimeout(_autoSaveTimer);
-  setSaveStatus('saving', '● Saving Changes…');
+  // No status update here — at 300ms debounce, flashing "Saving…" on every keystroke is too noisy.
+  // saveProject / saveSharedProject update status on actual write.
   _autoSaveTimer = setTimeout(saveProject, AUTO_SAVE_DELAY);
 }
 
