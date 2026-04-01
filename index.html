@@ -1,4 +1,4 @@
-<!-- NOTA v1.4.3 -->
+<!-- NOTA v1.4.4 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2749,7 +2749,7 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
 
 <script>
 /* ╔══════════════════════════════════════════════════════════════════════════════════╗
-   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2026-03-31 (SESSION:37)║
+   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2026-03-31 (SESSION:38)║
    ║  PURPOSE: Single source of truth for all AI tools reading/editing this file.   ║
    ║  FORMAT: dense structured notation > English prose. Symbols defined below.     ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝
@@ -3035,6 +3035,12 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     @onProjectNameChange() → scheduleAutoSave if logged in.
     ◆ scheduleAutoSave patched in P4: if editing shared project as editor → calls
       saveSharedProject() (writes to owner's Firestore path) instead.
+
+  OWN-PROJECT LIVE LISTENER: _ownProjListener. Started in loadProjectData patch.
+    Listens on users/{uid}/projects/{projId} with includeMetadataChanges.
+    Receives remote writes (admin edits, future multi-device) and updates S + renders.
+    Guards: hasPendingWrites, fromCache, _autoSaveTimer (same as collab editor branch).
+    Stopped on newProject, openSharedProject, doSignOut, _exitAdminMode.
 
   SAVE STATUS PILL: idle | saving(pulse) | saved(green,3s) | error(pink)
     Extra states [P4]: '👁 View Only' (viewer on shared proj), '↔ Shared' (editor)
@@ -3693,6 +3699,22 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     ADDED: NOTA_MANIFEST (this document) — §0-§15 — replaces old feature reference comment
     Manifest format: AI-primary, structured notation, self-updating instructions
 
+  [2026-03-31 | SESSION:38 | Claude-Sonnet-4.6]
+    FIXED BUG: Admin edits not visible on owner's device. Root cause: owner's page
+               never had a live Firestore listener on their own project doc — loaded
+               once via .get(), then only wrote. Admin writes to users/{uid}/projects/{projId}
+               were invisible to the owner until they manually reloaded the project.
+    FIXED:     Added _ownProjListener (new global). @startOwnProjListener(uid,projId)
+               attaches onSnapshot{includeMetadataChanges:true} to owner's project doc.
+               On confirmed remote snapshot: updates S.columns/tsNum/tsDenom/keySig/zoom/name
+               and calls _baseRender(). Same guards as collab editor: hasPendingWrites,
+               fromCache, _autoSaveTimer all cause early return to protect local edits.
+               @stopOwnProjListener() unsubscribes. Called in: loadProjectData patch
+               (start), newProject patch (stop), openSharedProject patch (stop),
+               doSignOut P5 patch (stop), _exitAdminMode (stop).
+    ADDED:     @startOwnProjListener(uid, projId), @stopOwnProjListener()
+    VERSION:   v1.4.4
+
   [2026-03-31 | SESSION:37 | Claude-Sonnet-4.6]
     FIXED BUG: Admin (and collab editors) couldn't see live remote changes to tsNum,
                tsDenom, keySig, zoom, or project name — editor branch of startCollabListener
@@ -4177,6 +4199,12 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   §16  SESSION LOG
   ══════════════════════════════════════════════════════════════════════════════════
 
+  [SESSION:38] tb reported admin edits still not appearing on other devices. Root cause:
+    owner's page had no live listener on their own project doc — .get() on load, no
+    onSnapshot. Added _ownProjListener: startOwnProjListener() attaches onSnapshot to
+    users/{uid}/projects/{projId} on loadProjectData; stopped on newProject/openShared/
+    signOut/_exitAdminMode. Same hasPendingWrites+_autoSaveTimer guards as collab. v1.4.4.
+
   [SESSION:37] tb reported admin can't see live changes or save changes in project-view.
     Three bugs: (1) collab listener editor branch only synced columns — not other fields.
     (2) saveSharedProject omitted `name` from write payload. (3) onProjectNameChange
@@ -4396,6 +4424,7 @@ let _projInvitesUnsub = null;
 let _sharedProjsUnsub = null;
 let _sharedProjsList  = [];         // shared projects from others
 let _collabListener   = null;       // real-time listener for collab editing
+let _ownProjListener  = null;       // real-time listener for owner's own project (receives admin writes)
 let _isCollabViewer   = false;      // true when viewing someone else's project as viewer
 let _collabOwnerUid   = null;       // ownerUid of currently open shared project
 let _collabProjId     = null;       // projId of currently open shared project
@@ -4933,6 +4962,39 @@ function startCollabListener(ownerUid, projId) {
 
 function stopCollabListener() {
   if (_collabListener) { _collabListener(); _collabListener = null; }
+}
+
+/* ─── Live listener for owner's own project — receives writes from admin/future editors ─── */
+function startOwnProjListener(uid, projId) {
+  stopOwnProjListener();
+  _ownProjListener = db.collection('users').doc(uid).collection('projects').doc(projId)
+    .onSnapshot({ includeMetadataChanges: true }, snap => {
+      if (!snap.exists) return; // project deleted — don't act; deleteProject() handles UI
+      // Skip local in-flight writes and stale cache to avoid clobbering mid-edit state
+      if (snap.metadata.hasPendingWrites || snap.metadata.fromCache) return;
+      // Skip if user is mid-edit (autosave timer pending)
+      if (_autoSaveTimer) return;
+      const d  = snap.data();
+      const pd = d.data || {};
+      const incoming = typeof pd.columns === 'string' ? JSON.parse(pd.columns) : (pd.columns || [[]]);
+      S.columns = incoming;
+      S.tsNum   = pd.tsNum   || S.tsNum;
+      S.tsDenom = pd.tsDenom || S.tsDenom;
+      S.keySig  = pd.keySig  || S.keySig;
+      S.zoom    = pd.zoom    || S.zoom;
+      document.getElementById('tsNum').value          = S.tsNum;
+      document.getElementById('tsDenom').value        = S.tsDenom;
+      document.getElementById('keySig').value         = S.keySig;
+      document.getElementById('zoomLbl').textContent  = S.zoom;
+      if (d.name) document.getElementById('projNameInput').value = d.name;
+      const maxId = Math.max(0, ...S.columns.flat().map(n => n.id || 0));
+      _nextId = Math.max(_nextId, maxId + 1);
+      _baseRender();
+    });
+}
+
+function stopOwnProjListener() {
+  if (_ownProjListener) { _ownProjListener(); _ownProjListener = null; }
 }
 
 /* ─── Save to shared project (editor writes to owner's path) ─── */
@@ -8966,10 +9028,12 @@ async function _presenceSendRequest(uid, username) {
 const _origLoadProjectData = loadProjectData;
 loadProjectData = function(doc) {
   stopPresence();
+  stopOwnProjListener(); // tear down any previous own-project listener
   _origLoadProjectData(doc);
   // _currentProjId is set synchronously by _origLoadProjectData
   if (_currentUser && _currentProjId) {
     startPresence(_currentUser.uid, _currentProjId);
+    startOwnProjListener(_currentUser.uid, _currentProjId); // receive live remote writes (e.g. admin edits)
   }
 };
 
@@ -8977,6 +9041,7 @@ loadProjectData = function(doc) {
 const _origOpenSharedProjectP5 = openSharedProject;
 openSharedProject = async function(ownerUid, projId) {
   stopPresence();
+  stopOwnProjListener(); // no longer on own project
   await _origOpenSharedProjectP5(ownerUid, projId);
   if (_currentUser && _collabOwnerUid && _collabProjId) {
     startPresence(_collabOwnerUid, _collabProjId);
@@ -8987,6 +9052,7 @@ openSharedProject = async function(ownerUid, projId) {
 const _origNewProjectP5 = newProject;
 newProject = function() {
   stopPresence();
+  stopOwnProjListener();
   _origNewProjectP5();
 };
 
@@ -8994,6 +9060,7 @@ newProject = function() {
 const _origSignOutP5 = doSignOut;
 doSignOut = async function() {
   stopPresence();
+  stopOwnProjListener();
   await _origSignOutP5();
 };
 
@@ -9202,6 +9269,7 @@ function _exitAdminMode() {
   if (_adminRefreshInterval) { clearInterval(_adminRefreshInterval); _adminRefreshInterval = null; }
   // Clean up if admin was in project-view
   stopCollabListener();
+  stopOwnProjListener();
   _collabOwnerUid = null;
   _collabProjId   = null;
   _currentProjId  = null;
