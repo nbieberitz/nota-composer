@@ -1,4 +1,4 @@
-<!-- NOTA v1.4.4 -->
+<!-- NOTA v1.4.5 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2749,7 +2749,7 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
 
 <script>
 /* ╔══════════════════════════════════════════════════════════════════════════════════╗
-   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2026-03-31 (SESSION:38)║
+   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2026-04-01 (SESSION:39)║
    ║  PURPOSE: Single source of truth for all AI tools reading/editing this file.   ║
    ║  FORMAT: dense structured notation > English prose. Symbols defined below.     ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝
@@ -3699,6 +3699,19 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     ADDED: NOTA_MANIFEST (this document) — §0-§15 — replaces old feature reference comment
     Manifest format: AI-primary, structured notation, self-updating instructions
 
+  [2026-04-01 | SESSION:39 | Claude-Sonnet-4.6]
+    FIXED BUG: Admin sees no save status (Saving… / Saved) in project-view.
+               Root cause: adminOpenProject hid the entire #projControls row
+               (display:none), which also hid #saveStatus inside it. setSaveStatus()
+               was running correctly — the pill was just invisible.
+    FIXED:     adminOpenProject now shows #projControls (display:flex) but hides only
+               the child <button> elements (💾 Save, 📁 Projects) via querySelectorAll.
+               Project name input + save status pill remain visible.
+               adminReturnToDashboard restores button display to '' on return.
+    NOTE:      Admin saves were already firing correctly via saveSharedProject() through
+               the P4 scheduleAutoSave patch — this was purely a UI visibility fix.
+    VERSION:   v1.4.5
+
   [2026-03-31 | SESSION:38 | Claude-Sonnet-4.6]
     FIXED BUG: Admin edits not visible on owner's device. Root cause: owner's page
                never had a live Firestore listener on their own project doc — loaded
@@ -4198,6 +4211,11 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   ══════════════════════════════════════════════════════════════════════════════════
   §16  SESSION LOG
   ══════════════════════════════════════════════════════════════════════════════════
+
+  [SESSION:39] tb reported admin still not seeing save status shown in project-view.
+    Root cause: adminOpenProject hid #projControls entirely — #saveStatus lives inside it
+    so the pill was invisible. Fix: show projControls but hide only its buttons. Admin
+    saves were already writing correctly via saveSharedProject. v1.4.5.
 
   [SESSION:38] tb reported admin edits still not appearing on other devices. Root cause:
     owner's page had no live listener on their own project doc — .get() on load, no
@@ -9506,9 +9524,13 @@ async function adminOpenProject(ownerUid, projId, projName) {
     const shareBtn = document.getElementById('shareProjBtn');
     if (shareBtn) shareBtn.style.display = 'none';
 
-    // Hide project controls row (save/projects buttons) to keep UI clean
+    // Show projControls so the project name + save status pill are visible,
+    // but hide the Save and Projects buttons (admin uses autosave; has no own project list)
     const projControls = document.getElementById('projControls');
-    if (projControls) projControls.style.display = 'none';
+    if (projControls) {
+      projControls.style.display = 'flex';
+      projControls.querySelectorAll('button').forEach(btn => btn.style.display = 'none');
+    }
 
     // Start real-time listener so admin sees live changes (but does NOT write presence)
     startCollabListener(ownerUid, projId);
@@ -9547,7 +9569,10 @@ function adminReturnToDashboard() {
 
   // Restore project controls visibility for next normal use
   const projControls = document.getElementById('projControls');
-  if (projControls && _currentUser) projControls.style.display = 'flex';
+  if (projControls && _currentUser) {
+    projControls.style.display = 'flex';
+    projControls.querySelectorAll('button').forEach(btn => btn.style.display = '');
+  }
 
   // Show admin dashboard
   document.getElementById('adminOverlay').classList.add('open');
