@@ -1,4 +1,4 @@
-<!-- NOTA v1.4.0 -->
+<!-- NOTA v1.4.2 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2749,7 +2749,7 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
 
 <script>
 /* ╔══════════════════════════════════════════════════════════════════════════════════╗
-   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2026-03-31 (SESSION:30)║
+   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2026-03-31 (SESSION:36)║
    ║  PURPOSE: Single source of truth for all AI tools reading/editing this file.   ║
    ║  FORMAT: dense structured notation > English prose. Symbols defined below.     ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝
@@ -3029,9 +3029,10 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     @newProject()     → reset S+UI, _currentProjId=null
     @startRenameProject(id,btn) → inline input in projList
 
-  AUTO-SAVE: _autoSaveTimer. Fires 4000ms after last render() if user is logged in
-    AND _currentProjId exists. Not triggered on new unsaved projects.
-    @onProjectNameChange() → scheduleAutoSave if proj exists.
+  AUTO-SAVE: _autoSaveTimer. Fires 4000ms after last render() if user is logged in.
+    Fires for BOTH new unsaved projects (_currentProjId=null) and existing projects.
+    For new projects, saveProject() calls .add() and sets _currentProjId automatically.
+    @onProjectNameChange() → scheduleAutoSave if logged in.
     ◆ scheduleAutoSave patched in P4: if editing shared project as editor → calls
       saveSharedProject() (writes to owner's Firestore path) instead.
 
@@ -3692,6 +3693,17 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     ADDED: NOTA_MANIFEST (this document) — §0-§15 — replaces old feature reference comment
     Manifest format: AI-primary, structured notation, self-updating instructions
 
+  [2026-03-31 | SESSION:36 | Claude-Sonnet-4.6]
+    FIXED BUG: New/unsaved projects never autosaved. scheduleAutoSave() guarded on
+               _currentProjId — null for new projects — so render() hook never fired
+               autosave until user manually clicked Save (which set _currentProjId).
+    FIXED:     Removed `!_currentProjId` guard from scheduleAutoSave(). saveProject()
+               already handles null via .add() → sets _currentProjId on first save.
+               render() hook updated: own projects always schedule (no _currentProjId
+               check); collab editor path separated with explicit _collabOwnerUid check
+               to avoid routing a new own project through saveSharedProject().
+    VERSION:   v1.4.2
+
   [2026-03-31 | SESSION:35 | Claude-Sonnet-4.6]
     FIXED BUG: saveSharedProject: "Missing or insufficient permissions" when admin
                edits another user's project. adminOpenProject sets _collabOwnerUid +
@@ -4148,6 +4160,10 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   ══════════════════════════════════════════════════════════════════════════════════
   §16  SESSION LOG
   ══════════════════════════════════════════════════════════════════════════════════
+
+  [SESSION:36] tb reported new/unsaved projects don't autosave until manual Save click.
+    Fixed by removing _currentProjId guard from scheduleAutoSave() and updating the
+    render() hook to always autosave for own projects regardless of save state.
 
   [SESSION:30] nb provided new admin UID (jEjlW2A0z4TBsLPltDMTlPlvee12). Updated all
     occurrences in index.html. Also updated wipeAllAuthUsers Cloud Function to filter
@@ -7132,7 +7148,7 @@ async function saveProject() {
 }
 
 function scheduleAutoSave() {
-  if (!_currentUser || !_currentProjId) return;
+  if (!_currentUser) return;
   clearTimeout(_autoSaveTimer);
   setSaveStatus('saving', '● Saving Changes…');
   _autoSaveTimer = setTimeout(saveProject, AUTO_SAVE_DELAY);
@@ -7261,9 +7277,15 @@ function closeProjModal(e) {
 const _baseRender = render;
 render = function() {
   _baseRender();
-  // Own project: save normally. Collab editor: routed by P4 scheduleAutoSave patch.
-  // _currentProjId is null for shared projects, so check collab state too.
-  if (_currentUser && (_currentProjId || (_collabOwnerUid && _collabProjId && !_isCollabViewer))) {
+  // Own project (new or existing): save on any render for logged-in users.
+  // Collab editor: routed by P4 scheduleAutoSave patch.
+  // _currentProjId is null for both new projects and shared projects;
+  // the collab-state check separates those two cases.
+  if (_currentUser && !_collabOwnerUid) {
+    // Own project (new or saved) — always schedule
+    scheduleAutoSave();
+  } else if (_currentUser && _collabOwnerUid && _collabProjId && !_isCollabViewer) {
+    // Collab editor
     scheduleAutoSave();
   }
 };
