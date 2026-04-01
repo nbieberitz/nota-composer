@@ -1,4 +1,4 @@
-<!-- NOTA v1.4.5 -->
+<!-- NOTA v1.4.6 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2749,7 +2749,7 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
 
 <script>
 /* ╔══════════════════════════════════════════════════════════════════════════════════╗
-   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2026-04-01 (SESSION:39)║
+   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2026-04-01 (SESSION:40)║
    ║  PURPOSE: Single source of truth for all AI tools reading/editing this file.   ║
    ║  FORMAT: dense structured notation > English prose. Symbols defined below.     ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝
@@ -3699,6 +3699,19 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     ADDED: NOTA_MANIFEST (this document) — §0-§15 — replaces old feature reference comment
     Manifest format: AI-primary, structured notation, self-updating instructions
 
+  [2026-04-01 | SESSION:40 | Claude-Sonnet-4.6]
+    FIXED BUG: Admin UID could appear in other users' presence bars via stale Firestore
+               docs from before the startPresence no-op patch was added.
+    FIXED:     (1) startPresence onSnapshot filter now explicitly excludes ADMIN_UID
+               from _onlineUsers — admin is invisible even if a stale doc exists.
+               (2) _enterAdminMode now runs a collectionGroup('online') query filtered
+               by the admin's UID and batch-deletes all matching presence docs on login,
+               so stale docs are cleaned up immediately.
+    CONFIRMED: _ownProjListener (SESSION:38) correctly gives all project owners live
+               updates from admin edits — covers the "auto refresh always" requirement.
+               No further changes needed for that path.
+    VERSION:   v1.4.6
+
   [2026-04-01 | SESSION:39 | Claude-Sonnet-4.6]
     FIXED BUG: Admin sees no save status (Saving… / Saved) in project-view.
                Root cause: adminOpenProject hid the entire #projControls row
@@ -4211,6 +4224,12 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   ══════════════════════════════════════════════════════════════════════════════════
   §16  SESSION LOG
   ══════════════════════════════════════════════════════════════════════════════════
+
+  [SESSION:40] tb requested admin invisibility and always-on project auto-refresh.
+    Presence: added ADMIN_UID filter in onSnapshot so stale docs never show. Added
+    collectionGroup delete in _enterAdminMode to scrub any existing admin presence docs.
+    Auto-refresh: confirmed _ownProjListener (SESSION:38) covers this fully — starts on
+    loadProjectData, receives all remote writes including admin edits. v1.4.6.
 
   [SESSION:39] tb reported admin still not seeing save status shown in project-view.
     Root cause: adminOpenProject hid #projControls entirely — #saveStatus lives inside it
@@ -8858,6 +8877,7 @@ function startPresence(ownerUid, projId) {
       .map(d => d.data())
       .filter(u => {
         if (!u.lastSeen) return false;
+        if (u.uid === ADMIN_UID) return false; // admin is always invisible
         const ms = u.lastSeen.toMillis ? u.lastSeen.toMillis()
                                        : (u.lastSeen.seconds || 0) * 1000;
         return (now - ms) < PRESENCE_STALE_MS;
@@ -9266,6 +9286,12 @@ function _enterAdminMode() {
   // Start silent background auto-refresh every 2 seconds
   if (_adminRefreshInterval) clearInterval(_adminRefreshInterval);
   _adminRefreshInterval = setInterval(_adminSilentRefresh, 2000);
+  // Scrub any stale presence docs for the admin UID so admin is never visible
+  if (_currentUser) {
+    db.collectionGroup('online').where('uid', '==', _currentUser.uid).get()
+      .then(snap => snap.docs.forEach(d => d.ref.delete()))
+      .catch(() => {});
+  }
 }
 
 /* ─── Exit admin mode — called before sign-out ─── */
