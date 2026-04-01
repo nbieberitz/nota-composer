@@ -3692,6 +3692,18 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     ADDED: NOTA_MANIFEST (this document) — §0-§15 — replaces old feature reference comment
     Manifest format: AI-primary, structured notation, self-updating instructions
 
+  [2026-03-31 | SESSION:34 | Claude-Sonnet-4.6]
+    FIXED BUG: Admin was shown the "Choose your username" overlay when entering a
+               project, because onUserLogin found no Firestore profile for the admin
+               UID and fell into the new-user branch.
+    FIXED:     Added explicit admin UID check in onUserLogin. If uid === ADMIN_UID and
+               no profile exists, a synthetic _userProfile {username:'admin'} is set
+               silently and the usernameOverlay is never shown. setupFriendListeners
+               is also skipped (admin has no friends/DM system). All project editing
+               capabilities are unaffected — access is controlled by adminOpenProject
+               and _isCollabViewer=false, not by _userProfile.
+    VERSION:   v1.4.1 (no bump)
+
   [2026-03-31 | SESSION:33 | Claude-Sonnet-4.6]
     REVERTED: SESSION:32 switched doGoogleSignIn to signInWithRedirect, which caused
               "just refreshes page" — the redirect flow navigates the tab away and
@@ -7268,6 +7280,12 @@ async function onUserLogin(user) {
     _userProfile = snap.data();
     renderUserArea(user);
     setupFriendListeners(user.uid);
+  } else if (user.uid === ADMIN_UID) {
+    // Admin has no public profile — synthesize one silently, skip the overlay.
+    // Admin is invisible to other users; presence is already suppressed for admin.
+    _userProfile = { uid: user.uid, username: 'admin', displayName: 'Admin' };
+    renderUserArea(user);
+    // Do NOT call setupFriendListeners — admin has no friends/DM system.
   } else {
     // New user — need a username
     document.getElementById('usernameOverlay').style.display = 'flex';
