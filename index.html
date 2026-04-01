@@ -1,4 +1,4 @@
-<!-- NOTA v1.4.7 -->
+<!-- NOTA v1.4.8 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2749,7 +2749,7 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
 
 <script>
 /* ╔══════════════════════════════════════════════════════════════════════════════════╗
-   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2026-04-01 (SESSION:41)║
+   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2026-04-01 (SESSION:42)║
    ║  PURPOSE: Single source of truth for all AI tools reading/editing this file.   ║
    ║  FORMAT: dense structured notation > English prose. Symbols defined below.     ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝
@@ -3039,8 +3039,11 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   OWN-PROJECT LIVE LISTENER: _ownProjListener. Started in loadProjectData patch.
     Listens on users/{uid}/projects/{projId} with includeMetadataChanges.
     Receives remote writes (admin edits, future multi-device) and updates S + renders.
-    Guards: hasPendingWrites, fromCache, _autoSaveTimer (same as collab editor branch).
+    Guards: hasPendingWrites, fromCache (sufficient at 300ms; _autoSaveTimer guard removed).
     Stopped on newProject, openSharedProject, doSignOut, _exitAdminMode.
+    ◆ Auto-load: onUserLogin patch fetches most recent project on login → calls
+      loadProjectData → listener starts immediately without user manually opening.
+      toggleProjModal() side-effect suppressed (projOverlay force-closed after auto-load).
 
   SAVE STATUS PILL: idle | saving(pulse) | saved(green,3s) | error(pink)
     Extra states [P4]: '👁 View Only' (viewer on shared proj), '↔ Shared' (editor)
@@ -3699,6 +3702,18 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     ADDED: NOTA_MANIFEST (this document) — §0-§15 — replaces old feature reference comment
     Manifest format: AI-primary, structured notation, self-updating instructions
 
+  [2026-04-01 | SESSION:42 | Claude-Sonnet-4.6]
+    FIXED BUG: Admin edits not visible on owner/other devices immediately. Root cause:
+               _ownProjListener only starts when loadProjectData is called (user manually
+               opens a project). On fresh page load, no project is loaded, so no listener
+               exists — admin writes arrive at Firestore but nothing on the client receives them.
+    FIXED:     onUserLogin patch now auto-loads the most recently updated project on login
+               (db.collection('users/{uid}/projects').orderBy('updatedAt','desc').limit(1).get()).
+               Calls loadProjectData() (patched) → _ownProjListener starts immediately.
+               toggleProjModal() side-effect suppressed: projOverlay force-closed after
+               auto-load so user lands on editor, not project picker. Admin skipped.
+    VERSION:   v1.4.8
+
   [2026-04-01 | SESSION:41 | Claude-Sonnet-4.6]
     CHANGED: AUTO_SAVE_DELAY 4000ms → 300ms. Edits now reach Firestore ~300ms after
              the last change, making live sync near-instant across all clients.
@@ -4237,6 +4252,11 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   ══════════════════════════════════════════════════════════════════════════════════
   §16  SESSION LOG
   ══════════════════════════════════════════════════════════════════════════════════
+
+  [SESSION:42] tb reported admin changes still not visible on other devices instantly.
+    Root cause: _ownProjListener never started unless user manually opened a project —
+    fresh page loads had no listener. Fixed by auto-loading most recent project in
+    onUserLogin patch; listener starts immediately on login. v1.4.8.
 
   [SESSION:41] tb requested near-instant live sync — all edits visible to all users
     within 1 second. Changed AUTO_SAVE_DELAY 4000→300ms. Removed _autoSaveTimer guard
@@ -5198,13 +5218,32 @@ async function leaveSharedProject(listId, ownerUid, projId, projName) {
   } catch(e) { showToast('Error leaving project.', 'var(--pink)'); console.error(e); }
 }
 
-/* ─── Patch onUserLogin to also start proj invite listeners ─── */
+/* ─── Patch onUserLogin to also start proj invite listeners + auto-load most recent project ─── */
 const _origOnUserLogin = onUserLogin;
 onUserLogin = async function(user) {
   await _origOnUserLogin(user);
   setupProjInviteListeners(user.uid);
   // Do NOT unconditionally show projInvitesBtnWrap here.
   // updateProjInvitesBadge (called by the listener snapshot) controls visibility.
+
+  // Auto-load the most recently updated project so _ownProjListener is immediately active.
+  // This ensures admin edits and any remote changes are received from the moment of login.
+  // Skip for admin — admin has no own projects and uses adminOpenProject instead.
+  if (user.uid === ADMIN_UID) return;
+  try {
+    const snap = await db.collection('users').doc(user.uid).collection('projects')
+      .orderBy('updatedAt', 'desc').limit(1).get();
+    if (!snap.empty) {
+      // Call loadProjectData (patched — starts _ownProjListener + presence).
+      // loadProjectData calls toggleProjModal() at the end; close the modal immediately
+      // if it was opened so the user lands on the editor, not the project picker.
+      loadProjectData(snap.docs[0]);
+      const ov = document.getElementById('projOverlay');
+      if (ov && ov.classList.contains('open')) ov.classList.remove('open');
+    }
+  } catch(e) {
+    console.warn('[NOTA] auto-load most recent project failed:', e);
+  }
 };
 
 /* ─── Patch doSignOut to cleanup ─── */
