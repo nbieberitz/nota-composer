@@ -572,6 +572,29 @@ select:focus { border-color: var(--cyan); }
 .nb-expand-btn--active { color: var(--purple); border-color: var(--purple); }
 .nb-expand-btn--active:hover { color: var(--cyan); border-color: var(--cyan); }
 
+.slide-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 9px;
+  padding: 2px 7px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  transition: color .15s, border-color .15s, background .15s;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.5px;
+  margin-top: 5px;
+  width: 100%;
+}
+.slide-btn:hover { color: var(--cyan); border-color: var(--cyan); }
+.slide-btn.active {
+  color: var(--cyan);
+  border-color: var(--cyan);
+  background: var(--cyan-dim);
+}
+.badge.slide { background: var(--cyan-dim); color: var(--cyan); }
+
 .nb.selected {
   border-color: var(--cyan) !important;
   box-shadow: 0 0 0 2px rgba(0,245,212,.35), 0 0 14px rgba(0,245,212,.2) !important;
@@ -5616,7 +5639,7 @@ function copySelected() {
     col.forEach(n => {
       if (selection.has(n.id)) {
         clipboard.push({ type: n.type, pitch: n.pitch, duration: n.duration,
-                         beatOffset: n.beatOffset, col: ci });
+                         beatOffset: n.beatOffset, col: ci, slide: n.slide || false });
       }
     });
   });
@@ -5663,7 +5686,8 @@ function pasteClipboard() {
       if (dist < bestDist) { bestDist = dist; insertIdx = i; }
     }
     [...col0Items].reverse().forEach(c => {
-      const n = { id: nid(), type: c.type, pitch: c.pitch, duration: c.duration };
+      const n = { id: nid(), type: c.type, pitch: c.pitch, duration: c.duration,
+                  ...(c.slide ? { slide: true } : {}) };
       S.columns[0].splice(insertIdx, 0, n);
       selection.add(n.id);
     });
@@ -5702,7 +5726,8 @@ function pasteClipboard() {
         cumPx += rows[i].height + (i < rows.length - 1 ? 10 : 0);
       }
       [...freeItems].reverse().forEach(c => {
-        const n = { id: nid(), type: c.type, pitch: c.pitch, duration: c.duration };
+        const n = { id: nid(), type: c.type, pitch: c.pitch, duration: c.duration,
+                    ...(c.slide ? { slide: true } : {}) };
         S.columns[0].splice(insertIdx, 0, n);
         selection.add(n.id);
       });
@@ -5718,7 +5743,8 @@ function pasteClipboard() {
       // col already contains previously pasted notes from this same paste, so
       // findFreeBeat will avoid collisions with both pre-existing and just-pasted notes.
       const beat = findFreeBeat(col, desiredBeat, durBeats, eighth, new Set());
-      const n = { id: nid(), type: c.type, pitch: c.pitch, duration: c.duration, beatOffset: beat };
+      const n = { id: nid(), type: c.type, pitch: c.pitch, duration: c.duration, beatOffset: beat,
+                  ...(c.slide ? { slide: true } : {}) };
       col.push(n);
       selection.add(n.id);
     });
@@ -6051,6 +6077,15 @@ function editSelectionDot() {
   render();
 }
 
+function toggleSlide(id, event) {
+  event.stopPropagation();
+  const note = S.columns.flat().find(n => n.id === id);
+  if (!note || note.type !== 'note') return;
+  pushUndo();
+  note.slide = !note.slide;
+  render();
+}
+
 function setZoom(val) {
   S.zoom = Math.max(36, Math.min(200, val));
   document.getElementById('zoomLbl').textContent = S.zoom;
@@ -6285,6 +6320,7 @@ function nbHtml(note, col, row, h, opts, d) {
   if (collapsed) {
     html += `<div class="nb-compact-row">
       <span class="badge${isRest ? ' r' : ''} badge-xs">${isRest ? 'R' : 'N'}</span>
+      ${!isRest && note.slide ? `<span class="badge badge-xs slide">~</span>` : ''}
       <span class="nb-compact-info">${isRest ? durLabel : `${pitchLabel} · ${durLabel}`}</span>
       <button class="nb-expand-btn" onclick="toggleExpand(${note.id},event)" title="Expand to edit">⋯</button>
       <button class="del" onclick="deleteNote(${note.id},${col})">×</button>
@@ -6317,6 +6353,9 @@ function nbHtml(note, col, row, h, opts, d) {
     html += `</select></div>`;
 
     html += `<div class="nb-beats">${fmtNum(beats)} beat${beats !== 1 ? 's' : ''}</div>`;
+    if (!isRest) {
+      html += `<button class="slide-btn${note.slide ? ' active' : ''}" onclick="toggleSlide(${note.id},event)" title="Glide pitch into next note">~ slide</button>`;
+    }
   }
 
   html += `</div>`;
@@ -6813,26 +6852,41 @@ function generateDesmos() {
       // Build pitched note segments first
       const segs = rows
         .filter(row => row.note.type === 'note')
-        .map(row => ({ s: row.startBeat, e: row.startBeat + row.beats, pitch: row.note.pitch }));
-      // Apply 0.1 break where consecutive same-pitch notes are back-to-back
+        .map(row => ({ s: row.startBeat, e: row.startBeat + row.beats, pitch: row.note.pitch, slide: row.note.slide || false }));
+      // Apply 0.1 break where consecutive same-pitch notes are back-to-back (non-slide)
       segs.forEach((seg, i) => {
         const next = segs[i + 1];
-        let end = seg.e;
-        if (next && seg.pitch === next.pitch && seg.e === next.s) end = seg.e - 0.1;
-        parts.push(`${fmtNum(seg.s)} < x <= ${fmtNum(end)}:${seg.pitch}`);
+        if (seg.slide && next) {
+          // Smoothstep glide: a + (b-a)(3t²-2t³) where t = (x-s)/len
+          const a = seg.pitch, b = next.pitch;
+          const s = fmtNum(seg.s), len = fmtNum(seg.e - seg.s);
+          const diff = fmtNum(b - a);
+          parts.push(`${s} < x <= ${fmtNum(seg.e)}: ${a}+${diff}(3((x-${s})/${len})^{2}-2((x-${s})/${len})^{3})`);
+        } else {
+          let end = seg.e;
+          if (next && seg.pitch === next.pitch && seg.e === next.s) end = seg.e - 0.1;
+          parts.push(`${fmtNum(seg.s)} < x <= ${fmtNum(end)}:${seg.pitch}`);
+        }
       });
     } else {
       const sorted = [...col].sort((a,b)=>(a.beatOffset??0)-(b.beatOffset??0));
       // Build pitched note segments first
       const segs = sorted
         .filter(n => n.type === 'note')
-        .map(n => ({ s: n.beatOffset ?? 0, e: (n.beatOffset ?? 0) + getBeats(n.duration, d), pitch: n.pitch }));
-      // Apply 0.1 break where consecutive same-pitch notes are back-to-back
+        .map(n => ({ s: n.beatOffset ?? 0, e: (n.beatOffset ?? 0) + getBeats(n.duration, d), pitch: n.pitch, slide: n.slide || false }));
+      // Apply 0.1 break where consecutive same-pitch notes are back-to-back (non-slide)
       segs.forEach((seg, i) => {
         const next = segs[i + 1];
-        let end = seg.e;
-        if (next && seg.pitch === next.pitch && seg.e === next.s) end = seg.e - 0.1;
-        parts.push(`${fmtNum(seg.s)} < x <= ${fmtNum(end)}:${seg.pitch}`);
+        if (seg.slide && next) {
+          const a = seg.pitch, b = next.pitch;
+          const s = fmtNum(seg.s), len = fmtNum(seg.e - seg.s);
+          const diff = fmtNum(b - a);
+          parts.push(`${s} < x <= ${fmtNum(seg.e)}: ${a}+${diff}(3((x-${s})/${len})^{2}-2((x-${s})/${len})^{3})`);
+        } else {
+          let end = seg.e;
+          if (next && seg.pitch === next.pitch && seg.e === next.s) end = seg.e - 0.1;
+          parts.push(`${fmtNum(seg.s)} < x <= ${fmtNum(end)}:${seg.pitch}`);
+        }
       });
     }
     if (parts.length > 0) {
