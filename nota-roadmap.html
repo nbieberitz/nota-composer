@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NOTA — Feature Roadmap</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0e0e1c;
+  --surface: #141428;
+  --surface2: #1a1a33;
+  --surface3: #21213e;
+  --border: #2d2d5c;
+  --border2: #3c3c6e;
+  --cyan: #00f5d4;
+  --cyan-dim: rgba(0,245,212,0.12);
+  --pink: #f72585;
+  --pink-dim: rgba(247,37,133,0.15);
+  --purple: #9b5de5;
+  --purple-dim: rgba(155,93,229,0.15);
+  --blue: #4cc9f0;
+  --blue-dim: rgba(76,201,240,0.12);
+  --green: #80ed99;
+  --green-dim: rgba(128,237,153,0.12);
+  --yellow: #ffd60a;
+  --text: #ced5f0;
+  --text-dim: #707898;
+  --text-muted: #3e4068;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Subtle grid background */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0,245,212,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,245,212,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── HEADER ── */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: linear-gradient(100deg, #14102e 0%, #15132e 60%, #101526 100%);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 2px 32px rgba(0,0,0,0.7);
+  padding: 14px 32px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.logo {
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 900;
+  font-size: 22px;
+  color: var(--cyan);
+  text-shadow: 0 0 18px rgba(0,245,212,0.7), 0 0 40px rgba(0,245,212,0.2);
+  letter-spacing: 6px;
+}
+.logo-sub {
+  font-size: 9px;
+  color: var(--text-dim);
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.header-sep { width: 1px; height: 32px; background: var(--border); }
+
+.header-stats {
+  display: flex;
+  gap: 18px;
+  margin-left: auto;
+}
+.stat {
+  text-align: center;
+}
+.stat-num {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+}
+.stat-num.todo  { color: var(--cyan); text-shadow: 0 0 12px rgba(0,245,212,.4); }
+.stat-num.done  { color: var(--green); text-shadow: 0 0 12px rgba(128,237,153,.4); }
+.stat-lbl {
+  font-size: 8px;
+  color: var(--text-muted);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+/* ── TABS ── */
+.tabs-wrap {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 0;
+  padding: 0 32px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(10,10,26,0.6);
+  backdrop-filter: blur(6px);
+}
+.tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 14px 20px;
+  cursor: pointer;
+  transition: color .18s, border-color .18s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tab:hover { color: var(--text); }
+.tab.active.todo-tab  { color: var(--cyan);  border-bottom-color: var(--cyan); }
+.tab.active.done-tab  { color: var(--green); border-bottom-color: var(--green); }
+
+.tab-count {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+  line-height: 1.4;
+}
+.todo-tab .tab-count  { background: var(--cyan-dim);   color: var(--cyan); }
+.done-tab .tab-count  { background: var(--green-dim);  color: var(--green); }
+
+/* ── MAIN LAYOUT ── */
+.page {
+  position: relative;
+  z-index: 1;
+  display: none;
+  padding: 28px 32px 80px;
+  max-width: 1100px;
+  margin: 0 auto;
+  animation: fadeUp .25s ease;
+}
+.page.active { display: block; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── CATEGORY SECTIONS ── */
+.category {
+  margin-bottom: 32px;
+}
+.cat-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.cat-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+.cat-line { flex: 1; height: 1px; }
+.cat-badge {
+  font-size: 9px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+  letter-spacing: .5px;
+}
+
+/* Category color themes */
+.cat-music    .cat-title { color: var(--purple); }
+.cat-music    .cat-line  { background: linear-gradient(90deg, var(--purple), transparent); }
+.cat-music    .cat-badge { background: var(--purple-dim); color: var(--purple); border: 1px solid var(--purple); }
+
+.cat-desmos   .cat-title { color: var(--cyan); }
+.cat-desmos   .cat-line  { background: linear-gradient(90deg, var(--cyan), transparent); }
+.cat-desmos   .cat-badge { background: var(--cyan-dim); color: var(--cyan); border: 1px solid var(--cyan); }
+
+.cat-audio    .cat-title { color: var(--blue); }
+.cat-audio    .cat-line  { background: linear-gradient(90deg, var(--blue), transparent); }
+.cat-audio    .cat-badge { background: var(--blue-dim); color: var(--blue); border: 1px solid var(--blue); }
+
+.cat-ui       .cat-title { color: var(--pink); }
+.cat-ui       .cat-line  { background: linear-gradient(90deg, var(--pink), transparent); }
+.cat-ui       .cat-badge { background: var(--pink-dim); color: var(--pink); border: 1px solid var(--pink); }
+
+.cat-projects .cat-title { color: var(--yellow); }
+.cat-projects .cat-line  { background: linear-gradient(90deg, var(--yellow), transparent); }
+.cat-projects .cat-badge { background: rgba(255,214,10,.1); color: var(--yellow); border: 1px solid var(--yellow); }
+
+.cat-social   .cat-title { color: var(--green); }
+.cat-social   .cat-line  { background: linear-gradient(90deg, var(--green), transparent); }
+.cat-social   .cat-badge { background: var(--green-dim); color: var(--green); border: 1px solid var(--green); }
+
+.cat-admin    .cat-title { color: var(--pink); }
+.cat-admin    .cat-line  { background: linear-gradient(90deg, var(--pink), transparent); }
+.cat-admin    .cat-badge { background: var(--pink-dim); color: var(--pink); border: 1px solid var(--pink); }
+
+.cat-tech     .cat-title { color: var(--text-dim); }
+.cat-tech     .cat-line  { background: linear-gradient(90deg, var(--text-dim), transparent); }
+.cat-tech     .cat-badge { background: rgba(112,120,152,.12); color: var(--text-dim); border: 1px solid var(--border2); }
+
+/* ── ITEM ── */
+.item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 11px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  margin-bottom: 6px;
+  transition: border-color .18s, background .18s, opacity .25s, transform .25s;
+  position: relative;
+  overflow: hidden;
+}
+.item::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  width: 2px;
+  opacity: 0;
+  transition: opacity .18s;
+}
+.item:hover {
+  border-color: var(--border2);
+  background: var(--surface2);
+}
+.item:hover::before { opacity: 1; }
+
+.cat-music    .item:hover::before { background: var(--purple); }
+.cat-desmos   .item:hover::before { background: var(--cyan); }
+.cat-audio    .item:hover::before { background: var(--blue); }
+.cat-ui       .item:hover::before { background: var(--pink); }
+.cat-projects .item:hover::before { background: var(--yellow); }
+.cat-social   .item:hover::before { background: var(--green); }
+.cat-admin    .item:hover::before { background: var(--pink); }
+.cat-tech     .item:hover::before { background: var(--text-dim); }
+
+/* Checkbox */
+.cb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 17px;
+  height: 17px;
+  min-width: 17px;
+  border-radius: 4px;
+  border: 1.5px solid var(--border2);
+  background: var(--surface2);
+  cursor: pointer;
+  margin-top: 1px;
+  transition: border-color .15s, background .15s, box-shadow .15s;
+  position: relative;
+  flex-shrink: 0;
+}
+.cb:hover {
+  border-color: var(--cyan);
+  box-shadow: 0 0 8px rgba(0,245,212,.25);
+}
+.cb:checked {
+  background: var(--green);
+  border-color: var(--green);
+}
+.cb:checked::after {
+  content: '';
+  position: absolute;
+  top: 2px; left: 5px;
+  width: 5px; height: 9px;
+  border: 2px solid #0e0e1c;
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg);
+}
+
+/* Item text */
+.item-body { flex: 1; min-width: 0; }
+.item-title {
+  font-size: 12px;
+  color: var(--text);
+  line-height: 1.6;
+  font-weight: 600;
+}
+.item-desc {
+  font-size: 10.5px;
+  color: var(--text-dim);
+  line-height: 1.7;
+  margin-top: 3px;
+  font-weight: 300;
+}
+
+/* Copy button */
+.copy-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  padding: 4px 9px;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all .15s;
+  align-self: flex-start;
+  margin-top: 1px;
+}
+.copy-btn:hover {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  box-shadow: 0 0 8px rgba(0,245,212,.2);
+}
+.copy-btn.copied {
+  border-color: var(--green) !important;
+  color: var(--green) !important;
+  box-shadow: 0 0 8px rgba(128,237,153,.2) !important;
+}
+
+/* ── COMPLETED ITEMS ── */
+.done-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 11px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(128,237,153,0.2);
+  background: rgba(128,237,153,0.04);
+  margin-bottom: 6px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color .18s;
+}
+.done-item::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  width: 2px;
+  background: var(--green);
+  opacity: .5;
+}
+.done-item:hover { border-color: rgba(128,237,153,.4); }
+
+.done-check {
+  width: 17px;
+  height: 17px;
+  min-width: 17px;
+  border-radius: 4px;
+  background: var(--green);
+  border: 1.5px solid var(--green);
+  box-shadow: 0 0 8px rgba(128,237,153,.25);
+  position: relative;
+  flex-shrink: 0;
+  margin-top: 1px;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.done-check::after {
+  content: '';
+  position: absolute;
+  top: 2px; left: 5px;
+  width: 5px; height: 9px;
+  border: 2px solid #0e0e1c;
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg);
+}
+.done-check:hover {
+  background: var(--pink);
+  border-color: var(--pink);
+}
+.done-check:hover::after { border-color: #fff; }
+
+.done-item .item-title {
+  color: var(--text-dim);
+  text-decoration: line-through;
+  text-decoration-color: rgba(128,237,153,.4);
+}
+.done-item .item-desc { color: var(--text-muted); }
+
+.done-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+.done-ts {
+  font-size: 8px;
+  color: var(--green);
+  letter-spacing: .5px;
+  opacity: .7;
+  white-space: nowrap;
+}
+.done-cat-badge {
+  font-size: 7px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  opacity: .75;
+  white-space: nowrap;
+}
+
+/* ── EMPTY STATE ── */
+.empty {
+  text-align: center;
+  padding: 80px 20px;
+  color: var(--text-muted);
+}
+.empty-icon {
+  font-size: 40px;
+  margin-bottom: 14px;
+  opacity: .5;
+}
+.empty-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.empty-sub { font-size: 10px; color: var(--text-muted); line-height: 1.8; }
+
+/* ── DONE PAGE HEADER ── */
+.done-page-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+.done-page-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px;
+  color: var(--green);
+  letter-spacing: 3px;
+  text-shadow: 0 0 12px rgba(128,237,153,.3);
+}
+.clear-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  padding: 5px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all .15s;
+}
+.clear-btn:hover { border-color: var(--pink); color: var(--pink); }
+
+/* ── PROGRESS BAR ── */
+.progress-wrap {
+  position: sticky;
+  top: 57px;
+  z-index: 90;
+  background: rgba(14,14,28,0.85);
+  backdrop-filter: blur(6px);
+  padding: 8px 32px;
+  border-bottom: 1px solid rgba(45,45,92,.4);
+}
+.progress-bar-bg {
+  height: 3px;
+  background: var(--surface3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--purple), var(--cyan));
+  border-radius: 2px;
+  transition: width .4s cubic-bezier(.4,0,.2,1);
+  box-shadow: 0 0 8px rgba(0,245,212,.4);
+}
+.progress-label {
+  font-size: 8px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  text-align: right;
+  margin-top: 4px;
+}
+
+/* ── TOAST ── */
+.nota-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--surface2);
+  border: 1px solid var(--green);
+  color: var(--green);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: .5px;
+  padding: 9px 20px;
+  border-radius: 20px;
+  box-shadow: 0 4px 24px rgba(0,0,0,.5), 0 0 16px rgba(128,237,153,.2);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s, transform .2s;
+  z-index: 999;
+  white-space: nowrap;
+}
+.nota-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 7px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--purple); }
+</style>
+</head>
+<body>
+
+<div class="nota-toast" id="toast"></div>
+
+<!-- HEADER -->
+<div class="header">
+  <div>
+    <div class="logo">NOTA</div>
+    <div class="logo-sub">Feature Roadmap</div>
+  </div>
+  <div class="header-sep"></div>
+  <div style="font-size:9px;color:var(--text-muted);letter-spacing:1px;">IDEAS TRACKER</div>
+  <div class="header-stats">
+    <div class="stat">
+      <div class="stat-num todo" id="statTodo">0</div>
+      <div class="stat-lbl">Remaining</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num done" id="statDone">0</div>
+      <div class="stat-lbl">Completed</div>
+    </div>
+  </div>
+</div>
+
+<!-- PROGRESS BAR -->
+<div class="progress-wrap">
+  <div class="progress-bar-bg">
+    <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+  </div>
+  <div class="progress-label" id="progressLabel">0 / 0 features</div>
+</div>
+
+<!-- TABS -->
+<div class="tabs-wrap">
+  <button class="tab todo-tab active" onclick="switchTab('todo')">
+    ◆ Todo
+    <span class="tab-count" id="tabTodoCount">0</span>
+  </button>
+  <button class="tab done-tab" onclick="switchTab('done')">
+    ✓ Completed
+    <span class="tab-count" id="tabDoneCount">0</span>
+  </button>
+</div>
+
+<!-- TODO PAGE -->
+<div class="page active" id="pageTodo"></div>
+
+<!-- DONE PAGE -->
+<div class="page" id="pageDone">
+  <div class="done-page-hdr">
+    <div class="done-page-title">✓ Completed Features</div>
+    <button class="clear-btn" onclick="clearCompleted()">✕ Clear All</button>
+  </div>
+  <div id="doneList"></div>
+</div>
+
+<script>
+// ─── DATA ─────────────────────────────────────────────────────────────────────
+
+const CATEGORIES = [
+  {
+    id: 'music',
+    cls: 'cat-music',
+    label: '🎵 Core Composer / Music Logic',
+    items: [
+      { title: 'Triplets and Tuplets', desc: 'Add a "3" tuplet duration type (e.g., quarter triplet = 1/6 of a bar) so users can write swing or compound rhythms that go beyond straight dotted notes.' },
+      { title: 'Swing Feel Toggle', desc: 'A header checkbox that applies a 2:1 ratio to every pair of eighth notes during generation, offsetting every odd-indexed eighth beat in the output piecewise function without the user having to manually adjust durations.' },
+      { title: 'Minor Key Signatures', desc: 'Add relative minor options (Am, Em, Dm, etc.) to the key signature dropdown, with accidentals matching the natural minor scale.' },
+      { title: 'Accidental Overrides on Individual Notes', desc: 'A per-note ♯/♭/♮ button that overrides the key signature accidental for that one note — important for chromatic passages and borrowed chords.' },
+      { title: 'Extended Pitch Range', desc: 'Currently C3–B6; add C1–B8 so users can write bass lines and very high notes. The y offset formula already supports it.' },
+      { title: 'Velocity / Dynamics Field on Note Blocks', desc: 'A dropdown (pp, p, mp, mf, f, ff) stored per note and passed into the Desmos output as a separate amplitude multiplier function amp(t).' },
+      { title: 'Tied Notes', desc: 'A toggle that removes the same-pitch break trim (the -0.1 beats logic) between two consecutive same-pitch notes, so they sound as one long note in Desmos instead of re-attacking.' },
+      { title: 'Repeat / Loop Section Markers', desc: 'User marks a start and end bar, and Generate automatically duplicates those beats N times in the output expression without requiring manual block duplication in the composer.' },
+      { title: 'Humanize Jitter Button', desc: 'Randomly nudges each note\'s start time by ±0–5% of a beat in the output LaTeX, making exported music feel less mechanical in Desmos.' },
+    ]
+  },
+  {
+    id: 'desmos',
+    cls: 'cat-desmos',
+    label: '📊 Desmos Output & Generation',
+    items: [
+      { title: 'Export as .des / Desmos State JSON', desc: 'Instead of copy-paste LaTeX lines, produce a full Desmos calculator state JSON that can be uploaded directly to desmos.com/calculator via their import feature.' },
+      { title: 'Multi-Voice Chord Expressions', desc: 'A "Chord" block type that holds 2–4 simultaneous pitches, generating a tone(…) + tone(…) sum in the Desmos output for harmonics.' },
+      { title: 'Waveform Selector Per Track', desc: 'A per-column dropdown (sine, square, sawtooth, triangle) that wraps the tone() call differently or uses a Desmos Fourier approximation for timbre variety.' },
+      { title: 'ADSR Envelope Expressions', desc: 'Generate an env(t) helper with attack, decay, sustain, and release parameters so notes fade in/out properly instead of abrupt starts/stops.' },
+      { title: 'Named Variable Output', desc: 'Instead of hard-coded function names f,g,h…, let the user name each column (e.g., "melody", "bass") and emit melody(x)=… in the LaTeX output.' },
+      { title: 'Preview the Desmos Ticker Formula', desc: 'Show the exact LaTeX that will be pasted into the Desmos expression list as a live preview string at the bottom of the output panel before generating.' },
+      { title: 'Tempo Ramp / Ritardando', desc: 'Allow BPM to vary across bars (a ramp table input), and generate a tempo(t) function that the ticker step expression uses instead of a constant a.' },
+    ]
+  },
+  {
+    id: 'audio',
+    cls: 'cat-audio',
+    label: '🎹 In-Browser Audio Preview',
+    items: [
+      { title: 'Play Button using Web Audio API', desc: 'Directly mentioned as [GOAL][LOW] in §10; implement AudioContext + OscillatorNode playback so users can hear their composition without opening Desmos at all.' },
+      { title: 'Per-Track Mute/Solo Buttons', desc: 'Once audio preview exists, add mute (silence that track) and solo (only play that track) toggles on each column header.' },
+      { title: 'Metronome Click Track', desc: 'A toggle that plays a click sound on every beat during audio preview so users can check rhythm accuracy.' },
+      { title: 'Loop Playback Region', desc: 'Draggable start/end handles on the ruler that restrict audio playback to a section while composing.' },
+    ]
+  },
+  {
+    id: 'ui',
+    cls: 'cat-ui',
+    label: '🖥️ Composer UI / Editing',
+    items: [
+      { title: 'Piano Roll View', desc: 'An alternative view to the block list where notes are placed on a 2D grid (time on X, pitch on Y), more like a traditional DAW; could be a second tab next to the current block view.' },
+      { title: 'Snap-to-Grid Strength Setting', desc: 'A dropdown to choose snapping resolution (1/4, 1/8, 1/16, 1/32 note) independently of the note duration, so drag-drops and pastes snap to finer grids.' },
+      { title: 'Column Color Coding', desc: 'Let users pick an accent color per column (from the existing CSS color palette) that tints the column header and all its note blocks, making large multi-track compositions visually scannable.' },
+      { title: 'Column Rename', desc: 'Click the column header label to rename it (currently shows "Track 2", "Track 3" etc. only).' },
+      { title: 'Lock Column', desc: 'A padlock icon on each column header that prevents any edits to that column without going through a confirmation, useful for protecting a finished backing track while writing melody on top.' },
+      { title: 'Note Labels on Blocks', desc: 'Display the note name (e.g., "C4", "Eb5") and beat count prominently inside each note block so you can read the composition at a glance without hovering.' },
+      { title: 'Duplicate Selected Notes', desc: 'Ctrl+D shortcut that clones all selected notes and appends/places them immediately after their originals (similar to Illustrator\'s duplicate).' },
+      { title: 'Quantize Selection', desc: 'A button that snaps all selected free-float note beat offsets to the nearest 1/8 or 1/16 boundary, cleaning up sloppy drag-placed notes.' },
+      { title: 'Note Input Mode (Step Record)', desc: 'A toggle mode where each letter-key press advances a cursor through column 0 beat by beat, auto-advancing to the next slot, so users can type out melodies quickly without clicking.' },
+      { title: 'Transpose Tool for Selection', desc: 'A toolbar popup when notes are selected with +/- semitone and +/- octave buttons, complementing the existing keyboard shortcuts with a mouse-friendly alternative.' },
+      { title: 'Measure / Bar Numbers on Ruler', desc: 'The left ruler already shows beat marks; extend it to number each bar prominently at bar lines to aid navigation in longer compositions.' },
+    ]
+  },
+  {
+    id: 'projects',
+    cls: 'cat-projects',
+    label: '💾 Projects & Storage',
+    items: [
+      { title: 'Project Duplication', desc: 'A "Duplicate" button in the projects list that clones the entire composition under a new name (great for making variations).' },
+      { title: 'Project Templates', desc: 'A "New from Template" option offering starter skeletons: "4-bar loop", "AABA form", "12-bar blues", etc., pre-filled with the correct time signature and a few placeholder notes.' },
+      { title: 'Import from JSON', desc: 'A file input that accepts a NOTA project JSON (the same format saved to Firestore) so users can share compositions as files and import them without needing a shared account.' },
+      { title: 'Export to JSON', desc: 'A Download button that saves the current project as a .nota.json file for offline backup or sharing.' },
+      { title: 'Version History', desc: 'Store the last N auto-saves per project in Firestore as timestamped snapshots, with a "Restore" modal that lets users roll back to any prior version. The updatedAt timestamps already exist.' },
+      { title: 'Project Tags / Folders', desc: 'Let users assign tags ("WIP", "done", "collab") or organize projects into named folders within the projects modal.' },
+    ]
+  },
+  {
+    id: 'social',
+    cls: 'cat-social',
+    label: '🌐 Social / Community',
+    items: [
+      { title: 'Public Project Gallery / Discover Feed', desc: 'A browseable page of public compositions with like counts and a "Remix" button that forks a public project into your own account. Mentioned in §10 as [GOAL][LOW].' },
+      { title: 'Profile Pages', desc: 'Clicking a username opens a modal showing their public projects, join date, and mutual friends. Also in §10 [GOAL][MED].' },
+      { title: 'Project Comments', desc: 'A comment thread per project (separate Firestore subcollection) where collaborators and viewers can leave timestamped notes about the composition.' },
+      { title: '"Listening Together" Mode', desc: 'An extension of the presence system (P5) where one user clicks "Play for everyone" and the audio preview is broadcast to all online collaborators in that project via Firestore.' },
+      { title: 'Activity Feed', desc: 'A notification or feed item when a friend creates a new public project, so you can discover and react to compositions from people you follow.' },
+      { title: 'Full Notification Bell', desc: 'The [GOAL][LOW] notification system from §10: a bell icon that aggregates friend requests, project invites, group chat mentions, and DMs into one dismissible list.' },
+    ]
+  },
+  {
+    id: 'admin',
+    cls: 'cat-admin',
+    label: '🛡️ Admin & Moderation',
+    items: [
+      { title: 'Admin: View and Action Reports', desc: 'The admin dashboard currently only shows projects; add a Reports tab that lists all #reports documents with Dismiss / Warn / Ban action buttons.' },
+      { title: 'Admin: Global Ban Enforcement', desc: 'The [GOAL][MED] global bans feature: an admin can ban a UID, and Firestore security rules block all writes from that UID (currently only client-side blocking exists).' },
+      { title: 'Admin: User Lookup', desc: 'Search by username or UID in the admin dashboard and view that user\'s full profile, project list, block list, and report history in one place.' },
+      { title: 'Admin: Project Delete', desc: 'Add a delete button on admin project cards so the admin can remove a reported or policy-violating project from any user\'s account.' },
+      { title: 'Rate Limiting for Reports', desc: 'Either a Cloud Function or Firestore rule to prevent a single user from submitting more than N reports per hour. Noted in §12 KNOWN GAPS.' },
+    ]
+  },
+  {
+    id: 'tech',
+    cls: 'cat-tech',
+    label: '🔧 Technical / Architecture',
+    items: [
+      { title: 'Cloud Function for Group Chat Cleanup', desc: 'When a group is deleted (confirmDeleteGroup), the msgs subcollection is currently orphaned; a Firestore onDelete Cloud Function would clean it up automatically. Noted in §8 WARN.' },
+      { title: 'Block Enforcement via Firestore Rules', desc: 'Currently blocking is client-side only; add a security rule that checks #blocked/{recipientUid}/list/{senderUid} before allowing a msgs write. Noted in §12 KNOWN GAPS.' },
+      { title: 'DM Non-Friend Restriction Rule', desc: 'Optional Firestore rule that requires a sender to be in the receiver\'s #friends/list before they can write to #directMessages, preventing cold-message spam.' },
+      { title: 'Redo Stack', desc: 'Currently only undoStack exists; add a redoStack that captures the state after an undo so Ctrl+Y works.' },
+      { title: 'Firestore Offline Persistence', desc: 'Enable Firestore\'s enablePersistence() so the app still loads and edits work while offline, syncing when connectivity resumes.' },
+      { title: 'Lazy-Load the Desmos Embed', desc: 'The Desmos iframe/API is loaded upfront; defer loading it until the user first clicks "📈 Graph" to reduce initial page load time.' },
+      { title: 'Theming / Accent Color Picker', desc: 'The [GOAL][LOW] theme system: a settings menu where users pick their primary accent color (stored in userProfile), swapping the --cyan and --pink variables at runtime.' },
+    ]
+  },
+];
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+
+let completed = JSON.parse(localStorage.getItem('nota_completed') || '{}');
+// completed[itemKey] = { ts: ISO string, category: id, catLabel, title, desc }
+
+function itemKey(catId, idx) { return `${catId}::${idx}`; }
+
+function saveState() {
+  localStorage.setItem('nota_completed', JSON.stringify(completed));
+}
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+
+function render() {
+  const pageTodo = document.getElementById('pageTodo');
+  const doneList = document.getElementById('doneList');
+  pageTodo.innerHTML = '';
+  doneList.innerHTML = '';
+
+  let totalItems = 0;
+  let doneItems  = 0;
+
+  CATEGORIES.forEach(cat => {
+    const section = document.createElement('div');
+    section.className = `category ${cat.cls}`;
+
+    const remaining = cat.items.filter((_, i) => !completed[itemKey(cat.id, i)]).length;
+    section.innerHTML = `
+      <div class="cat-header">
+        <div class="cat-title">${cat.label}</div>
+        <div class="cat-line"></div>
+        <div class="cat-badge">${remaining} left</div>
+      </div>
+    `;
+
+    cat.items.forEach((item, i) => {
+      totalItems++;
+      const key = itemKey(cat.id, i);
+      const isDone = !!completed[key];
+      if (isDone) doneItems++;
+      else {
+        const el = document.createElement('div');
+        el.className = 'item';
+        el.innerHTML = `
+          <input type="checkbox" class="cb" data-key="${key}" data-cat="${cat.id}" data-idx="${i}">
+          <div class="item-body">
+            <div class="item-title">${item.title}</div>
+            <div class="item-desc">${item.desc}</div>
+          </div>
+          <button class="copy-btn" data-copy="${escapeAttr(item.title + ' — ' + item.desc)}">Copy</button>
+        `;
+        section.appendChild(el);
+      }
+    });
+
+    if (section.querySelectorAll('.item').length > 0) {
+      pageTodo.appendChild(section);
+    }
+  });
+
+  // Empty state for todo
+  if (pageTodo.children.length === 0) {
+    pageTodo.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">🎉</div>
+        <div class="empty-title">All Features Complete</div>
+        <div class="empty-sub">Every idea has been implemented.<br>Time to ship NOTA v2.0.</div>
+      </div>`;
+  }
+
+  // Completed list
+  const doneEntries = Object.entries(completed).sort((a, b) =>
+    new Date(b[1].ts) - new Date(a[1].ts)
+  );
+
+  if (doneEntries.length === 0) {
+    doneList.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">📋</div>
+        <div class="empty-title">Nothing Completed Yet</div>
+        <div class="empty-sub">Check off items on the Todo list<br>and they'll appear here with timestamps.</div>
+      </div>`;
+  } else {
+    doneEntries.forEach(([key, data]) => {
+      const el = document.createElement('div');
+      el.className = 'done-item';
+      const cat = CATEGORIES.find(c => c.id === data.category);
+      const catBadgeStyle = cat ? getCatBadgeStyle(cat.cls) : '';
+      el.innerHTML = `
+        <div class="done-check" title="Click to restore" data-key="${key}"></div>
+        <div class="item-body">
+          <div class="item-title">${data.title}</div>
+          <div class="item-desc">${data.desc}</div>
+        </div>
+        <div class="done-meta">
+          <div class="done-ts">✓ ${formatTs(data.ts)}</div>
+          <div class="done-cat-badge" style="${catBadgeStyle}">${data.catLabel || ''}</div>
+          <button class="copy-btn" data-copy="${escapeAttr(data.title + ' — ' + data.desc)}">Copy</button>
+        </div>
+      `;
+      doneList.appendChild(el);
+    });
+  }
+
+  // Stats
+  document.getElementById('statTodo').textContent  = totalItems - doneItems;
+  document.getElementById('statDone').textContent  = doneItems;
+  document.getElementById('tabTodoCount').textContent = totalItems - doneItems;
+  document.getElementById('tabDoneCount').textContent = doneItems;
+
+  const pct = totalItems > 0 ? Math.round((doneItems / totalItems) * 100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = `${doneItems} / ${totalItems} features · ${pct}%`;
+
+  attachListeners();
+}
+
+function getCatBadgeStyle(cls) {
+  const map = {
+    'cat-music':    'background:rgba(155,93,229,.15);color:#9b5de5;border:1px solid #9b5de5',
+    'cat-desmos':   'background:rgba(0,245,212,.12);color:#00f5d4;border:1px solid #00f5d4',
+    'cat-audio':    'background:rgba(76,201,240,.12);color:#4cc9f0;border:1px solid #4cc9f0',
+    'cat-ui':       'background:rgba(247,37,133,.15);color:#f72585;border:1px solid #f72585',
+    'cat-projects': 'background:rgba(255,214,10,.1);color:#ffd60a;border:1px solid #ffd60a',
+    'cat-social':   'background:rgba(128,237,153,.12);color:#80ed99;border:1px solid #80ed99',
+    'cat-admin':    'background:rgba(247,37,133,.15);color:#f72585;border:1px solid #f72585',
+    'cat-tech':     'background:rgba(112,120,152,.12);color:#707898;border:1px solid #3c3c6e',
+  };
+  return map[cls] || '';
+}
+
+function attachListeners() {
+  // Checkboxes
+  document.querySelectorAll('.cb').forEach(cb => {
+    cb.addEventListener('change', e => {
+      const { key, cat: catId, idx } = e.target.dataset;
+      const cat = CATEGORIES.find(c => c.id === catId);
+      const item = cat.items[parseInt(idx)];
+      completed[key] = {
+        ts: new Date().toISOString(),
+        category: catId,
+        catLabel: cat.label.replace(/^[^\s]+\s/, ''),
+        title: item.title,
+        desc: item.desc,
+      };
+      saveState();
+      showToast(`✓ "${item.title}" marked complete`);
+      render();
+    });
+  });
+
+  // Restore (uncheck done item)
+  document.querySelectorAll('.done-check').forEach(btn => {
+    btn.addEventListener('click', e => {
+      const key = e.currentTarget.dataset.key;
+      const title = completed[key]?.title || 'Item';
+      delete completed[key];
+      saveState();
+      showToast(`↩ "${title}" restored to Todo`);
+      render();
+    });
+  });
+
+  // Copy buttons
+  document.querySelectorAll('.copy-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      const text = e.currentTarget.dataset.copy;
+      navigator.clipboard.writeText(text).then(() => {
+        e.currentTarget.textContent = 'Copied!';
+        e.currentTarget.classList.add('copied');
+        setTimeout(() => {
+          e.currentTarget.textContent = 'Copy';
+          e.currentTarget.classList.remove('copied');
+        }, 1800);
+      });
+    });
+  });
+}
+
+// ─── TAB SWITCHING ────────────────────────────────────────────────────────────
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  if (tab === 'todo') {
+    document.querySelector('.todo-tab').classList.add('active');
+    document.getElementById('pageTodo').classList.add('active');
+  } else {
+    document.querySelector('.done-tab').classList.add('active');
+    document.getElementById('pageDone').classList.add('active');
+  }
+}
+
+// ─── CLEAR COMPLETED ──────────────────────────────────────────────────────────
+
+function clearCompleted() {
+  if (!Object.keys(completed).length) return;
+  if (confirm('Clear all completed items? They will return to the Todo list.')) {
+    completed = {};
+    saveState();
+    showToast('All items restored to Todo');
+    render();
+  }
+}
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+
+function formatTs(iso) {
+  const d = new Date(iso);
+  return d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })
+    + ' · ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function escapeAttr(s) {
+  return s.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+let _toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+
+render();
+</script>
+</body>
+</html>
