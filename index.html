@@ -1,4 +1,4 @@
-<!-- NOTA v1.4.10 -->
+<!-- NOTA v1.5.0 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,6 +10,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 :root {
   --bg: #0e0e1c;
@@ -1538,6 +1539,29 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
 .btn-graph:hover { background: rgba(76,201,240,.22); box-shadow: 0 0 12px rgba(76,201,240,.35); transform: translateY(-1px); }
 .btn-graph.active { background: rgba(76,201,240,.22); box-shadow: 0 0 10px rgba(76,201,240,.3); }
 
+/* ── MSCZ import (v1.5.0) ── */
+.btn-sm.import {
+  border-color: var(--purple); color: var(--purple); background: var(--purple-dim);
+}
+.btn-sm.import:hover { background: rgba(155,93,229,.28); box-shadow: 0 0 10px rgba(155,93,229,.35); }
+.imp-panel {
+  border-bottom: 1px solid var(--border);
+  padding: 8px 10px;
+  background: rgba(155,93,229,0.05);
+  flex-shrink: 0;
+}
+.imp-hdr {
+  font-size: 8px; text-transform: uppercase; letter-spacing: 2px;
+  color: var(--purple); margin-bottom: 6px;
+}
+.imp-row { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+.imp-row.muted .imp-name { text-decoration: line-through; opacity: .5; }
+.imp-name {
+  flex: 1; min-width: 0; font-size: 10px; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.imp-meta { font-size: 8px; color: var(--text-muted); white-space: nowrap; }
+
 #desmosOverlay {
   display: none;
   position: fixed; inset: 0;
@@ -2553,6 +2577,9 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
       <button class="btn-sm" onclick="toggleProjModal()" title="My projects">📁 Projects</button>
     </div>
 
+    <button class="btn-sm import" id="msczBtn" onclick="document.getElementById('msczFile').click()" title="Import a MuseScore .mscz file (or drop one anywhere on the page)">🎼 Import .mscz</button>
+    <input type="file" id="msczFile" accept=".mscz" style="display:none" onchange="onMsczPicked(this)">
+
     <!-- spacer -->
     <div style="flex:1"></div>
 
@@ -2602,9 +2629,10 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
       <span class="out-title">Desmos Output</span>
       <button class="cbtn-all" onclick="copyAll()">Copy All</button>
     </div>
+    <div id="impPanel" class="imp-panel" style="display:none"></div>
     <div class="out-lines" id="outLines">
       <div class="out-empty">
-        Add notes then hit<br>
+        Add notes or import a .mscz, then hit<br>
         <span style="color:var(--pink);font-weight:600">▶ Generate</span><br>
         to build Desmos code
       </div>
@@ -3740,6 +3768,25 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   [2025-06 | SESSION:3 | Claude-Sonnet-4.6]
     ADDED: NOTA_MANIFEST (this document) — §0-§15 — replaces old feature reference comment
     Manifest format: AI-primary, structured notation, self-updating instructions
+
+  [2026-10-10 | SESSION:45 | Claude-Sonnet-5.5]
+    ADDED:     .mscz (MuseScore) import built into the main site — "🎼 Import .mscz" button in header row 2,
+               or drop a .mscz anywhere on the page. Parses ALL staves + voices; simultaneous notes are split
+               into channels (@importMscz, @parseAllNotes, @assignChannels, @extractScoreInfo; JSZip from cdnjs).
+    ADDED:     S.imported[] — imported scores are READ-ONLY, exact (no pitch-range / duration snapping), stored in
+               whole-note units so they follow the BPM / time-sig inputs. Saved as JSON string data.imported on
+               every project save path and restored on every load path. Capped at ~800 KB of JSON (Firestore 1 MiB).
+               #impPanel in the output panel lists them with Mute / Remove (@renderImports, @toggleImportMute).
+    CHANGED:   ▶ Generate is now LIST-BASED for EVERYTHING (hand-composed + imported): one list per channel
+               L_k=[midi,start_s,end_s,…], shared R_eadNotes/N_otePitch/P_itch, one tone() + one parametric curve
+               per channel, real-time ticker T_imer(dt) every 0 ms. Lists are only chunked past 3000 notes per
+               channel (Desmos' 10,000-element cap); the 33-note chunking of the "laggy" prototype is gone.
+    CHANGED:   Slide notes expand to short stepped sub-notes (smoothstep glide). Overlapping notes inside one
+               free-float track now become extra channels instead of being dropped. Live graph (📈) sync, Copy All
+               and copyText() rebuilt on S.exprs[]; copyText() gained an execCommand fallback.
+    REMOVED:   per-track piecewise f(x)={…}, ticker t→t+d, (t,f(t)) point traces. S.extraLines, S.tickerStep,
+               S.tickerMs are legacy/unused. Other manifest sections still describe the old output until rewritten.
+    VERSION:   v1.5.0
 
   [2026-04-01 | SESSION:44 | Claude-Sonnet-4.6]
     FIXED BUG: Project invitations broken — both code-join and username-invite accept paths
@@ -5039,6 +5086,7 @@ async function openSharedProject(ownerUid, projId) {
     const d = doc.data();
     const pd = d.data || {};
     S.columns = typeof pd.columns === 'string' ? JSON.parse(pd.columns) : (pd.columns || [[]]);
+    S.imported = _impFromPd(pd);
     S.tsNum   = pd.tsNum   || 4;
     S.tsDenom = pd.tsDenom || 4;
     S.keySig  = pd.keySig  || 'C';
@@ -5096,7 +5144,7 @@ function startCollabListener(ownerUid, projId) {
 
       if (_isCollabViewer) {
         // Viewers always accept confirmed remote state
-        S.columns = incoming;
+        S.columns = incoming; S.imported = _impFromPd(pd);
         S.tsNum   = pd.tsNum   || S.tsNum;
         S.tsDenom = pd.tsDenom || S.tsDenom;
         S.keySig  = pd.keySig  || S.keySig;
@@ -5110,7 +5158,7 @@ function startCollabListener(ownerUid, projId) {
         _baseRender();
       } else {
         // Editor: confirmed remote state — hasPendingWrites/fromCache already guarded above.
-        S.columns = incoming;
+        S.columns = incoming; S.imported = _impFromPd(pd);
         S.tsNum   = pd.tsNum   || S.tsNum;
         S.tsDenom = pd.tsDenom || S.tsDenom;
         S.keySig  = pd.keySig  || S.keySig;
@@ -5142,7 +5190,7 @@ function startOwnProjListener(uid, projId) {
       const d  = snap.data();
       const pd = d.data || {};
       const incoming = typeof pd.columns === 'string' ? JSON.parse(pd.columns) : (pd.columns || [[]]);
-      S.columns = incoming;
+      S.columns = incoming; S.imported = _impFromPd(pd);
       S.tsNum   = pd.tsNum   || S.tsNum;
       S.tsDenom = pd.tsDenom || S.tsDenom;
       S.keySig  = pd.keySig  || S.keySig;
@@ -5173,6 +5221,7 @@ async function saveSharedProject() {
       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
       data: {
         columns: JSON.stringify(S.columns),
+        imported: JSON.stringify(S.imported || []),
         tsNum: S.tsNum, tsDenom: S.tsDenom, keySig: S.keySig, zoom: S.zoom,
       }
     };
@@ -5421,55 +5470,40 @@ function _syncToDesmos() {
   if (!_desmosCalc) return;
   _desmosCalc.setBlank();
 
+  // Same ordered expression list that "Copy All" uses (see generateDesmos)
   const exprs = [];
   let id = 1;
-
-  // 1. t → 0  (initialises the ticker variable)
-  exprs.push({ id: String(id++), latex: 't\\to0' });
-
-  // 2. t = 0  (defines t as a variable)
-  exprs.push({ id: String(id++), latex: 't=0' });
-
-  // 3. Function definitions — assign each track its color
-  (S.output || []).forEach((line, i) => {
-    const color = DESMOS_COLORS[i % DESMOS_COLORS.length];
-    exprs.push({ id: String(id++), latex: line.latex, color });
+  (S.exprs || []).forEach(e => {
+    const o = { id: String(id++), latex: e.latex };
+    if (e.color) o.color = e.color;
+    if (e.group === 'curve') o.parametricDomain = { min: '0', max: '1' };
+    exprs.push(o);
   });
-
-  // 2. Tone expressions — one per track, same color as its function
-  (S.extraLines || []).filter(l => l.group === 'tone').forEach((line, i) => {
-    const color = DESMOS_COLORS[(line.trackIdx ?? i) % DESMOS_COLORS.length];
-    exprs.push({ id: String(id++), latex: line.copy, color });
-  });
-
-  // 3. Graph point traces  (t, fn(t)) — same color as their function
-  (S.output || []).forEach((line, i) => {
-    const fn = line.fn.replace('(x)', '');
-    const color = DESMOS_COLORS[i % DESMOS_COLORS.length];
-    exprs.push({ id: String(id++), latex: `\\left(t,${fn}\\left(t\\right)\\right)`, color });
-  });
-
+  if (!exprs.length) return;
   _desmosCalc.setExpressions(exprs);
 
   // Ticker lives at state.expressions.ticker — a separate field from the list.
-  // setExpression({type:'ticker',...}) silently does nothing because it targets
-  // the list array. Must inject via getState() → mutate → setState().
-  if (S.tickerStep > 0) {
-    const state = _desmosCalc.getState();
-    state.expressions.ticker = {
-      handlerLatex: `t\\to t+${S.tickerStep}`,
-      minStepLatex: String(S.tickerMs),
-      open: true,
-    };
-    _desmosCalc.setState(state, { allowUndo: false });
-  }
+  // setExpression({type:'ticker',...}) silently does nothing; inject via getState() → setState().
+  const state = _desmosCalc.getState();
+  state.expressions.ticker = {
+    handlerLatex: LX.timerTick,
+    minStepLatex: '0',
+    open: true,
+  };
+  _desmosCalc.setState(state, { allowUndo: false });
+
+  // Frame the piano-roll view: x = semitones from middle C, y = seconds ahead (0…H)
+  try {
+    const m = S.meta;
+    if (m) _desmosCalc.setMathBounds({ left: m.lo - 60 - 8, right: m.hi - 60 + 8, bottom: -2, top: 22 });
+  } catch (e) {}
 
   // Update meta label
   const meta = document.getElementById('desmosMeta');
   if (meta) {
     const count = (S.output || []).length;
     meta.textContent = count > 0
-      ? `— ${count} track${count === 1 ? '' : 's'} loaded`
+      ? `— ${count} channel${count === 1 ? '' : 's'} loaded`
       : '— hit ▶ Generate to populate';
   }
 }
@@ -5557,11 +5591,14 @@ let S = {
   keySig:   'C',
   zoom:     120,
   columns:  [[]],
+  imported: [],        // read-only imported .mscz scores (see MSCZ IMPORT)
   output:   [],
   extraLines: [],
   expanded: new Set(), // note IDs manually expanded past their beat height
-  tickerStep: 0,       // d: t increment per tick (shortest note in beats)
-  tickerMs:   0,       // c: ticker interval in ms
+  tickerStep: 0,       // (legacy, unused since v1.5.0)
+  tickerMs:   0,       // (legacy, unused since v1.5.0)
+  exprs:    [],        // ordered Desmos expressions: Copy All + live graph
+  meta:     null,      // {totalNotes,totalSec,lo,hi,bpm} of the last Generate
 };
 
 let _nextId   = 1;
@@ -6831,286 +6868,660 @@ function newColDrop(e) {
    DESMOS GENERATION
 ══════════════════════════════════════════════════════════ */
 
+/* ═══════════════════════════════════════════════════════════
+   LIST-BASED DESMOS ENGINE + MSCZ IMPORT  (v1.5.0)
+   ───────────────────────────────────────────────────────────
+   Every track (hand-composed columns AND imported .mscz channels) is turned
+   into one Desmos list per channel:  L_k = [midi, start_s, end_s, midi, ...]
+   plus three shared helper functions (R_eadNotes, N_otePitch, P_itch), one
+   tone() and one parametric curve per channel, and a real-time ticker:
+        T_imer(dt)  every 0 ms        (T is playback time in seconds)
+   This replaces the old per-track piecewise functions f(x)={a<x<=b:p,…}.
+   Lists are NOT chunked unless a channel passes ~3000 notes (Desmos caps a
+   list at 10,000 elements) — chunking at ~33 notes made the output laggy.
+
+   Imported scores live in S.imported (read-only, exact, saved with the
+   project):  [{ id, name, muted, tsN, tsD, notes, totalW,
+                 channels:[ [midi,startW,endW, …], … ] }]
+   Times there are in WHOLE-NOTE units, so they follow the BPM / time-sig
+   inputs exactly like hand-composed notes:  sec = w · tsDenom · 60 / bpm.
+   Slide notes are expanded into short stepped sub-notes (smoothstep glide).
+══════════════════════════════════════════════════════════ */
+
+/* Fixed LaTeX for every Desmos expression we output */
+const LX = {
+ timerTick: 'T_{imer}\\left(\\operatorname{dt}\\right)',
+ tReset:    'T\\to0',
+ tInit:     'T=0',
+ timerFn:   'T_{imer}\\left(t_{i}\\right)=T\\to T+\\frac{t_{i}}{1000}',
+ readNotes: 'R_{eadNotes}\\left(L_{i}\\right)=\\left(L_{i}\\left[3\\left(i-1\\right)+1\\right]\\operatorname{for}i=\\left[1\\ldots\\frac{\\operatorname{count}\\left(L_{i}\\right)}{3}\\right]\\right)\\left[\\left(L_{i}\\left[3\\left(i-1\\right)+2\\right]\\operatorname{for}i=\\left[1\\ldots\\frac{\\operatorname{count}\\left(L_{i}\\right)}{3}\\right]\\right)\\le T<\\left(L_{i}\\left[3\\left(i-1\\right)+3\\right]\\operatorname{for}i=\\left[1\\ldots\\frac{\\operatorname{count}\\left(L_{i}\\right)}{3}\\right]\\right)\\right]',
+ notePitch: 'N_{otePitch}\\left(n_{i}\\right)=440\\cdot2^{\\frac{n_{i}-69}{12}}',
+ // P_itch now takes (V, s_i) — V is the list parameter, avoids subscript-i collision
+ pitch:     'P_{itch}\\left(V,s_{i}\\right)=\\left(V\\left[3\\left(i-1\\right)+1\\right]\\operatorname{for}i=\\left[1\\ldots\\frac{\\operatorname{count}\\left(V\\right)}{3}\\right]\\right)\\left[\\left(V\\left[3\\left(i-1\\right)+2\\right]\\operatorname{for}i=\\left[1\\ldots\\frac{\\operatorname{count}\\left(V\\right)}{3}\\right]\\right)\\le s_{i}<\\left(V\\left[3\\left(i-1\\right)+3\\right]\\operatorname{for}i=\\left[1\\ldots\\frac{\\operatorname{count}\\left(V\\right)}{3}\\right]\\right)\\right]',
+ wVar:      'W=4',
+ hVar:      'H=20',
+ playhead:  'y=0'
+};
+ 
+/* Generate per-channel LaTeX strings */
+function toneLatex(k) {
+ const rn = `R_{eadNotes}\\left(L_{${k}}\\right)`;
+ // Single-condition piecewise: avoids comma-as-branch-separator bug and ensures
+ // tone() always receives a scalar (not an empty list when no note is active).
+ return `\\operatorname{tone}\\left(\\left\\{\\operatorname{count}\\left(${rn}\\right)>0:N_{otePitch}\\left(${rn}\\left[1\\right]\\right),0\\right\\}\\right)`;
+}
+function vizLatex(k) {
+ // Reference MIDI 60 (middle C) → x = 0; 1 unit per semitone keeps a ~3-octave
+ // span within the default Desmos viewport instead of pushing notes to ±225.
+ return `\\left(P_{itch}\\left(L_{${k}},T+t\\cdot W\\right)\\left[1\\right]-60,t\\cdot H\\right)`;
+}
+
+// Desmos subscripts allow only letters and digits — no commas or punctuation.
+// Map 0-based chunk index to a letter suffix: 0->'a', 25->'z', 26->'aa', etc.
+function chunkSuffix(j) {
+ let s = ''; j++;
+ while (j > 0) { s = String.fromCharCode(96 + ((j - 1) % 26 + 1)) + s; j = Math.floor((j - 1) / 26); }
+ return s;
+}
+
+// Split a channel's flat value array into sub-lists of ≤99 numbers (= 33 notes),
+// always aligned on 3-value note boundaries so no triplet is split across chunks.
+// Each chunk is a standalone Desmos list (L_{1a}, L_{1b}, …).
+// Desmos can't nest lists, so there is no concat expression — instead one tone()
+// and one parametric curve is emitted per chunk; at any moment T only the chunk
+// covering that time range has an active note, so audio/viz are identical.
+function buildChannelChunks(k, values) {
+ const CHUNK = 9000; // multiple of 3 (3000 notes) — Desmos caps a list at 10,000 elements
+ const chunks = [];
+ for (let i = 0; i < values.length; i += CHUNK) chunks.push(values.slice(i, i + CHUNK));
+
+ return chunks.map((chunk, j) => {
+   const nums = chunk.map(fmtNum);
+   // Single chunk → keep plain L_{k} name; multiple → L_{ka}, L_{kb}, …
+   const sub = chunks.length === 1 ? `${k}` : `${k}${chunkSuffix(j)}`;
+   return {
+     sub,
+     latex:   `L_{${sub}}=\\left[${nums.join(',')}\\right]`,
+     display: `L_{${sub}} = [${nums.join(', ')}]`,
+   };
+ });
+}
+ 
+
+/**
+* Beat fraction of a duration type + dots, as a fraction of a whole note.
+* e.g. quarter + 1 dot = 3/8
+*/
+function durToFraction(durType, dots) {
+ const base = {
+   'whole':1, 'half':0.5, 'quarter':0.25, 'eighth':0.125,
+   '16th':1/16, '32nd':1/32, '64th':1/64, '128th':1/128,
+   'breve':2, 'long':4
+ }[durType];
+ if (base === undefined) return 0.25; // fallback
+ const dotMult = dots === 2 ? 1.75 : dots === 1 ? 1.5 : 1;
+ return base * dotMult;
+}
+ 
+/** Flatten direct children plus Segment children (MS3 style). */
+function flatMeasureChildren(measure) {
+ const els = [];
+ for (const child of measure.children) {
+   if (child.tagName === 'Segment') {
+     for (const gc of child.children) els.push(gc);
+   } else {
+     els.push(child);
+   }
+ }
+ return els;
+}
+ 
+/**
+ * Parse ALL notes from ALL staves and ALL voices.
+ * Returns { notes: [{midi, startSec, endSec}], totalSec }
+ */
+function parseAllNotes(doc, tsDenom, bpm) {
+ const secPerBeat = 60 / bpm;
+ 
+ const allStaffEls = Array.from(doc.querySelectorAll('Staff[id]'));
+ const staffIds = [...new Set(
+   allStaffEls
+     .filter(s => s.querySelector('Measure'))
+     .map(s => s.getAttribute('id'))
+ )];
+ 
+ const allNotes = [];
+ let globalMaxBeat = 0;
+ 
+ for (const staffId of staffIds) {
+   const staff = allStaffEls.find(
+     s => s.getAttribute('id') === staffId && s.querySelector('Measure'));
+   if (!staff) continue;
+ 
+   let measureStartBeat = 0;
+ 
+   for (const measure of staff.querySelectorAll('Measure')) {
+     // Detect MS4 (<voice> wrapper children) vs MS3 (voice tag inside each element)
+     const voiceWrappers = Array.from(measure.children).filter(c => c.tagName === 'voice');
+     const voiceMap = new Map(); // vKey -> elements[]
+ 
+     if (voiceWrappers.length > 0) {
+       // MS4: each <voice> child is a distinct voice stream
+       voiceWrappers.forEach((vEl, idx) => {
+         voiceMap.set(String(idx), Array.from(vEl.children));
+       });
+     } else {
+       // MS3: Chord/Rest elements carry a <voice> child with value "0","1"...
+       for (const el of flatMeasureChildren(measure)) {
+         if (!['Chord','Rest','Tuplet','endTuplet'].includes(el.tagName)) continue;
+         const vKey = el.querySelector(':scope > voice')?.textContent?.trim() ?? '0';
+         if (!voiceMap.has(vKey)) voiceMap.set(vKey, []);
+         voiceMap.get(vKey).push(el);
+       }
+     }
+ 
+     let measureMaxBeat = 0;
+ 
+     for (const [, els] of voiceMap) {
+       let beat = measureStartBeat;
+       let tupletRatio = 1;
+       const tieBuffer = new Map(); // midi -> {idx}
+ 
+       for (const el of els) {
+         if (el.tagName === 'Tuplet') {
+           const actual = parseInt(el.querySelector('actualNotes')?.textContent || '3');
+           const normal = parseInt(el.querySelector('normalNotes')?.textContent || '2');
+           tupletRatio = actual > 0 ? normal / actual : 1;
+           continue;
+         }
+         if (el.tagName === 'endTuplet') { tupletRatio = 1; continue; }
+ 
+         if (el.tagName === 'Chord') {
+           if (el.querySelector('acciaccatura,appoggiatura,grace4,grace8,grace16')) continue;
+ 
+           const durType = el.querySelector(':scope > durationType')?.textContent?.trim() || 'quarter';
+           const dots    = parseInt(el.querySelector(':scope > dots')?.textContent || '0');
+           const bf      = durToFraction(durType, dots) * tupletRatio;
+ 
+           const startSec = Math.round(beat * tsDenom * secPerBeat * 1e6) / 1e6;
+           const endSec   = Math.round((beat + bf) * tsDenom * secPerBeat * 1e6) / 1e6;
+ 
+           el.querySelectorAll('Note').forEach(noteEl => {
+             const midi = parseInt(noteEl.querySelector('pitch')?.textContent || '-1');
+             if (midi < 0) return;
+             const isTied = !!noteEl.querySelector('Spanner[type="Tie"] prev');
+             if (isTied && tieBuffer.has(midi)) {
+               // Extend tied note end time
+               allNotes[tieBuffer.get(midi)].endSec = endSec;
+             } else {
+               tieBuffer.set(midi, allNotes.length);
+               allNotes.push({midi, startSec, endSec});
+             }
+           });
+ 
+           beat += bf;
+ 
+         } else if (el.tagName === 'Rest') {
+           let durType = el.querySelector(':scope > durationType')?.textContent?.trim() || 'quarter';
+           const isMeasureRest = durType === 'measure';
+           if (isMeasureRest) durType = 'whole';
+           const dots = parseInt(el.querySelector(':scope > dots')?.textContent || '0');
+           beat += durToFraction(durType, dots) * (isMeasureRest ? 1 : tupletRatio);
+         }
+       }
+ 
+       const voiceDur = beat - measureStartBeat;
+       if (voiceDur > measureMaxBeat) measureMaxBeat = voiceDur;
+     }
+ 
+     measureStartBeat += measureMaxBeat;
+     if (measureStartBeat > globalMaxBeat) globalMaxBeat = measureStartBeat;
+   }
+ }
+ 
+ if (!allNotes.length) throw new Error('No notes found in this file.');
+ const totalSec = Math.round(globalMaxBeat * tsDenom * secPerBeat * 1e6) / 1e6;
+ return {notes: allNotes, totalSec};
+}
+ 
+/**
+ * Greedy interval-graph coloring: assign simultaneous notes to separate channels.
+ * Notes with higher pitch go to earlier channels (L1 = highest notes).
+ * Returns channels: array-of-arrays of notes, each channel non-overlapping.
+ */
+function assignChannels(notes) {
+ const sorted = [...notes].sort((a, b) =>
+   a.startSec - b.startSec || b.midi - a.midi);
+ 
+ const channels   = [];
+ const channelEnd = [];
+ 
+ for (const note of sorted) {
+   let k = -1;
+   for (let i = 0; i < channels.length; i++) {
+     if (channelEnd[i] <= note.startSec + 1e-6) { k = i; break; }
+   }
+   if (k === -1) { k = channels.length; channels.push([]); channelEnd.push(0); }
+   channels[k].push(note);
+   channelEnd[k] = note.endSec;
+ }
+ 
+ return channels;
+}
+ 
+
+function extractScoreInfo(doc) {
+ const info = { bpm: null, timeSigN: 4, timeSigD: 4, numStaves: 1, title: '' };
+ 
+ // Title: metaTag or Title frame
+ const titleMeta = doc.querySelector('metaTag[name="workTitle"]');
+ if (titleMeta?.textContent?.trim()) info.title = titleMeta.textContent.trim();
+ if (!info.title) {
+   const titleFrame = doc.querySelector('Text > text');
+   if (titleFrame) info.title = titleFrame.textContent.trim();
+ }
+ 
+ // Tempo: first <Tempo> element — value is in beats-per-second
+ const tempoEl = doc.querySelector('Tempo tempo');
+ if (tempoEl) info.bpm = Math.round(parseFloat(tempoEl.textContent) * 60);
+ 
+ // Time signature: first <TimeSig>
+ const sigN = doc.querySelector('TimeSig sigN');
+ const sigD = doc.querySelector('TimeSig sigD');
+ if (sigN) info.timeSigN = parseInt(sigN.textContent) || 4;
+ if (sigD) info.timeSigD = parseInt(sigD.textContent) || 4;
+ 
+ // Count staves: Staff elements that actually contain Measure data
+ const allStaff = doc.querySelectorAll('Staff[id]');
+ const dataIds = new Set();
+ allStaff.forEach(s => { if (s.querySelector('Measure')) dataIds.add(s.getAttribute('id')); });
+ info.numStaves = Math.max(1, dataIds.size);
+ 
+ return info;
+}
+ 
+
+
+const FN_NAMES = ['f','g','h','j','k','l','m','n','p','q'];
+const _r3 = n => Math.round(n * 1000) / 1000;
+
+function _bpmNow() { return parseFloat(document.getElementById('bpmInput').value) || 120; }
+
+/* hand-composed segments [{s,e,pitch,slide}] in beats → timed notes in seconds */
+function _segsToNotes(segs, spb) {
+  const out = [];
+  segs.forEach((seg, i) => {
+    const next = segs[i + 1];
+    const s = seg.s * spb, e = seg.e * spb, dur = e - s;
+    if (!(dur > 0)) return;
+    const midi = seg.pitch + 69;                 // main app stores pitch as semitones from A4
+    if (seg.slide && next) {
+      const diff  = next.pitch - seg.pitch;
+      const steps = Math.max(4, Math.min(32, Math.round(dur / 0.04)));
+      for (let k = 0; k < steps; k++) {
+        const t = (k + 0.5) / steps, sm = t * t * (3 - 2 * t);
+        out.push({ midi: _r3(midi + diff * sm), startSec: s + dur * k / steps, endSec: s + dur * (k + 1) / steps });
+      }
+    } else {
+      let end = e;
+      // back-to-back same pitch: leave a tiny gap so the second note re-attacks
+      if (next && seg.pitch === next.pitch && seg.e === next.s) end = e - Math.min(0.1 * spb, dur * 0.4);
+      out.push({ midi, startSec: s, endSec: end });
+    }
+  });
+  return out;
+}
+
+/* All channels to output: hand-composed tracks first, then imported scores */
+function buildChannels() {
+  const spb = 60 / _bpmNow();
+  const d   = S.tsDenom;
+  const chans = [];
+
+  S.columns.forEach((col, ci) => {
+    const fn = FN_NAMES[ci] ?? `v${ci + 1}`;
+    let segs;
+    if (ci === 0) {
+      segs = getRows().filter(r => r.note.type === 'note')
+        .map(r => ({ s: r.startBeat, e: r.startBeat + r.beats, pitch: r.note.pitch, slide: !!r.note.slide }));
+    } else {
+      segs = [...col].sort((a, b) => (a.beatOffset ?? 0) - (b.beatOffset ?? 0))
+        .filter(n => n.type === 'note')
+        .map(n => ({ s: n.beatOffset ?? 0, e: (n.beatOffset ?? 0) + getBeats(n.duration, d), pitch: n.pitch, slide: !!n.slide }));
+    }
+    if (!segs.length) return;
+    // overlapping notes in one free-float track become extra channels instead of being dropped
+    assignChannels(_segsToNotes(segs, spb)).forEach((chNotes, sub) => {
+      const vals = [];
+      chNotes.forEach(n => vals.push(n.midi, _r3(n.startSec), _r3(n.endSec)));
+      chans.push({ label: sub === 0 ? fn : `${fn}·${sub + 1}`, src: 'track', vals, count: chNotes.length });
+    });
+  });
+
+  const wToSec = d * spb;
+  (S.imported || []).forEach(song => {
+    if (song.muted) return;
+    song.channels.forEach((flat, i) => {
+      const vals = new Array(flat.length);
+      for (let j = 0; j < flat.length; j += 3) {
+        vals[j]     = flat[j];
+        vals[j + 1] = _r3(flat[j + 1] * wToSec);
+        vals[j + 2] = _r3(flat[j + 2] * wToSec);
+      }
+      chans.push({ label: `${song.name} · ${i + 1}`, src: 'import', vals, count: flat.length / 3 });
+    });
+  });
+  return chans;
+}
+
 function generateDesmos() {
   syncSettings();
-  const d     = S.tsDenom;
-  const col0  = S.columns[0];
-  const rows  = getRows();
-  const fnNames = ['f','g','h','j','k','l','m','n','p','q'];
+  const chans = buildChannels();
+  S.extraLines = []; S.tickerStep = 0; S.tickerMs = 0;
 
-  if (col0.length === 0) {
+  if (!chans.length) {
+    S.output = []; S.exprs = []; S.meta = null;
     renderOutput([]);
     return;
   }
 
-  const lines = [];
-
-  S.columns.forEach((col, ci) => {
-    const fn = fnNames[ci] ?? `v${ci+1}`;
-    const parts = [];
-    if (ci === 0) {
-      // Build pitched note segments first
-      const segs = rows
-        .filter(row => row.note.type === 'note')
-        .map(row => ({ s: row.startBeat, e: row.startBeat + row.beats, pitch: row.note.pitch, slide: row.note.slide || false }));
-      // Apply 0.1 break where consecutive same-pitch notes are back-to-back (non-slide)
-      segs.forEach((seg, i) => {
-        const next = segs[i + 1];
-        if (seg.slide && next) {
-          // Smoothstep glide: a + (b-a)(3t²-2t³) where t = (x-s)/len
-          const a = seg.pitch, b = next.pitch;
-          const s = fmtNum(seg.s), len = fmtNum(seg.e - seg.s);
-          const diff = fmtNum(b - a);
-          parts.push(`${s} < x <= ${fmtNum(seg.e)}: ${a}+${diff}(3((x-${s})/${len})^{2}-2((x-${s})/${len})^{3})`);
-        } else {
-          let end = seg.e;
-          if (next && seg.pitch === next.pitch && seg.e === next.s) end = seg.e - 0.1;
-          parts.push(`${fmtNum(seg.s)} < x <= ${fmtNum(end)}:${seg.pitch}`);
-        }
-      });
-    } else {
-      const sorted = [...col].sort((a,b)=>(a.beatOffset??0)-(b.beatOffset??0));
-      // Build pitched note segments first
-      const segs = sorted
-        .filter(n => n.type === 'note')
-        .map(n => ({ s: n.beatOffset ?? 0, e: (n.beatOffset ?? 0) + getBeats(n.duration, d), pitch: n.pitch, slide: n.slide || false }));
-      // Apply 0.1 break where consecutive same-pitch notes are back-to-back (non-slide)
-      segs.forEach((seg, i) => {
-        const next = segs[i + 1];
-        if (seg.slide && next) {
-          const a = seg.pitch, b = next.pitch;
-          const s = fmtNum(seg.s), len = fmtNum(seg.e - seg.s);
-          const diff = fmtNum(b - a);
-          parts.push(`${s} < x <= ${fmtNum(seg.e)}: ${a}+${diff}(3((x-${s})/${len})^{2}-2((x-${s})/${len})^{3})`);
-        } else {
-          let end = seg.e;
-          if (next && seg.pitch === next.pitch && seg.e === next.s) end = seg.e - 0.1;
-          parts.push(`${fmtNum(seg.s)} < x <= ${fmtNum(end)}:${seg.pitch}`);
-        }
-      });
+  let totalNotes = 0, totalSec = 0, lo = Infinity, hi = -Infinity;
+  const channelData = chans.map((c, idx) => {
+    totalNotes += c.count;
+    for (let j = 0; j < c.vals.length; j += 3) {
+      if (c.vals[j] < lo) lo = c.vals[j];
+      if (c.vals[j] > hi) hi = c.vals[j];
+      if (c.vals[j + 2] > totalSec) totalSec = c.vals[j + 2];
     }
-    if (parts.length > 0) {
-      const inner = parts.join(', ');
-      const code  = `${fn}(x) = {${inner}}`;
-      const latex = `${fn}(x) = \\left\\{${inner}\\right\\}`;
-      const color = DESMOS_COLORS[ci % DESMOS_COLORS.length];
-      lines.push({ fn: fn+'(x)', code, latex, color });
-    }
+    return {
+      k: idx + 1, label: c.label, src: c.src, count: c.count,
+      color: DESMOS_COLORS[idx % DESMOS_COLORS.length],
+      chunks: buildChannelChunks(idx + 1, c.vals),
+    };
   });
 
-    S.output = lines;
-  renderOutput(lines);
-  // Auto-sync to Desmos if overlay is open
+  // Ordered expression list — used by Copy All and by the live Desmos graph
+  const ex = [];
+  const add = (latex, show, group, extra) => ex.push(Object.assign({ latex, show, group }, extra || {}));
+  add(LX.tReset, 'T → 0', 'reset');
+  add(LX.tInit,  'T = 0', 'reset');
+  add(LX.timerFn, 'T_imer(t_i) = T → T + t_i / 1000', 'timer');
+  channelData.forEach(c => c.chunks.forEach(ch => add(ch.latex, ch.display, 'data', { color: c.color, ch: c, chunk: ch })));
+  add(LX.readNotes, 'R_eadNotes(L_i)', 'fn');
+  add(LX.notePitch, 'N_otePitch(n_i)', 'fn');
+  add(LX.pitch,     'P_itch(V, s_i)',  'fn');
+  channelData.forEach(c => c.chunks.forEach(ch =>
+    add(toneLatex(ch.sub), `tone(N_otePitch(R_eadNotes(L_${ch.sub})))`, 'tone', { color: c.color, ch: c })));
+  add(LX.wVar, 'W = 4',  'viz');
+  add(LX.hVar, 'H = 20', 'viz');
+  channelData.forEach(c => c.chunks.forEach(ch =>
+    add(vizLatex(ch.sub), `(P_itch(L_${ch.sub}, T + t·W)[1] − 60, t·H)`, 'curve', { color: c.color, ch: c })));
+  add(LX.playhead, 'y = 0', 'viz');
+
+  S.exprs  = ex;
+  S.output = channelData;
+  S.meta   = { totalNotes, totalSec: _r3(totalSec), lo, hi, bpm: _bpmNow() };
+  renderOutput(channelData);
   if (_desmosOpen) _syncToDesmos();
 }
 
-function renderOutput(lines) {
+/* ═══════════════════════════════════════════════════════════
+   OUTPUT PANEL
+══════════════════════════════════════════════════════════ */
+
+let _exBuf = [];   // copy buffer — avoids escaping LaTeX inside onclick attributes
+function copyBuf(i, btn) { copyText(_exBuf[i], btn); }
+
+function _trunc(s, n) { return s.length > n ? s.slice(0, n) + ' …' : s; }
+
+function renderOutput(channelData) {
   const el = document.getElementById('outLines');
-  if (!lines || lines.length === 0) {
+  if (!channelData || channelData.length === 0) {
+    const nothing  = S.columns[0].length === 0 && !(S.imported || []).length;
+    const allMuted = !S.columns.some(c => c.some(x => x.type === 'note')) && (S.imported || []).length && S.imported.every(s => s.muted);
     el.innerHTML = `<div class="out-empty">
-      ${S.columns[0].length===0
-        ? 'Add notes then hit<br><span style="color:var(--pink);font-weight:600">▶ Generate</span>'
+      ${nothing
+        ? 'Add notes or import a .mscz, then hit<br><span style="color:var(--pink);font-weight:600">▶ Generate</span>'
+        : allMuted
+        ? 'All imported scores are muted.<br><span style="color:var(--text-dim);font-size:10px">Unmute one to generate</span>'
         : 'No pitched notes found.<br><span style="color:var(--text-dim);font-size:10px">Add at least one Note (not just Rests)</span>'}
     </div>`;
     return;
   }
 
-  // ── Compute BPM variables ──
-  const bpm = parseFloat(document.getElementById('bpmInput').value) || 120;
-  const d_ts = parseInt(document.getElementById('tsDenom').value) || 4; // tsDenom for getBeats
+  _exBuf = [];
+  const buf = t => { _exBuf.push(t); return _exBuf.length - 1; };
+  const sw  = c => c ? `<span class="out-swatch" style="background:${c}"></span>` : '';
+  const row = e => `
+    <div class="out-extra">
+      ${sw(e.color)}
+      <span class="out-extra-code">${escapeHtml(e.show)}</span>
+      <button class="cbtn" style="flex-shrink:0" onclick="copyBuf(${buf(e.latex)},this)">Copy</button>
+    </div>`;
+  const of = g => S.exprs.filter(e => e.group === g);
+  const m  = S.meta, n = channelData.length;
 
-  // b = shortest note/rest duration (in beats) anywhere in all tracks
-  let minBeats = Infinity;
-  S.columns.forEach(col => {
-    col.forEach(note => {
-      const nb = getBeats(note.duration, d_ts);
-      if (nb > 0 && nb < minBeats) minBeats = nb;
-    });
-  });
-  if (!isFinite(minBeats)) minBeats = 1; // fallback if no notes
+  let h = '';
 
-  const b = Math.round(minBeats * 1000000) / 1000000;
-  const c = Math.round((60000 * b) / bpm * 1000) / 1000;  // ms per tick
-  const d = Math.round(b * 1000000) / 1000000;             // t increment per tick (= b)
-
-  // Store for _syncToDesmos()
-  S.tickerStep = d;
-  S.tickerMs   = c;
-
-  // ── Store extra lines on S.output for copyAll ──
-  // Extra lines: reset1, reset2, then tone×tracks, graph×tracks, then fn×tracks
-  const extraLines = [];
-
-  // t reset
-  extraLines.push({ copy: 't\\to0', show: 't → 0',           group: 'reset' });
-  extraLines.push({ copy: 't=0',    show: 't = 0',            group: 'reset' });
-
-  // tone lines  (one per track that has output)
-  lines.forEach((line, i) => {
-    const fn = line.fn.replace('(x)','');  // 'f', 'g', etc.
-    extraLines.push({
-      copy: `\\operatorname{tone}\\left(440\\cdot2^{\\frac{n}{12}}\\right)\\operatorname{with}n=${fn}\\left(t\\right)`,
-      show: `tone(440·2^(n/12)) with n = ${fn}(t)`,
-      group: 'tone', trackIdx: i,
-    });
-  });
-
-  // graph point lines
-  lines.forEach((line, i) => {
-    const fn = line.fn.replace('(x)','');
-    extraLines.push({
-      copy: `\\left(t,${fn}\\left(t\\right)\\right)`,
-      show: `(t, ${fn}(t))`,
-      group: 'graph', trackIdx: i,
-    });
-  });
-
-  S.output = lines;
-  S.extraLines = extraLines;
-
-  // ── Build HTML ──
-  let html = '';
-
-  // 1. Ticker setup card
-  html += `
+  // 1. Ticker
+  h += `
   <div class="out-setup">
     <div class="out-setup-hdr">Ticker Setup</div>
-    <div class="out-setup-desc">In Desmos, click <strong style="color:var(--cyan)">+</strong> and add a <strong style="color:var(--cyan)">Ticker</strong>, then fill in the two values:</div>
+    <div class="out-setup-desc">In Desmos, click <strong style="color:var(--cyan)">+</strong> and add a <strong style="color:var(--cyan)">Ticker</strong>, then fill in:</div>
     <div class="out-ticker-row">
       <span class="out-ticker-kw">Run</span>
-      <span class="out-ticker-val">t → t + ${d}</span>
-      <button class="cbtn" style="flex-shrink:0" onclick="copyText('t\\\\to t+${d}', this)">Copy</button>
+      <span class="out-ticker-val">T_imer(dt)</span>
+      <button class="cbtn" style="flex-shrink:0" onclick="copyBuf(${buf(LX.timerTick)},this)">Copy</button>
       <span class="out-ticker-sep">every</span>
-      <span class="out-ticker-val">${c}</span>
-      <button class="cbtn" style="flex-shrink:0" onclick="copyText('${c}', this)">Copy</button>
+      <span class="out-ticker-val">0</span>
       <span class="out-ticker-kw">ms</span>
     </div>
+    <div class="out-setup-desc" style="margin:10px 0 0">${m.totalNotes} notes · ${n} channel${n !== 1 ? 's' : ''} · ${m.totalSec}s · ${m.bpm} bpm</div>
   </div>`;
 
-  // 2. Reset section
-  html += `<div class="out-section">Ticker Reset</div>`;
-  extraLines.filter(l => l.group === 'reset').forEach((line, i) => {
-    html += `
-    <div class="out-extra">
-      <span class="out-extra-code">${escapeHtml(line.show)}</span>
-      <button class="cbtn" style="flex-shrink:0" onclick="copyExtra(${i},this)">Copy</button>
-    </div>`;
-  });
+  // 2. Reset + timer
+  h += `<div class="out-section">Ticker Reset</div>` + of('reset').map(row).join('');
+  h += `<div class="out-section">Timer Function</div>` + of('timer').map(row).join('');
 
-  // 3. Tone section
-  const toneOffset = 2; // after the 2 reset lines
-  html += `<div class="out-section">Tone Expressions</div>`;
-  extraLines.filter(l => l.group === 'tone').forEach((line, i) => {
-    const color = DESMOS_COLORS[line.trackIdx % DESMOS_COLORS.length];
-    html += `
-    <div class="out-extra">
-      <span class="out-swatch" style="background:${color}"></span>
-      <span class="out-extra-code">${escapeHtml(line.show)}</span>
-      <button class="cbtn" style="flex-shrink:0" onclick="copyExtra(${toneOffset + i},this)">Copy</button>
-    </div>`;
-  });
-
-  // 4. Graph point section
-  const graphOffset = toneOffset + lines.length;
-  html += `<div class="out-section">Graph Points</div>`;
-  extraLines.filter(l => l.group === 'graph').forEach((line, i) => {
-    const color = DESMOS_COLORS[line.trackIdx % DESMOS_COLORS.length];
-    html += `
-    <div class="out-extra">
-      <span class="out-swatch" style="background:${color}"></span>
-      <span class="out-extra-code">${escapeHtml(line.show)}</span>
-      <button class="cbtn" style="flex-shrink:0" onclick="copyExtra(${graphOffset + i},this)">Copy</button>
-    </div>`;
-  });
-
-  // 5. Function definitions
-  html += `<div class="out-section">Function Definitions</div>`;
-  html += lines.map((line, i) => `
+  // 3. Sound data — one card per channel (one row per chunk, normally just one)
+  h += `<div class="out-section">Sound Data</div>`;
+  channelData.forEach(c => {
+    const multi = c.chunks.length > 1;
+    const allIdx = multi ? buf(c.chunks.map(ch => ch.latex).join('\n')) : -1;
+    h += `
     <div class="out-line">
       <div class="out-lhdr">
         <span style="display:flex;align-items:center;gap:6px">
-          <span class="out-swatch" style="background:${line.color}"></span>
-          <span class="out-fn">${line.fn}</span>
+          ${sw(c.color)}
+          <span class="out-fn">L<sub>${c.k}</sub> · ${escapeHtml(_trunc(c.label, 28))}</span>
+          <span style="font-size:8px;color:var(--text-muted)">${c.count} note${c.count !== 1 ? 's' : ''}${c.src === 'import' ? ' · imported' : ''}</span>
         </span>
-        <button class="cbtn" onclick="copyLine(${i},this)">Copy</button>
+        ${multi ? `<button class="cbtn" onclick="copyBuf(${allIdx},this)">Copy All Parts</button>` : ''}
       </div>
-      <div class="out-code" id="oc${i}">${escapeHtml(line.code)}</div>
-    </div>
-  `).join('');
+      ${c.chunks.map(ch => `
+      <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
+        <div class="out-code" style="flex:1;max-height:38px;overflow:hidden">${escapeHtml(_trunc(ch.display, 260))}</div>
+        <button class="cbtn" style="flex-shrink:0" onclick="copyBuf(${buf(ch.latex)},this)">Copy</button>
+      </div>`).join('')}
+    </div>`;
+  });
 
-  el.innerHTML = html;
+  // 4. Shared helpers, tones, visualisation
+  h += `<div class="out-section">Shared Functions</div>` + of('fn').map(row).join('');
+  h += `<div class="out-section">Tone Expressions</div>`  + of('tone').map(row).join('');
+  h += `<div class="out-section">Visualization <span style="text-transform:none;letter-spacing:0;color:var(--text-muted)">· set each curve's t domain to [0, 1]</span></div>`
+     + of('viz').filter(e => e.show !== 'y = 0').map(row).join('')
+     + of('curve').map(row).join('')
+     + of('viz').filter(e => e.show === 'y = 0').map(row).join('');
+
+  el.innerHTML = h;
 }
 
 function copyText(text, btn) {
-  navigator.clipboard.writeText(String(text)).then(() => {
-    btn.textContent = '✓';
-    btn.classList.add('ok');
-    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('ok'); }, 1600);
-  }).catch(() => {
-    btn.textContent = '✗';
-    setTimeout(() => { btn.textContent = 'Copy'; }, 1600);
-  });
-}
-
-function copyExtra(idx, btn) {
-  const line = S.extraLines?.[idx];
-  if (!line) return;
-  navigator.clipboard.writeText(line.copy).then(() => {
-    btn.textContent = '✓ Copied';
-    btn.classList.add('ok');
-    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('ok'); }, 1800);
-  }).catch(() => {
-    btn.textContent = '✗';
-    setTimeout(() => { btn.textContent = 'Copy'; }, 1800);
-  });
+  const str = String(text);
+  const fallback = () => {
+    const ta = document.createElement('textarea');
+    ta.value = str;
+    ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0;width:1px;height:1px';
+    document.body.appendChild(ta);
+    ta.focus(); ta.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    return ok;
+  };
+  const finish = ok => {
+    const orig = btn.dataset.orig || btn.textContent;
+    btn.dataset.orig = orig;
+    btn.textContent = ok ? '✓' : '✗';
+    btn.classList.toggle('ok', ok);
+    setTimeout(() => { btn.textContent = orig; btn.classList.remove('ok'); }, 1600);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(str).then(() => finish(true)).catch(() => finish(fallback()));
+  } else finish(fallback());
 }
 
 function escapeHtml(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-function copyLine(idx, btn) {
-  const line = S.output[idx];
-  if (!line) return;
-  navigator.clipboard.writeText(line.latex).then(() => {
-    btn.textContent = '✓ Copied';
-    btn.classList.add('ok');
-    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('ok'); }, 1800);
-  }).catch(() => {
-    btn.textContent = '✗ Failed';
-    btn.style.borderColor = 'var(--pink)';
-    btn.style.color = 'var(--pink)';
-    setTimeout(() => {
-      btn.textContent = 'Copy';
-      btn.style.borderColor = '';
-      btn.style.color = '';
-    }, 1800);
-  });
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 function copyAll() {
-  if (!S.output.length) return;
-  // Copy: extra lines (reset, tone, graph) + function definitions
-  const extraText = (S.extraLines || []).map(l => l.copy).join('\n');
-  const fnText    = S.output.map(l => l.latex).join('\n');
-  const text      = extraText + '\n' + fnText;
-  const btn = document.querySelector('.cbtn-all');
-  navigator.clipboard.writeText(text).then(() => {
-    const orig = btn.textContent;
-    btn.textContent = '✓ All Copied!';
-    setTimeout(() => btn.textContent = orig, 1800);
-  }).catch(() => {
-    const orig = btn.textContent;
-    btn.textContent = '✗ Failed';
-    btn.style.borderColor = 'var(--pink)';
-    btn.style.color = 'var(--pink)';
-    setTimeout(() => {
-      btn.textContent = orig;
-      btn.style.borderColor = '';
-      btn.style.color = '';
-    }, 1800);
-  });
+  if (!S.exprs || !S.exprs.length) return;
+  copyText(S.exprs.map(e => e.latex).join('\n'), document.querySelector('.cbtn-all'));
 }
+
+/* ═══════════════════════════════════════════════════════════
+   MSCZ IMPORT
+══════════════════════════════════════════════════════════ */
+
+function _isViewer() { return typeof _isCollabViewer !== 'undefined' && _isCollabViewer; }
+
+function _impFromPd(pd) {
+  try {
+    const v = typeof pd.imported === 'string' ? JSON.parse(pd.imported) : (pd.imported || []);
+    return Array.isArray(v) ? v.filter(s => s && Array.isArray(s.channels)) : [];
+  } catch (e) { return []; }
+}
+
+function onMsczPicked(input) {
+  const f = input.files && input.files[0];
+  input.value = '';
+  if (f) importMscz(f);
+}
+
+async function importMscz(file) {
+  if (_isViewer()) { showToast('You have view-only access.', 'var(--blue)'); return; }
+  if (!/\.mscz$/i.test(file.name)) { showToast('Please choose a .mscz file (MuseScore).', 'var(--yellow)'); return; }
+  if (typeof JSZip === 'undefined') { showToast('Importer library (JSZip) failed to load — check your connection.', 'var(--pink)'); return; }
+  showToast(`Reading ${file.name}…`);
+  try {
+    let zip;
+    try { zip = await JSZip.loadAsync(await file.arrayBuffer()); }
+    catch (e) { throw new Error('Could not unzip file — is it a valid .mscz?'); }
+
+    let mscx = null;
+    for (const [name, zf] of Object.entries(zip.files)) {
+      if (/\.mscx$/i.test(name) && !name.startsWith('__MACOSX') && !zf.dir) { mscx = await zf.async('string'); break; }
+    }
+    if (!mscx) throw new Error('No score (.mscx) found inside this file.');
+
+    const doc = new DOMParser().parseFromString(mscx, 'text/xml');
+    if (doc.querySelector('parsererror')) throw new Error('The score XML could not be read.');
+
+    const info = extractScoreInfo(doc);
+    // tsDenom=1, bpm=60 → parser returns whole-note units (start/end in "w")
+    const { notes, totalSec: totalW } = parseAllNotes(doc, 1, 60);
+    const channels = assignChannels(notes);
+
+    const r5 = x => Math.round(x * 1e5) / 1e5;
+    const tEl  = doc.querySelector('Tempo tempo');
+    const bpmQ = tEl ? parseFloat(tEl.textContent) * 60 : null;      // quarter notes / min
+    const song = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      name: (info.title || file.name.replace(/\.mscz$/i, '')).slice(0, 60),
+      muted: false, tsN: info.timeSigN, tsD: info.timeSigD,
+      notes: notes.length, totalW: r5(totalW),
+      channels: channels.map(ch => {
+        const f = [];
+        ch.forEach(n => f.push(n.midi, r5(n.startSec), r5(n.endSec)));
+        return f;
+      }),
+    };
+
+    // Tempo / time signature: apply freely on an empty composer, otherwise ask
+    const empty = S.columns.every(c => c.length === 0) && !(S.imported || []).length;
+    const bpmDen = bpmQ ? Math.round(bpmQ * (info.timeSigD / 4) * 100) / 100 : null;  // bpm counted in 1/tsDenom notes
+    if (empty || confirm(`Apply this score's time signature (${info.timeSigN}/${info.timeSigD})` +
+        `${bpmDen ? ` and tempo (${bpmDen} BPM)` : ''}?\nThis also changes the timing of your existing notes.`)) {
+      document.getElementById('tsNum').value   = info.timeSigN;
+      document.getElementById('tsDenom').value = info.timeSigD;
+      if (bpmDen) document.getElementById('bpmInput').value = bpmDen;
+    }
+
+    S.imported = S.imported || [];
+    S.imported.push(song);
+    if (JSON.stringify(S.imported).length > 800000) {       // Firestore docs cap at 1 MiB
+      S.imported.pop();
+      throw new Error('This score is too large to save inside a project (limit ≈ 40k notes total).');
+    }
+
+    render();
+    generateDesmos();
+    showToast(`✓ Imported "${song.name}" — ${song.notes} notes · ${song.channels.length} channel${song.channels.length !== 1 ? 's' : ''}`);
+  } catch (e) {
+    console.error('[NOTA import]', e);
+    showToast('⚠ ' + (e.message || String(e)), 'var(--pink)');
+  }
+}
+
+function toggleImportMute(i) {
+  if (_isViewer()) { showToast('You have view-only access.', 'var(--blue)'); return; }
+  const s = (S.imported || [])[i]; if (!s) return;
+  s.muted = !s.muted;
+  render(); generateDesmos();
+}
+
+function removeImport(i) {
+  if (_isViewer()) { showToast('You have view-only access.', 'var(--blue)'); return; }
+  const s = (S.imported || [])[i]; if (!s) return;
+  if (!confirm(`Remove imported score "${s.name}"?`)) return;
+  S.imported.splice(i, 1);
+  render(); generateDesmos();
+}
+
+let _impSig = null;
+function renderImports() {
+  const el = document.getElementById('impPanel');
+  if (!el) return;
+  const list = S.imported || [];
+  const sig = list.map(s => `${s.id}|${s.name}|${s.muted ? 1 : 0}|${s.notes}`).join(';');
+  if (sig === _impSig) return;
+  _impSig = sig;
+  if (!list.length) { el.style.display = 'none'; el.innerHTML = ''; return; }
+  el.style.display = 'block';
+  el.innerHTML = `<div class="imp-hdr">Imported scores · read-only</div>` + list.map((s, i) => `
+    <div class="imp-row${s.muted ? ' muted' : ''}">
+      <span class="imp-name" title="${escapeHtml(s.name)}">🎼 ${escapeHtml(s.name)}</span>
+      <span class="imp-meta">${s.channels.length} ch · ${s.notes} notes</span>
+      <button class="btn-sm" onclick="toggleImportMute(${i})">${s.muted ? 'Unmute' : 'Mute'}</button>
+      <button class="btn-sm danger" onclick="removeImport(${i})" title="Remove">✕</button>
+    </div>`).join('');
+}
+
+// keep the imported-scores list in step with every render (the Firebase layer wraps render() again later)
+const _renderBeforeImports = render;
+render = function () { _renderBeforeImports.apply(this, arguments); renderImports(); };
+
+// drop a .mscz anywhere on the page
+window.addEventListener('dragover', e => {
+  if (e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files')) e.preventDefault();
+});
+window.addEventListener('drop', e => {
+  const f = Array.from((e.dataTransfer && e.dataTransfer.files) || []).find(x => /\.mscz$/i.test(x.name));
+  if (f) { e.preventDefault(); importMscz(f); }
+});
+
 
 /* ═══════════════════════════════════════════════════════════
    SETTINGS CHANGE LISTENERS
@@ -7423,6 +7834,7 @@ function getProjectData() {
     updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
     data: {
       columns:  JSON.stringify(S.columns), // serialised — Firestore doesn't support nested arrays
+      imported: JSON.stringify(S.imported || []), // read-only imported .mscz scores
       tsNum:    S.tsNum,
       tsDenom:  S.tsDenom,
       keySig:   S.keySig,
@@ -7471,6 +7883,7 @@ function loadProjectData(doc) {
   document.getElementById('projNameInput').value = d.name || 'Untitled';
   const pd = d.data || {};
   S.columns = typeof pd.columns === 'string' ? JSON.parse(pd.columns) : (pd.columns || [[]]);
+    S.imported = _impFromPd(pd);
   S.tsNum   = pd.tsNum   || 4;
   S.tsDenom = pd.tsDenom || 4;
   S.keySig  = pd.keySig  || 'C';
@@ -7501,7 +7914,7 @@ async function deleteProject(id, name) {
 
 function newProject() {
   _currentProjId = null;
-  S.columns = [[]]; S.tsNum = 4; S.tsDenom = 4; S.keySig = 'C'; S.zoom = 120;
+  S.columns = [[]]; S.imported = []; S.tsNum = 4; S.tsDenom = 4; S.keySig = 'C'; S.zoom = 120;
   document.getElementById('projNameInput').value = '';
   document.getElementById('tsNum').value   = 4;
   document.getElementById('tsDenom').value = 4;
@@ -9707,6 +10120,7 @@ async function adminOpenProject(ownerUid, projId, projName) {
     const d  = doc.data();
     const pd = d.data || {};
     S.columns = typeof pd.columns === 'string' ? JSON.parse(pd.columns) : (pd.columns || [[]]);
+    S.imported = _impFromPd(pd);
     S.tsNum   = pd.tsNum   || 4;
     S.tsDenom = pd.tsDenom || 4;
     S.keySig  = pd.keySig  || 'C';
