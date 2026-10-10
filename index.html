@@ -1,4 +1,4 @@
-<!-- NOTA v1.5.0 -->
+<!-- NOTA v1.6.0 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1562,6 +1562,65 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
 }
 .imp-meta { font-size: 8px; color: var(--text-muted); white-space: nowrap; }
 
+/* ── Geometry Dash template (v1.6.0) ── */
+#gdOverlay {
+  display: none; position: fixed; inset: 0; z-index: 9650;
+  background: rgba(5,5,18,0.84); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  align-items: center; justify-content: center; padding: 20px;
+}
+#gdOverlay.open { display: flex; }
+.gd-modal {
+  width: 100%; max-width: 1500px; height: 100%; max-height: 900px;
+  background: var(--surface); border: 1px solid var(--border2); border-radius: 14px;
+  box-shadow: 0 0 60px rgba(155,93,229,.18); display: flex; flex-direction: column; overflow: hidden;
+}
+.gd-hdr {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 11px 16px; background: var(--surface2); border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.gd-title { font-family: 'Orbitron', sans-serif; font-size: 10px; color: var(--purple); letter-spacing: 3px; text-shadow: 0 0 10px rgba(155,93,229,.45); }
+.gd-meta { font-size: 9px; color: var(--text-dim); letter-spacing: .5px; margin-left: 14px; }
+.gd-body { flex: 1; min-height: 0; display: flex; }
+.gd-drop {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+  margin: 24px; border: 2px dashed var(--border2); border-radius: 12px; color: var(--text-dim); font-size: 12px; text-align: center; padding: 20px;
+}
+.gd-drop b { color: var(--purple); }
+#gdMain { flex: 1; min-width: 0; display: none; }
+.gd-side { width: 300px; flex-shrink: 0; overflow-y: auto; padding: 10px; border-right: 1px solid var(--border); background: var(--surface); }
+.gd-view { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.gd-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 8px 10px; border-bottom: 1px solid var(--border); background: var(--surface2); }
+.gd-bar .sp { flex: 1; }
+.gd-bar .btn-sm.active { border-color: var(--purple); color: var(--purple); background: var(--purple-dim); }
+.gd-bar .btn-sm:disabled { opacity: .35; cursor: default; }
+.gd-pagelbl { font-size: 10px; color: var(--text-dim); min-width: 74px; text-align: center; }
+#gdZoom { font-size: 9px; color: var(--text-muted); min-width: 36px; text-align: center; }
+.gd-canvas { flex: 1; min-height: 0; position: relative; overflow: hidden; background: #12121f; cursor: grab; touch-action: none; }
+.gd-canvas:active { cursor: grabbing; }
+.gd-vp { position: absolute; left: 0; top: 0; transform-origin: 0 0; user-select: none; }
+.gd-vp svg { display: block; }
+.gd-hint { font-size: 9px; color: var(--text-muted); padding: 4px 10px; border-top: 1px solid var(--border); background: var(--surface2); }
+.gd-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; }
+.gd-h { font-size: 8px; text-transform: uppercase; letter-spacing: 2px; color: var(--purple); margin-bottom: 6px; }
+.gd-kv { display: flex; justify-content: space-between; gap: 8px; font-size: 10px; margin-top: 3px; }
+.gd-kv span { color: var(--text-muted); } .gd-kv b { color: var(--text); font-weight: 500; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gd-voice { display: flex; align-items: center; gap: 6px; font-size: 10px; margin-top: 4px; cursor: pointer; }
+.gd-voice.off { opacity: .45; }
+.gd-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.gd-vname { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gd-vmeta { font-size: 8px; color: var(--text-muted); white-space: nowrap; }
+.gd-in { background: var(--bg); border: 1px solid var(--border2); color: var(--text); border-radius: 5px; font: inherit; font-size: 10px; padding: 4px 6px; width: 100%; }
+.gd-in.gd-num { width: 64px; }
+.gd-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 10px; margin-top: 5px; }
+.gd-tbl { width: 100%; border-collapse: collapse; font-size: 10px; margin: 8px 0 6px; }
+.gd-tbl th { text-align: right; font-weight: 500; color: var(--text-muted); font-size: 8px; padding: 2px 4px; }
+.gd-tbl td { text-align: right; padding: 3px 4px; color: var(--text-dim); } .gd-tbl td:first-child, .gd-tbl th:first-child { text-align: left; }
+.gd-tbl tr.on td { color: var(--purple); font-weight: 700; } .gd-tbl tr.dis td { opacity: .45; }
+.gd-muted { font-size: 9px; color: var(--text-muted); line-height: 1.5; }
+.gd-warns { font-size: 9.5px; color: var(--yellow); line-height: 1.5; }
+.gd-idmap { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px 6px; font-size: 9px; color: var(--text-dim); margin-top: 6px; }
+.gd-idmap b { color: var(--purple); }
+
 #desmosOverlay {
   display: none;
   position: fixed; inset: 0;
@@ -2579,6 +2638,7 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
 
     <button class="btn-sm import" id="msczBtn" onclick="document.getElementById('msczFile').click()" title="Import a MuseScore .mscz file (or drop one anywhere on the page)">🎼 Import .mscz</button>
     <input type="file" id="msczFile" accept=".mscz" style="display:none" onchange="onMsczPicked(this)">
+    <button class="btn-sm import" id="gdBtn" onclick="openGdOverlay()" title="Turn a MuseScore .mscz file into a Geometry Dash spawn-trigger template (diagram + build sheet)">🎮 GD template</button>
 
     <!-- spacer -->
     <div style="flex:1"></div>
@@ -2726,6 +2786,56 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   </div>
 </div>
 
+<!-- ════════ GEOMETRY DASH TEMPLATE OVERLAY ════════ -->
+<div id="gdOverlay">
+  <div class="gd-modal">
+    <div class="gd-hdr">
+      <div style="display:flex;align-items:baseline;gap:0">
+        <span class="gd-title">GEOMETRY DASH TEMPLATE</span>
+        <span class="gd-meta" id="gdMeta">— .mscz → trigger flow diagram</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn-sm import" data-gd="pick">📂 Choose .mscz</button>
+        <button class="desmos-close-btn" data-gd="close">✕ Close</button>
+      </div>
+    </div>
+    <div class="gd-body">
+      <div class="gd-drop" id="gdDrop">
+        <div style="font-size:34px">🎮</div>
+        <div><b>Drop a .mscz file here</b> or use “Choose .mscz”.</div>
+        <div style="max-width:520px;line-height:1.6">The site finds every staff and voice, merges simultaneous notes, picks the chain layout with the fewest spawn triggers, and builds a rhythm / note spawn-trigger diagram plus a build sheet. SFX IDs are fixed: Bb2 = 1 … Bb6 = 49.</div>
+      </div>
+      <div id="gdMain">
+        <aside class="gd-side" id="gdSide"></aside>
+        <section class="gd-view">
+          <div class="gd-bar">
+            <button class="btn-sm active" id="gdVPages" data-gd="pages">▤ Pages</button>
+            <button class="btn-sm" id="gdVWhole" data-gd="whole">⛶ Whole song</button>
+            <span id="gdPageNav" style="display:flex;align-items:center;gap:4px">
+              <button class="btn-sm" id="gdPrev" data-gd="prev">◀</button>
+              <span class="gd-pagelbl" id="gdPageLbl"></span>
+              <button class="btn-sm" id="gdNext" data-gd="next">▶</button>
+            </span>
+            <button class="btn-sm" data-gd="zout" title="Zoom out">−</button><span id="gdZoom"></span><button class="btn-sm" data-gd="zin" title="Zoom in">+</button>
+            <button class="btn-sm" data-gd="fit">Fit</button><button class="btn-sm" data-gd="fitw">Fit width</button>
+            <span class="sp"></span>
+            <button class="btn-sm accent" data-gd="svg">⬇ SVG</button>
+            <button class="btn-sm accent" data-gd="png">⬇ PNG</button>
+            <button class="btn-sm accent" data-gd="csv">⬇ Build sheet CSV</button>
+            <button class="btn-sm" data-gd="txt">⬇ .txt</button>
+            <button class="btn-sm" id="gdCopyBtn" data-gd="copy">📋 Copy sheet</button>
+            <button class="btn-sm" data-gd="zipsvg" title="Every page as SVG + build sheet, zipped">⬇ All pages (SVG zip)</button>
+            <button class="btn-sm" data-gd="zippng" title="Every page as PNG + build sheet, zipped">⬇ All pages (PNG zip)</button>
+          </div>
+          <div class="gd-canvas" id="gdCanvas"></div>
+          <div class="gd-hint">Scroll to zoom · drag to pan · pinch on touch · click a dashed grey box to jump to that page · ← → flip pages · Esc closes</div>
+        </section>
+      </div>
+      <input type="file" id="gdFile" accept=".mscz" style="display:none">
+    </div>
+  </div>
+</div>
+
 <!-- ════════ ADMIN PIN CHALLENGE ════════ -->
 <div class="admin-pin-overlay" id="adminPinOverlay">
   <div class="admin-pin-box">
@@ -2800,7 +2910,7 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
 
 <script>
 /* ╔══════════════════════════════════════════════════════════════════════════════════╗
-   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2026-04-01 (SESSION:43)║
+   ║  NOTA_MANIFEST  ·  AI-PRIMARY DOCUMENT  ·  LAST_UPDATED: 2026-10-10 (SESSION:46)║
    ║  PURPOSE: Single source of truth for all AI tools reading/editing this file.   ║
    ║  FORMAT: dense structured notation > English prose. Symbols defined below.     ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝
@@ -2932,6 +3042,7 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     chatOverlay      9300
     kbdOverlay       9000
     desmosOverlay    9600
+    gdOverlay        9650   [v1.6.0] .mscz → Geometry Dash template (see §15 SESSION:46)
     presencePopup    15000  [P5] inline presence tooltip/action popup
     adminOverlay     20000  [ADMIN] full-screen admin dashboard (replaces normal UI)
     adminPinOverlay  20100  [ADMIN] PIN challenge shown before dashboard
@@ -3397,6 +3508,11 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
     Projects can be public (browsable) or private (default). Public projects appear
     in a "Discover" feed. Schema: add isPublic:bool, ownerUsername to project doc.
 
+  [GOAL][MED] GD TEMPLATE FOLLOW-UPS (SESSION:46)
+    - Detect repeated phrases and model them as ONE reusable phrase group re-spawned (huge trigger savings on repetitive songs).
+    - Unroll repeats / jumps (D.S., codas, voltas); follow gradual tempo changes.
+    - Option to export Group-ID suggestions in the build sheet once tb's group scheme is known.
+
   [GOAL][LOW] THEMES / APPEARANCE SETTINGS
     Let users choose color accent. Swap --cyan / --pink values. Store in userProfile.
 
@@ -3768,6 +3884,31 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   [2025-06 | SESSION:3 | Claude-Sonnet-4.6]
     ADDED: NOTA_MANIFEST (this document) — §0-§15 — replaces old feature reference comment
     Manifest format: AI-primary, structured notation, self-updating instructions
+
+  [2026-10-10 | SESSION:46 | Claude-Sonnet-5.5]
+    ADDED:     "🎮 GD template" button (header row 2, next to Import .mscz) → #gdOverlay: turns a .mscz into a Geometry Dash
+               spawn-trigger template. Own file picker / drop zone inside the overlay (drops there do NOT go to the Desmos importer).
+               Code: two blocks just above "SETTINGS CHANGE LISTENERS": GDCore (parse → analyse → plan → pagination → CSV/text sheet,
+               pure logic) and GDUI (SVG renderer, overlay, pan/zoom viewer, exports). CSS = ".gd-*" + #gdOverlay (z 9650).
+    GD MODEL:  Rhythm spawn triggers R1..Rn (purple) = one per distinct onset in a chain; delay = start-to-start gap from the previous onset
+               in that chain (first one = song time of first onset). Each R spawns its note spawn triggers (teal, no delay) + next R.
+               Note triggers carry the fixed SFX ID: ID = MIDI − 45 (Bb2 = MIDI 46 = ID 1 … Bb6 = MIDI 94 = ID 49), same for every song.
+               START trigger (grey) spawns the first R of every chain. No arrows to SFX triggers (user said too messy); SFX shown as a
+               "used here" strip + text inside each note box.
+    ANALYSIS:  @GDCore.parseScore — OWN parser (does not use parseAllNotes, which drops staff/voice): keeps staff:voice per note, tempo map
+               (all fixed Tempo marks), per-measure lengths (len attr / measure rests use <duration>), nested tuplets, ties across barlines,
+               skips grace notes. @GDCore.analyze — drops excluded voices, global transpose, picks ONE whole-song octave shift only when >10% of
+               notes are outside Bb2–Bb6 (otherwise strays are folded), merges identical pitch+time across voices, merges chords.
+    LAYOUTS:   3 plans always computed + trigger counts compared: merged (one chain), echo (one chain; a voice that is an exact
+               time-shifted copy of another's rhythm reuses its rhythm triggers and its NOTE triggers get a delay = shift),
+               voices (parallel chain per voice). Auto = fewest total triggers, ties → merged > echo > voices. NOTE: per-voice can never beat
+               merged on count (union of onsets ≤ sum), it exists for editability. User can force any layout.
+    VIEWS:     Pages (paginate by measures: auto = ≤16 events per lane per page, or "Measures per page"; dashed grey stub boxes link to the
+               previous/next page, clickable) and Whole song (single canvas; >6000 triggers refuses and points to Pages/sheet). Both use the
+               same pan (drag) / zoom (wheel, pinch) viewer. Diagram colours match the chat example (purple/teal/grey, voice stripe on notes).
+    EXPORTS:   SVG + PNG of the current view, build sheet CSV / .txt / copy, "All pages" zip (SVG or PNG + CSV). PNG scale is capped (16k px side, 120MP).
+    LIMITS:    Repeats/jumps are NOT unrolled; gradual tempo changes ignored; MuseScore 2 ties not read; grace notes dropped.
+    VERSION:   v1.6.0
 
   [2026-10-10 | SESSION:45 | Claude-Sonnet-5.5]
     ADDED:     .mscz (MuseScore) import built into the main site — "🎼 Import .mscz" button in header row 2,
@@ -4374,6 +4515,11 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
   ══════════════════════════════════════════════════════════════════════════════════
   §16  SESSION LOG
   ══════════════════════════════════════════════════════════════════════════════════
+
+  [SESSION:46] tb asked for .mscz → Geometry Dash music template: analyse voices, build an exportable
+    trigger-flow diagram (rhythm/note spawn triggers). Decisions from tb: paginated AND whole-song pan/zoom
+    views; site chooses chain layout by fewest triggers; fixed chromatic SFX IDs (Bb2=1 … Bb6=49); export SVG,
+    PNG and build sheet. Built + tested in headless Chromium with synthetic scores. v1.6.0.
 
   [SESSION:44] tb reported invitations broken — errors when entering a valid code or
     accepting by username. Two bugs: (1) Firestore rules blocked new joiners from reading
@@ -7521,6 +7667,899 @@ window.addEventListener('drop', e => {
   const f = Array.from((e.dataTransfer && e.dataTransfer.files) || []).find(x => /\.mscz$/i.test(x.name));
   if (f) { e.preventDefault(); importMscz(f); }
 });
+
+
+/* ═══════════════════════════════════════════════════════════
+   GEOMETRY DASH TEMPLATE  (v1.6.0)
+   .mscz → trigger-flow diagram + build sheet.
+   Fixed SFX map: ID = MIDI − 45  (Bb2 = MIDI 46 = ID 1  …  Bb6 = MIDI 94 = ID 49).
+   Part 1: parse → analyse → plan (pure logic, no DOM except the XML doc).
+══════════════════════════════════════════════════════════ */
+const GDCore = (function () {
+'use strict';
+
+const LO = 46, HI = 94, ID_OFF = 45;
+const FLAT = ['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];
+const noteName = m => FLAT[((m % 12) + 12) % 12] + (Math.floor(m / 12) - 1);
+const r4 = x => Math.round(x * 1e4) / 1e4;
+const fmtS = x => (Math.round(x * 1e4) / 1e4).toFixed(4).replace(/0+$/, '').replace(/\.$/, '');
+const delayLabel = d => d === 0 ? 'no delay' : '+' + fmtS(d) + 's';
+const PALETTE = ['#4cc9f0','#f72585','#ffd60a','#80ed99','#ff9e00','#c77dff','#00f5d4','#ff6b6b'];
+
+function parseFrac(s) {
+  if (s == null) return null;
+  const m = String(s).trim().match(/^(\d+)\s*\/\s*(\d+)$/);
+  if (!m) return null;
+  const n = +m[1], d = +m[2];
+  return d > 0 ? n / d : null;
+}
+const txt = (el, sel) => (el.querySelector(sel)?.textContent || '').trim();
+
+/* ── parsing ─────────────────────────────────────────────── */
+const GRACE = 'acciaccatura,appoggiatura,grace4,grace8,grace8after,grace16,grace16after,grace32,grace32after,grace64,grace64after';
+
+function parseScore(doc) {
+  const info = extractScoreInfo(doc);
+  const warnings = [];
+  const staffEls = Array.from(doc.querySelectorAll('Staff[id]'));
+  const staffIds = [...new Set(staffEls.filter(s => s.querySelector('Measure')).map(s => s.getAttribute('id')))];
+  if (!staffIds.length) throw new Error('No staves found in this score.');
+
+  const partOf = new Map(), partStaves = new Map();
+  doc.querySelectorAll('Part').forEach((p, i) => {
+    const nm = txt(p, 'trackName') || txt(p, 'Instrument longName') || ('Part ' + (i + 1));
+    const ids = [];
+    p.querySelectorAll('Staff[id]').forEach(s => { partOf.set(s.getAttribute('id'), nm); ids.push(s.getAttribute('id')); });
+    partStaves.set(nm + '#' + i, ids);
+    ids.forEach(id => partOf.set(id + '|idx', ids.indexOf(id)));
+    ids.forEach(id => partOf.set(id + '|n', ids.length));
+  });
+
+  const voices = new Map();
+  const tempos = [];
+  const measures = [];
+  let firstStaff = true;
+
+  for (const staffId of staffIds) {
+    const staff = staffEls.find(s => s.getAttribute('id') === staffId && s.querySelector('Measure'));
+    let measStart = 0, curN = info.timeSigN, curD = info.timeSigD, mIdx = 0;
+    const ties = new Map();   // voiceKey -> Set(midi)
+
+    for (const measure of staff.querySelectorAll('Measure')) {
+      const ts = measure.querySelector('TimeSig');
+      if (ts) {
+        const n = parseInt(txt(ts, 'sigN')), d = parseInt(txt(ts, 'sigD'));
+        if (n > 0 && d > 0) { curN = n; curD = d; }
+      }
+      const lenAttr = parseFrac(measure.getAttribute('len'));
+      const nominal = curN / curD;
+
+      const wrappers = Array.from(measure.children).filter(c => c.tagName === 'voice');
+      const voiceMap = new Map();
+      if (wrappers.length) {
+        wrappers.forEach((v, i) => voiceMap.set(String(i), Array.from(v.children)));
+      } else {
+        for (const el of flatMeasureChildren(measure)) {
+          if (!['Chord', 'Rest', 'Tuplet', 'endTuplet', 'Tempo'].includes(el.tagName)) continue;
+          const vk = el.querySelector(':scope > voice')?.textContent?.trim() ?? '0';
+          if (!voiceMap.has(vk)) voiceMap.set(vk, []);
+          voiceMap.get(vk).push(el);
+        }
+      }
+
+      let maxDur = 0;
+      for (const [vKey, els] of voiceMap) {
+        const key = staffId + ':' + vKey;
+        let rec = voices.get(key);
+        if (!rec) { rec = { key, staffId, vIdx: +vKey || 0, raw: [] }; voices.set(key, rec); ties.set(key, new Set()); }
+        const tieSet = ties.get(key);
+        let beat = measStart;
+        const stack = [];
+        let ratio = 1;
+
+        for (const el of els) {
+          const tag = el.tagName;
+          if (tag === 'Tuplet') {
+            const a = parseInt(txt(el, 'actualNotes')) || 3, n = parseInt(txt(el, 'normalNotes')) || 2;
+            const r = a > 0 ? n / a : 1;
+            stack.push(r); ratio *= r; continue;
+          }
+          if (tag === 'endTuplet') { const r = stack.pop(); if (r) ratio /= r; continue; }
+          if (tag === 'Tempo') {
+            const q = parseFloat(txt(el, 'tempo'));
+            if (firstStaff && q > 0 && !tempos.some(t => Math.abs(t.w - beat) < 1e-9)) tempos.push({ w: beat, qps: q });
+            continue;
+          }
+          if (tag === 'Chord') {
+            if (el.querySelector(GRACE)) continue;
+            const dt = txt(el, ':scope > durationType') || 'quarter';
+            const dots = parseInt(txt(el, ':scope > dots')) || 0;
+            const bf = durToFraction(dt, dots) * ratio;
+            el.querySelectorAll('Note').forEach(nEl => {
+              const midi = parseInt(txt(nEl, 'pitch'));
+              if (!(midi >= 0)) return;
+              let tEnd = false, tStart = false;
+              nEl.querySelectorAll('Spanner[type="Tie"]').forEach(sp => {
+                if (sp.querySelector('prev')) tEnd = true;
+                if (sp.querySelector('next')) tStart = true;
+              });
+              if (tEnd && tieSet.has(midi)) { if (!tStart) tieSet.delete(midi); return; }
+              rec.raw.push({ w: beat, midi });
+              if (tStart) tieSet.add(midi);
+            });
+            beat += bf;
+          } else if (tag === 'Rest') {
+            const dt = txt(el, ':scope > durationType') || 'quarter';
+            if (dt === 'measure') {
+              beat += parseFrac(txt(el, ':scope > duration')) ?? (lenAttr ?? nominal);
+            } else {
+              beat += durToFraction(dt, parseInt(txt(el, ':scope > dots')) || 0) * ratio;
+            }
+          }
+        }
+        maxDur = Math.max(maxDur, beat - measStart);
+      }
+
+      const mlen = lenAttr != null ? lenAttr : Math.max(nominal, maxDur);
+      if (firstStaff) measures.push({ n: mIdx + 1, startW: measStart, lenW: mlen, tsN: curN, tsD: curD });
+      measStart += mlen;
+      mIdx++;
+    }
+    firstStaff = false;
+  }
+
+  // voice labels
+  const list = Array.from(voices.values()).filter(v => v.raw.length);
+  const perStaff = new Map();
+  list.forEach(v => perStaff.set(v.staffId, (perStaff.get(v.staffId) || 0) + 1));
+  list.forEach(v => {
+    const bits = [partOf.get(v.staffId) || ('Staff ' + v.staffId)];
+    if ((partOf.get(v.staffId + '|n') || 1) > 1) bits.push('staff ' + ((partOf.get(v.staffId + '|idx') || 0) + 1));
+    if (perStaff.get(v.staffId) > 1) bits.push('V' + (v.vIdx + 1));
+    v.label = bits.join(' · ');
+    v.raw.sort((a, b) => a.w - b.w || a.midi - b.midi);
+  });
+  list.sort((a, b) => (+a.staffId - +b.staffId) || (a.vIdx - b.vIdx));
+  if (!list.length) throw new Error('No notes found in this file.');
+
+  if (doc.querySelector('endRepeat, startRepeat, Jump')) warnings.push('Repeats / jumps are not unrolled — the template plays the written score once, straight through.');
+  if (doc.querySelector('GradualTempoChange')) warnings.push('Gradual tempo changes (rit. / accel.) are ignored; only fixed tempo marks are followed.');
+  if (doc.querySelector('Tuplet')) warnings.push('Tuplets found — their times are rounded to 4 decimals (max drift 0.00005 s, never accumulates).');
+
+  return { info, measures, tempos, voices: list, warnings };
+}
+
+/* ── time map / measure lookup ───────────────────────────── */
+function makeTimeMap(tempos) {
+  const pts = tempos.slice().sort((a, b) => a.w - b.w);
+  if (!pts.length) pts.push({ w: 0, qps: 2 });
+  else if (pts[0].w > 1e-9) pts.unshift({ w: 0, qps: pts[0].qps });
+  const base = [0];
+  for (let i = 0; i < pts.length - 1; i++) base.push(base[i] + (pts[i + 1].w - pts[i].w) * 4 / pts[i].qps);
+  return w => {
+    let i = pts.length - 1;
+    while (i > 0 && pts[i].w > w + 1e-9) i--;
+    return base[i] + (w - pts[i].w) * 4 / pts[i].qps;
+  };
+}
+function makeMeasureLookup(measures) {
+  return w => {
+    let lo = 0, hi = measures.length - 1;
+    while (lo < hi) {
+      const mid = (lo + hi + 1) >> 1;
+      if (measures[mid].startW <= w + 1e-9) lo = mid; else hi = mid - 1;
+    }
+    const m = measures[lo];
+    const beat = Math.round(((w - m.startW) * 4 + 1) * 100) / 100;
+    return { mi: lo, beat };
+  };
+}
+
+/* ── analysis ────────────────────────────────────────────── */
+function fold(m) { while (m < LO) m += 12; while (m > HI) m -= 12; return m; }
+
+function analyze(parsed, opts) {
+  const tm = makeTimeMap(parsed.tempos);
+  const measAt = makeMeasureLookup(parsed.measures);
+  const warnings = parsed.warnings.slice();
+  const transpose = opts.transpose || 0;
+  const exclude = opts.exclude || new Set();
+
+  const inc = parsed.voices.filter(v => !exclude.has(v.key));
+
+  // best whole-song octave shift
+  const allP = [];
+  inc.forEach(v => v.raw.forEach(n => allP.push(n.midi + transpose)));
+  let shift = 0;
+  const outAt0 = allP.filter(p => p < LO || p > HI).length;
+  if (allP.length && outAt0 / allP.length > 0.1) {   // a few strays are just folded; shift only for real range problems
+    let best = Infinity;
+    for (let s = -48; s <= 48; s += 12) {
+      let out = 0;
+      for (const p of allP) if (p + s < LO || p + s > HI) out++;
+      if (out < best || (out === best && Math.abs(s) < Math.abs(shift))) { best = out; shift = s; }
+    }
+  }
+
+  let folded = 0, dupInVoice = 0, crossDup = 0;
+  const seen = new Set();
+  const voices = [];
+  parsed.voices.forEach((pv, i) => {
+    const v = {
+      key: pv.key, label: pv.label, color: PALETTE[i % PALETTE.length],
+      included: !exclude.has(pv.key), rawCount: pv.raw.length,
+      origLo: Math.min(...pv.raw.map(n => n.midi)), origHi: Math.max(...pv.raw.map(n => n.midi)),
+      events: [], noteCount: 0, status: '',
+    };
+    voices.push(v);
+    if (!v.included) { v.status = 'excluded'; return; }
+    const byT = new Map();
+    pv.raw.forEach(n => {
+      const t = r4(tm(n.w));
+      let e = byT.get(t);
+      if (!e) { e = { t, w: n.w, notes: [] }; byT.set(t, e); }
+      let m = n.midi + transpose + shift;
+      if (m < LO || m > HI) { m = fold(m); folded++; }
+      if (e.notes.some(x => x.midi === m)) { dupInVoice++; return; }
+      e.notes.push({ midi: m, id: m - ID_OFF, name: noteName(m), voiceKey: pv.key, delay: 0 });
+    });
+    const evs = Array.from(byT.values()).sort((a, b) => a.t - b.t);
+    evs.forEach(e => {
+      e.notes = e.notes.filter(n => {
+        const k = e.t + '|' + n.id;
+        if (seen.has(k)) { crossDup++; return false; }
+        seen.add(k); return true;
+      });
+      e.notes.sort((a, b) => b.midi - a.midi);
+    });
+    v.events = evs.filter(e => e.notes.length);
+    v.noteCount = v.events.reduce((s, e) => s + e.notes.length, 0);
+    if (!v.events.length) v.status = 'doubled — merged away';
+    const ms = v.events.flatMap(e => e.notes.map(n => n.midi));
+    v.lo = ms.length ? Math.min(...ms) : null; v.hi = ms.length ? Math.max(...ms) : null;
+  });
+
+  if (shift) warnings.push(`Whole song shifted ${shift > 0 ? 'up' : 'down'} ${Math.abs(shift) / 12} octave${Math.abs(shift) === 12 ? '' : 's'} to fit the Bb2–Bb6 SFX range (all voices together, so harmony is kept).`);
+  if (folded) warnings.push(`${folded} note${folded > 1 ? 's were' : ' was'} still outside Bb2–Bb6 and got folded by octaves into range.`);
+  if (crossDup) warnings.push(`${crossDup} identical note${crossDup > 1 ? 's' : ''} (same pitch, same moment, in different voices) merged into one trigger.`);
+  if (dupInVoice) warnings.push(`${dupInVoice} repeated note${dupInVoice > 1 ? 's' : ''} inside a single chord merged.`);
+
+  const active = voices.filter(v => v.events.length);
+  const totalSec = r4(tm(parsed.measures.reduce((m, x) => Math.max(m, x.startW + x.lenW), 0)));
+
+  const plans = {
+    merged: makePlan('merged', active, measAt),
+    voices: makePlan('voices', active, measAt),
+  };
+  plans.echo = makePlan('echo', active, measAt);
+  const echoUseful = plans.echo.followers.length > 0;
+  let chosen = opts.strategy && opts.strategy !== 'auto' ? opts.strategy : null;
+  let autoWhy = '';
+  if (!chosen) {
+    chosen = 'merged';
+    if (echoUseful && plans.echo.counts.total < plans.merged.counts.total) chosen = 'echo';
+    if (plans.voices.counts.total < plans[chosen].counts.total) chosen = 'voices';
+    autoWhy = 'fewest triggers';
+  }
+  return { parsed, voices, active, plans, chosen, plan: plans[chosen], autoWhy, warnings, shift, totalSec, tm, measAt, echoUseful };
+}
+
+/* ── plans ───────────────────────────────────────────────── */
+function decorate(chain, measAt) {
+  chain.events.forEach((e, i) => {
+    const mb = measAt(e.w);
+    e.mi = mb.mi; e.beat = mb.beat;
+    e.delay = i === 0 ? e.t : r4(e.t - chain.events[i - 1].t);
+  });
+}
+
+function makePlan(strategy, voices, measAt) {
+  const plan = { strategy, chains: [], followers: [], counts: null };
+  const clone = n => ({ ...n });
+  const mergeInto = (map, v, nodes, tKey, w, delay) => {
+    let g = map.get(tKey);
+    if (!g) { g = { t: tKey, w, notes: [] }; map.set(tKey, g); }
+    nodes.forEach(n => g.notes.push({ ...clone(n), delay }));
+    return g;
+  };
+
+  if (strategy === 'voices') {
+    voices.forEach(v => {
+      const chain = { id: 'V' + v.key, label: v.label, color: v.color, voiceKeys: [v.key],
+        events: v.events.map(e => ({ t: e.t, w: e.w, notes: e.notes.map(clone) })) };
+      plan.chains.push(chain);
+    });
+  } else {
+    // bases / followers (echo)
+    let bases = voices.slice();
+    const follow = [];
+    if (strategy === 'echo') {
+      const sorted = voices.slice().sort((a, b) => a.events[0].t - b.events[0].t);
+      bases = [];
+      sorted.forEach(w => {
+        for (const b of bases) {
+          if (b.events.length !== w.events.length) continue;
+          const d = r4(w.events[0].t - b.events[0].t);
+          if (d < 0.0005) continue;
+          if (b.events.every((e, i) => Math.abs((w.events[i].t - e.t) - d) < 2e-4)) { follow.push({ v: w, base: b, d }); return; }
+        }
+        bases.push(w);
+      });
+    }
+    const map = new Map();
+    bases.forEach(v => v.events.forEach(e => mergeInto(map, v, e.notes, e.t, e.w, 0)));
+    follow.forEach(f => f.v.events.forEach((e, i) => {
+      const be = f.base.events[i];
+      const delay = r4(e.t - be.t);
+      mergeInto(map, f.v, e.notes, be.t, be.w, delay);
+    }));
+    const events = Array.from(map.values()).sort((a, b) => a.t - b.t);
+    events.forEach(e => e.notes.sort((a, b) => (a.delay - b.delay) || (b.midi - a.midi)));
+    plan.followers = follow.map(f => ({ voice: f.v.label, base: f.base.label, d: f.d }));
+    plan.chains.push({ id: 'ALL', label: strategy === 'echo' && follow.length ? 'One rhythm chain · echo voices use delayed note triggers' : 'One rhythm chain · all voices',
+      color: '#9b5de5', voiceKeys: voices.map(v => v.key), events });
+  }
+
+  let rn = 0;
+  plan.chains.forEach(c => {
+    decorate(c, measAt);
+    c.events.forEach(e => { e.rn = ++rn; e.notes.forEach((n, k) => { n.name = n.name || noteName(n.midi); n.nn = 'N' + e.rn + '.' + (k + 1); }); });
+  });
+  const R = rn, N = plan.chains.reduce((s, c) => s + c.events.reduce((x, e) => x + e.notes.length, 0), 0);
+  plan.counts = { R, N, total: 1 + R + N };
+  return plan;
+}
+
+/* ── pagination ──────────────────────────────────────────── */
+function paginate(plan, perPage, limit) {
+  limit = limit || 16;
+  let M = 0;
+  plan.chains.forEach(c => c.events.forEach(e => { if (e.mi + 1 > M) M = e.mi + 1; }));
+  M = Math.max(M, 1);
+  const counts = plan.chains.map(c => { const a = new Array(M).fill(0); c.events.forEach(e => a[e.mi]++); return a; });
+  const pages = [];
+  if (perPage > 0) {
+    for (let s = 0; s < M; s += perPage) pages.push({ a: s, b: Math.min(M - 1, s + perPage - 1) });
+  } else {
+    let a = 0, acc = counts.map(() => 0);
+    for (let m = 0; m < M; m++) {
+      const tent = acc.map((x, i) => x + counts[i][m]);
+      if (m > a && Math.max(...tent) > limit) { pages.push({ a, b: m - 1 }); a = m; acc = counts.map(c => c[m]); }
+      else acc = tent;
+    }
+    pages.push({ a, b: M - 1 });
+  }
+  return pages;
+}
+
+/* ── exports (text) ──────────────────────────────────────── */
+function sheetRows(an) {
+  const plan = an.plan, rows = [];
+  const vlabel = k => (an.voices.find(v => v.key === k) || {}).label || '';
+  const firstR = plan.chains.filter(c => c.events.length).map(c => 'R' + c.events[0].rn);
+  rows.push({ type: 'START', trig: 'START', chain: '—', m: '', beat: '', time: 0, delay: 0, by: '—', spawns: firstR.join(', '), id: '', note: '', midi: '', voice: '' });
+  plan.chains.forEach(c => c.events.forEach((e, i) => {
+    const next = c.events[i + 1];
+    const sp = e.notes.map(n => n.nn).concat(next ? ['R' + next.rn] : []);
+    const prev = i === 0 ? 'START' : 'R' + c.events[i - 1].rn;
+    rows.push({ type: 'RHYTHM', trig: 'R' + e.rn, chain: c.id === 'ALL' ? 'main' : c.label, m: e.mi + 1, beat: e.beat, time: e.t, delay: e.delay, by: prev, spawns: sp.join(', '), id: '', note: '', midi: '', voice: '' });
+    e.notes.forEach(n => rows.push({ type: 'NOTE', trig: n.nn, chain: c.id === 'ALL' ? 'main' : c.label, m: e.mi + 1, beat: e.beat, time: r4(e.t + n.delay), delay: n.delay, by: 'R' + e.rn, spawns: '—', id: n.id, note: n.name, midi: n.midi, voice: vlabel(n.voiceKey) }));
+  }));
+  return rows;
+}
+const COLS = [['#', 'n'], ['Type', 'type'], ['Trigger', 'trig'], ['Chain', 'chain'], ['Measure', 'm'], ['Beat', 'beat'], ['Song time (s)', 'time'], ['Delay (s)', 'delay'], ['Spawned by', 'by'], ['Spawns', 'spawns'], ['SFX ID', 'id'], ['Note', 'note'], ['MIDI', 'midi'], ['Voice', 'voice']];
+function sheetCsv(an) {
+  const q = v => { v = String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+  const rows = sheetRows(an);
+  const out = [COLS.map(c => q(c[0])).join(',')];
+  rows.forEach((r, i) => { r.n = i + 1; out.push(COLS.map(c => q(c[1] === 'time' || c[1] === 'delay' ? fmtS(r[c[1]]) : r[c[1]])).join(',')); });
+  return out.join('\r\n') + '\r\n';
+}
+function sheetText(an, name) {
+  const p = an.plan, rows = sheetRows(an);
+  const lines = [];
+  lines.push('GEOMETRY DASH BUILD SHEET — ' + name);
+  lines.push('='.repeat(60));
+  lines.push(`Layout: ${({ merged: 'one merged rhythm chain', echo: 'one rhythm chain + delayed note triggers (echo voices)', voices: 'parallel rhythm chain per voice' })[p.strategy]}${an.autoWhy ? ' (auto: ' + an.autoWhy + ')' : ''}`);
+  lines.push(`Triggers: 1 start + ${p.counts.R} rhythm + ${p.counts.N} note = ${p.counts.total} spawn triggers`);
+  lines.push(`Length: ${fmtS(an.totalSec)} s`);
+  lines.push('');
+  lines.push('HOW TO BUILD');
+  lines.push('  - START spawns the first rhythm trigger of each chain.');
+  lines.push('  - Every rhythm trigger Rn spawns its note triggers (no delay unless listed) and the next rhythm trigger.');
+  lines.push('  - "Delay" on a rhythm trigger = time from the previous onset in the chain to this one (start-to-start, rests included).');
+  lines.push('  - Each note trigger spawns the SFX trigger with the listed ID. SFX IDs are fixed: ID = MIDI - 45 (Bb2 = 1 ... Bb6 = 49).');
+  lines.push('');
+  const used = new Map();
+  p.chains.forEach(c => c.events.forEach(e => e.notes.forEach(n => used.set(n.id, n))));
+  lines.push('SFX IDS USED');
+  lines.push('  ' + Array.from(used.values()).sort((a, b) => a.id - b.id).map(n => `${n.id}=${n.name}`).join('  '));
+  lines.push('');
+  lines.push('TRIGGERS');
+  const w = COLS.map(c => c[0].length);
+  const cells = rows.map((r, i) => { r.n = i + 1; return COLS.map((c, j) => { const s = String(c[1] === 'time' || c[1] === 'delay' ? fmtS(r[c[1]]) : r[c[1]]); w[j] = Math.max(w[j], s.length); return s; }); });
+  lines.push(COLS.map((c, j) => c[0].padEnd(w[j])).join(' | '));
+  lines.push(w.map(x => '-'.repeat(x)).join('-+-'));
+  cells.forEach(r => lines.push(r.map((s, j) => s.padEnd(w[j])).join(' | ')));
+  return lines.join('\n') + '\n';
+}
+
+return { parseScore, analyze, paginate, sheetCsv, sheetText, sheetRows, noteName, fmtS, delayLabel, r4, LO, HI, ID_OFF, PALETTE };
+})();
+
+/* ═══════════════════════════════════════════════════════════
+   GEOMETRY DASH TEMPLATE — part 2: diagram renderer, overlay UI, exports
+══════════════════════════════════════════════════════════ */
+const GDUI = (function () {
+'use strict';
+const C = GDCore;
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+/* geometry */
+const BW = 78, BH = 46, GX = 30, PITCH = BW + GX, NW = BW - 12, NH = 32, NG = 6, MX = 34;
+const FONT = 'Helvetica,Arial,sans-serif';
+const COL = {
+  bg: '#12121f', text: '#ced5f0', muted: '#8a90b8',
+  rFill: '#3c3489', rStroke: '#7f77dd', rText: '#eeedfe', rSub: '#cecbf6',
+  nFill: '#085041', nStroke: '#1d9e75', nText: '#e1f5ee', nSub: '#9fe1cb',
+  gFill: '#3d3d3a', gStroke: '#888780', gText: '#e8e6dc', gSub: '#b4b2a9',
+  arrow: '#8a90b8', arrowR: '#9a93e8', arrowN: '#2fbf94',
+};
+let uid = 0;
+
+/* ── build lane item lists ───────────────────────────────── */
+function pageOf(pages, mi) { for (let i = 0; i < pages.length; i++) if (mi >= pages[i].a && mi <= pages[i].b) return i; return pages.length - 1; }
+
+function lanesForPage(plan, pages, pi) {
+  const pg = pages[pi], lanes = [];
+  plan.chains.forEach(c => {
+    const ev = c.events;
+    const idx = ev.map((e, i) => i).filter(i => ev[i].mi >= pg.a && ev[i].mi <= pg.b);
+    const first = idx.length ? idx[0] : ev.findIndex(e => e.mi > pg.b);
+    const prev = idx.length ? (idx[0] > 0 ? ev[idx[0] - 1] : null) : (first > 0 ? ev[first - 1] : (first === -1 ? ev[ev.length - 1] : null));
+    const next = idx.length ? ev[idx[idx.length - 1] + 1] || null : (first >= 0 ? ev[first] : null);
+    const items = [];
+    if (!prev) items.push(pi === 0 ? { k: 'start' } : { k: 'stubIn', t1: 'START', t2: 'page 1', goto: 0 });
+    else items.push({ k: 'stubIn', t1: 'R' + prev.rn, t2: 'from p.' + (pageOf(pages, prev.mi) + 1), goto: pageOf(pages, prev.mi) });
+    if (!idx.length && !next) return;               // lane finished earlier
+    if (!idx.length && prev && !next) return;
+    idx.forEach(i => items.push({ k: 'r', e: ev[i] }));
+    if (next) items.push({ k: 'stubOut', t1: 'R' + next.rn, t2: 'to p.' + (pageOf(pages, next.mi) + 1), goto: pageOf(pages, next.mi) });
+    lanes.push({ chain: c, items, empty: !idx.length });
+  });
+  return lanes;
+}
+function lanesWhole(plan) {
+  return plan.chains.filter(c => c.events.length).map(c => ({ chain: c, items: [{ k: 'start' }].concat(c.events.map(e => ({ k: 'r', e }))) }));
+}
+
+/* ── svg drawing ─────────────────────────────────────────── */
+function tx(x, y, s, size, fill, weight, anchor) {
+  return `<text x="${x}" y="${y}" font-size="${size}" fill="${fill}"${weight ? ` font-weight="${weight}"` : ''} text-anchor="${anchor || 'middle'}" font-family="${FONT}">${esc(s)}</text>`;
+}
+function drawBox(x, y, it, mk) {
+  if (it.k === 'r') {
+    const e = it.e;
+    let s = tx(x + BW / 2, y - 4, `m${e.mi + 1}·b${C.fmtS(e.beat)}`, 8, COL.muted);
+    s += `<rect x="${x}" y="${y}" width="${BW}" height="${BH}" rx="7" fill="${COL.rFill}" stroke="${COL.rStroke}" stroke-width="1"/>`;
+    s += tx(x + BW / 2, y + 19, 'R' + e.rn, 13, COL.rText, 700);
+    s += tx(x + BW / 2, y + 35, C.delayLabel(e.delay), 10, COL.rSub);
+    return s;
+  }
+  const link = it.goto != null;
+  const dash = it.k === 'start' ? '' : ' stroke-dasharray="4 3"';
+  const t1 = it.k === 'start' ? 'START' : it.t1, t2 = it.k === 'start' ? 'start trigger' : it.t2;
+  let s = `<g${link ? ` data-goto="${it.goto}" style="cursor:pointer"` : ''}>`;
+  s += `<rect x="${x}" y="${y}" width="${BW}" height="${BH}" rx="7" fill="${COL.gFill}" stroke="${COL.gStroke}" stroke-width="1"${dash}/>`;
+  s += tx(x + BW / 2, y + 19, t1, 12, COL.gText, 700);
+  s += tx(x + BW / 2, y + 35, t2, 9, COL.gSub);
+  return s + '</g>';
+}
+function drawNotes(x, y, e, voiceColor) {
+  let s = '';
+  const trunkX = x + 4, y0 = y + BH;
+  const centers = e.notes.map((n, k) => y0 + 10 + k * (NH + NG) + NH / 2);
+  s += `<line x1="${trunkX}" y1="${y0}" x2="${trunkX}" y2="${centers[centers.length - 1]}" stroke="${COL.arrowN}" stroke-width="1"/>`;
+  e.notes.forEach((n, k) => {
+    const ny = y0 + 10 + k * (NH + NG), nx = x + BW - NW;
+    s += `<line x1="${trunkX}" y1="${centers[k]}" x2="${nx - 1}" y2="${centers[k]}" stroke="${COL.arrowN}" stroke-width="1" marker-end="url(#%ID%n)"/>`;
+    s += `<rect x="${nx}" y="${ny}" width="${NW}" height="${NH}" rx="5" fill="${COL.nFill}" stroke="${COL.nStroke}" stroke-width="1"/>`;
+    s += `<rect x="${nx}" y="${ny + 3}" width="4" height="${NH - 6}" rx="2" fill="${voiceColor(n.voiceKey)}"/>`;
+    s += `<text x="${nx + NW / 2 + 2}" y="${ny + 14}" text-anchor="middle" font-family="${FONT}"><tspan font-size="11" font-weight="700" fill="${COL.nText}">${esc(n.name)}</tspan>` +
+      (n.delay ? `<tspan font-size="8.5" fill="#ffd60a"> ${esc(C.delayLabel(n.delay))}</tspan>` : '') + `</text>`;
+    s += tx(nx + NW / 2 + 2, ny + 26, `SFX ${n.id}`, 8.5, COL.nSub);
+  });
+  return s;
+}
+
+function render(spec) {
+  const myId = 'gd' + (++uid);
+  const cols = spec.cols;
+  const voiceColor = k => (spec.voiceColors[k] || '#9aa3c8');
+  const lanes = spec.lanes;
+  const maxItems = Math.max(1, ...lanes.map(l => l.items.length));
+  const usedCols = Math.min(cols, maxItems);
+  const innerW = usedCols * PITCH - GX;
+
+  // legend rows are measured after width known
+  const legend = [
+    ['r', 'Rhythm spawn trigger'], ['n', 'Note spawn trigger (colour stripe = voice)'], ['g', 'Start / continuation (click to jump)'],
+  ];
+  const W = Math.max(innerW + MX * 2, 700);
+  let y = 22;
+  let body = '';
+  body += tx(MX, y, spec.title, 17, COL.text, 700, 'start'); y += 18;
+  body += tx(MX, y, spec.subtitle, 10.5, COL.muted, 0, 'start'); y += 18;
+
+  // legend
+  let lx = MX;
+  const legendItems = legend.map(l => ({ kind: l[0], text: l[1] }));
+  if (spec.voiceLegend) spec.voiceLegend.forEach(v => legendItems.push({ kind: 'v', text: v.label, color: v.color }));
+  legendItems.forEach(it => {
+    const w = 22 + it.text.length * 5.6 + 18;
+    if (lx + w > W - MX && lx > MX) { lx = MX; y += 18; }
+    if (it.kind === 'r') body += `<rect x="${lx}" y="${y - 10}" width="12" height="12" rx="3" fill="${COL.rFill}" stroke="${COL.rStroke}"/>`;
+    else if (it.kind === 'n') body += `<rect x="${lx}" y="${y - 10}" width="12" height="12" rx="3" fill="${COL.nFill}" stroke="${COL.nStroke}"/>`;
+    else if (it.kind === 'g') body += `<rect x="${lx}" y="${y - 10}" width="12" height="12" rx="3" fill="${COL.gFill}" stroke="${COL.gStroke}" stroke-dasharray="3 2"/>`;
+    else body += `<rect x="${lx}" y="${y - 10}" width="12" height="12" rx="6" fill="${it.color}"/>`;
+    body += tx(lx + 18, y, it.text, 10, COL.text, 0, 'start');
+    lx += w;
+  });
+  y += 30;
+
+  const usedIds = new Map();
+  lanes.forEach(lane => {
+    if (spec.showLaneHeader) {
+      const sw = lane.chain.color || '#9b5de5';
+      body += `<rect x="${MX}" y="${y - 11}" width="10" height="10" rx="2" fill="${sw}"/>`;
+      body += tx(MX + 16, y - 2, lane.chain.label + (lane.empty ? '  — no notes on this page' : ''), 11, COL.text, 700, 'start');
+      y += 20;
+    }
+    const items = lane.items;
+    const nRows = Math.ceil(items.length / cols);
+    const pos = [];
+    // row geometry
+    const rowTop = [];
+    for (let r = 0; r < nRows; r++) {
+      const slice = items.slice(r * cols, (r + 1) * cols);
+      const maxN = Math.max(0, ...slice.map(it => it.k === 'r' ? it.e.notes.length : 0));
+      const boxY = y + 14;
+      rowTop.push(boxY);
+      slice.forEach((it, i) => {
+        const col = r % 2 === 0 ? i : cols - 1 - i;
+        pos.push({ x: MX + col * PITCH, y: boxY, r, col });
+      });
+      y = boxY + BH + (maxN ? 10 + maxN * (NH + NG) : 0) + 22;
+    }
+    // arrows (under boxes)
+    let arrows = '', boxes = '';
+    for (let i = 0; i < items.length - 1; i++) {
+      const a = pos[i], b = pos[i + 1], yc = a.y + BH / 2;
+      if (a.r === b.r) {
+        const dir = a.r % 2 === 0 ? 1 : -1;
+        const x1 = dir > 0 ? a.x + BW : a.x, x2 = dir > 0 ? b.x : b.x + BW;
+        arrows += `<line x1="${x1}" y1="${yc}" x2="${x2 + (dir > 0 ? -1 : 1)}" y2="${yc}" stroke="${COL.arrowR}" stroke-width="1.4" marker-end="url(#${myId}r)"/>`;
+      } else {
+        const out = a.r % 2 === 0;
+        const xe = out ? a.x + BW : a.x, xo = out ? xe + 16 : xe - 16, y2 = b.y + BH / 2;
+        arrows += `<path d="M${xe} ${yc} H${xo} V${y2} H${xe + (out ? 1 : -1)}" fill="none" stroke="${COL.arrowR}" stroke-width="1.4" marker-end="url(#${myId}r)"/>`;
+      }
+    }
+    items.forEach((it, i) => {
+      boxes += drawBox(pos[i].x, pos[i].y, it);
+      if (it.k === 'r') {
+        boxes += drawNotes(pos[i].x, pos[i].y, it.e, voiceColor);
+        it.e.notes.forEach(n => usedIds.set(n.id, n.name));
+      }
+    });
+    body += arrows + boxes.replace(/%ID%/g, myId);
+    y += 6;
+  });
+
+  // SFX palette
+  if (usedIds.size) {
+    y += 4;
+    body += tx(MX, y, 'SFX triggers used here (shared, fixed IDs):', 10, COL.muted, 0, 'start'); y += 10;
+    let cx = MX;
+    Array.from(usedIds.entries()).sort((a, b) => a[0] - b[0]).forEach(([id, nm]) => {
+      if (cx + 66 > W - MX && cx > MX) { cx = MX; y += 28; }
+      body += `<rect x="${cx}" y="${y}" width="62" height="22" rx="5" fill="${COL.gFill}" stroke="${COL.gStroke}"/>`;
+      body += tx(cx + 31, y + 15, `${id} · ${nm}`, 10, COL.gText, 600);
+      cx += 68;
+    });
+    y += 30;
+  }
+  const H = Math.ceil(y + 10);
+  const defs = `<defs>` +
+    `<marker id="${myId}r" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" fill="${COL.arrowR}"/></marker>` +
+    `<marker id="${myId}n" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L8 4L0 8z" fill="${COL.arrowN}"/></marker></defs>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${defs}<rect width="${W}" height="${H}" fill="${COL.bg}"/>${body}</svg>`;
+  return { svg, w: W, h: H };
+}
+
+/* ── per-song diagram builders ───────────────────────────── */
+function stratName(s) { return ({ merged: 'one merged rhythm chain', echo: 'one rhythm chain with delayed echo notes', voices: 'parallel chain per voice' })[s]; }
+
+function buildPage(an, pages, pi, name) {
+  const plan = an.plan, vc = {};
+  an.voices.forEach(v => vc[v.key] = v.color);
+  return render({
+    title: `${name} — page ${pi + 1} / ${pages.length}`,
+    subtitle: `Measures ${pages[pi].a + 1}–${pages[pi].b + 1}  ·  ${stratName(plan.strategy)}  ·  ${plan.counts.total} triggers in the whole song`,
+    lanes: lanesForPage(plan, pages, pi), cols: 8, voiceColors: vc,
+    voiceLegend: an.active.map(v => ({ label: v.label, color: v.color })),
+    showLaneHeader: plan.chains.length > 1,
+  });
+}
+function buildWhole(an, name) {
+  const plan = an.plan, vc = {};
+  an.voices.forEach(v => vc[v.key] = v.color);
+  return render({
+    title: `${name} — full song`,
+    subtitle: `${stratName(plan.strategy)}  ·  ${plan.counts.R} rhythm + ${plan.counts.N} note + 1 start = ${plan.counts.total} triggers  ·  ${C.fmtS(an.totalSec)} s`,
+    lanes: lanesWhole(plan), cols: 20, voiceColors: vc,
+    voiceLegend: an.active.map(v => ({ label: v.label, color: v.color })),
+    showLaneHeader: plan.chains.length > 1,
+  });
+}
+
+/* ═══ overlay / state ═════════════════════════════════════ */
+const G = {
+  parsed: null, name: '', an: null, pages: [], page: 0, cur: null,
+  opts: { strategy: 'auto', transpose: 0, perPage: 0, exclude: new Set(), view: 'pages' },
+};
+const $ = id => document.getElementById(id);
+const BIG_LIMIT = 6000;
+const safeName = () => (G.name || 'song').replace(/[^\w\-]+/g, '_').slice(0, 50);
+
+async function loadFile(file) {
+  if (!/\.mscz$/i.test(file.name)) { showToast('Please choose a .mscz file (MuseScore).', 'var(--yellow)'); return; }
+  if (typeof JSZip === 'undefined') { showToast('JSZip failed to load — check your connection.', 'var(--pink)'); return; }
+  showToast(`Reading ${file.name}…`);
+  try {
+    let zip;
+    try { zip = await JSZip.loadAsync(await file.arrayBuffer()); } catch (e) { throw new Error('Could not unzip file — is it a valid .mscz?'); }
+    let mscx = null;
+    for (const [n, zf] of Object.entries(zip.files)) {
+      if (/\.mscx$/i.test(n) && !n.startsWith('__MACOSX') && !zf.dir) { mscx = await zf.async('string'); break; }
+    }
+    if (!mscx) throw new Error('No score (.mscx) found inside this file.');
+    const doc = new DOMParser().parseFromString(mscx, 'text/xml');
+    if (doc.querySelector('parsererror')) throw new Error('The score XML could not be read.');
+    loadDoc(doc, file.name.replace(/\.mscz$/i, ''));
+  } catch (e) {
+    console.error('[GD template]', e);
+    showToast('⚠ ' + (e.message || e), 'var(--pink)');
+  }
+}
+function loadDoc(doc, fallbackName) {
+  G.parsed = C.parseScore(doc);
+  G.name = (G.parsed.info.title || fallbackName || 'Song').slice(0, 60);
+  G.opts.exclude = new Set(); G.opts.strategy = 'auto'; G.opts.transpose = 0; G.opts.perPage = 0; G.page = 0;
+  $('gdDrop').style.display = 'none'; $('gdMain').style.display = 'flex';
+  $('gdMeta').textContent = '— ' + G.name;
+  refresh();
+}
+function refresh() {
+  G.an = C.analyze(G.parsed, G.opts);
+  G.pages = C.paginate(G.an.plan, G.opts.perPage);
+  if (G.page >= G.pages.length) G.page = G.pages.length - 1;
+  renderSide(); renderView();
+}
+
+function renderSide() {
+  const an = G.an, p = G.parsed, el = $('gdSide');
+  const tempos = p.tempos.length ? p.tempos.map(t => Math.round(t.qps * 60)) : [120];
+  const bpmTxt = tempos.every(t => t === tempos[0]) ? tempos[0] + ' BPM' : tempos[0] + ' → … (' + p.tempos.length + ' tempo marks)';
+  const sigs = [...new Set(p.measures.map(m => m.tsN + '/' + m.tsD))];
+  const mm = Math.floor(an.totalSec / 60), ss = Math.round(an.totalSec % 60);
+  const rows = ['merged', 'echo', 'voices'].map(k => {
+    const c = an.plans[k].counts;
+    const dis = k === 'echo' && !an.echoUseful;
+    return `<tr class="${an.chosen === k ? 'on' : ''}${dis ? ' dis' : ''}"><td>${({ merged: 'Merged', echo: 'Echo-shared', voices: 'Per-voice' })[k]}</td><td>${c.R}</td><td>${c.N}</td><td>${c.total}</td></tr>`;
+  }).join('');
+  const sel = ['auto', 'merged', 'echo', 'voices'].map(k => `<option value="${k}"${G.opts.strategy === k ? ' selected' : ''}>${({ auto: 'Auto — fewest triggers', merged: 'Merged chain', echo: 'Echo-shared (delayed notes)', voices: 'Per-voice chains' })[k]}</option>`).join('');
+  const fmtR = (lo, hi) => lo == null ? '—' : C.noteName(lo) + '–' + C.noteName(hi);
+  const vlist = an.voices.map(v => `
+    <label class="gd-voice${v.included ? '' : ' off'}">
+      <input type="checkbox" data-gdvoice="${esc(v.key)}" ${v.included ? 'checked' : ''}>
+      <span class="gd-dot" style="background:${v.color}"></span>
+      <span class="gd-vname" title="${esc(v.label)}">${esc(v.label)}</span>
+      <span class="gd-vmeta">${v.included ? (v.events.length ? v.noteCount + ' notes · ' + fmtR(v.lo, v.hi) : esc(v.status)) : 'excluded'}</span>
+    </label>`).join('');
+  const warn = an.warnings.length ? `<div class="gd-warns">${an.warnings.map(w => `<div>• ${esc(w)}</div>`).join('')}</div>` : '<div class="gd-muted">No problems found.</div>';
+  let echoNote = '';
+  if (an.echoUseful) {
+    echoNote = '<div class="gd-muted" style="margin-top:6px">Echo: ' + an.plans.echo.followers.map(f => `<b>${esc(f.voice)}</b> repeats <b>${esc(f.base)}</b>'s rhythm ${C.fmtS(f.d)}s later, so it reuses those rhythm triggers with delayed note triggers.`).join(' ') + '</div>';
+  }
+  const idmap = []; for (let m = C.LO; m <= C.HI; m++) idmap.push(`<span><b>${m - C.ID_OFF}</b> ${C.noteName(m)}</span>`);
+  el.innerHTML = `
+    <div class="gd-card">
+      <div class="gd-h">Song</div>
+      <div class="gd-kv"><span>Title</span><b>${esc(G.name)}</b></div>
+      <div class="gd-kv"><span>Tempo</span><b>${bpmTxt}</b></div>
+      <div class="gd-kv"><span>Time sig.</span><b>${sigs.join(', ')}</b></div>
+      <div class="gd-kv"><span>Measures</span><b>${p.measures.length}</b></div>
+      <div class="gd-kv"><span>Length</span><b>${mm}:${String(ss).padStart(2, '0')}</b></div>
+    </div>
+    <div class="gd-card">
+      <div class="gd-h">Voices found (${an.voices.length})</div>${vlist}
+    </div>
+    <div class="gd-card">
+      <div class="gd-h">Chain layout</div>
+      <select id="gdStrategy" class="gd-in">${sel}</select>
+      <table class="gd-tbl"><tr><th></th><th>R</th><th>N</th><th>Total*</th></tr>${rows}</table>
+      <div class="gd-muted">* includes 1 start trigger. Using <b>${({ merged: 'merged chain', echo: 'echo-shared', voices: 'per-voice chains' })[an.chosen]}</b>${an.autoWhy ? ' (' + an.autoWhy + ')' : ''}: <b>${an.plan.counts.total}</b> triggers.
+      Per-voice lanes never use fewer triggers than a merged chain, but they are easier to mute or edit one voice at a time.</div>${echoNote}
+    </div>
+    <div class="gd-card">
+      <div class="gd-h">Options</div>
+      <label class="gd-row">Transpose (semitones) <input id="gdTrans" class="gd-in gd-num" type="number" step="1" value="${G.opts.transpose}"></label>
+      <label class="gd-row">Measures per page <input id="gdPer" class="gd-in gd-num" type="number" min="0" step="1" value="${G.opts.perPage}"><span class="gd-muted">0 = auto</span></label>
+    </div>
+    <div class="gd-card">
+      <div class="gd-h">Analysis notes</div>${warn}
+    </div>
+    <details class="gd-card"><summary class="gd-h" style="cursor:pointer">SFX ID map (fixed)</summary>
+      <div class="gd-muted">ID = MIDI − 45. Bb2 = 1 … Bb6 = 49. Same for every song.</div><div class="gd-idmap">${idmap.join('')}</div></details>`;
+}
+
+/* ── viewer ──────────────────────────────────────────────── */
+const V = { x: 0, y: 0, k: 1, w: 1, h: 1, ptrs: new Map(), moved: 0 };
+function vApply() { const vp = $('gdVp'); if (vp) vp.style.transform = `translate(${V.x}px,${V.y}px) scale(${V.k})`; const z = $('gdZoom'); if (z) z.textContent = Math.round(V.k * 100) + '%'; }
+function vFit(mode) {
+  const cv = $('gdCanvas'), cw = cv.clientWidth, ch = cv.clientHeight;
+  const kw = cw / V.w, kh = ch / V.h;
+  V.k = Math.min(mode === 'width' ? kw : Math.min(kw, kh), 1.6);
+  V.x = Math.max(0, (cw - V.w * V.k) / 2); V.y = mode === 'width' ? 0 : Math.max(0, (ch - V.h * V.k) / 2);
+  vApply();
+}
+function vZoom(f, cx, cy) {
+  const cv = $('gdCanvas');
+  if (cx == null) { cx = cv.clientWidth / 2; cy = cv.clientHeight / 2; }
+  const nk = Math.min(8, Math.max(0.03, V.k * f)), r = nk / V.k;
+  V.x = cx - (cx - V.x) * r; V.y = cy - (cy - V.y) * r; V.k = nk; vApply();
+}
+function vSet(res, mode) {
+  G.cur = res;
+  $('gdCanvas').innerHTML = `<div id="gdVp" class="gd-vp" style="width:${res.w}px;height:${res.h}px">${res.svg}</div>`;
+  V.w = res.w; V.h = res.h; vFit(mode);
+}
+function bindViewer() {
+  const cv = $('gdCanvas');
+  cv.addEventListener('wheel', e => { e.preventDefault(); const r = cv.getBoundingClientRect(); vZoom(e.deltaY < 0 ? 1.12 : 1 / 1.12, e.clientX - r.left, e.clientY - r.top); }, { passive: false });
+  cv.addEventListener('pointerdown', e => { cv.setPointerCapture(e.pointerId); V.ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); V.moved = 0; V.pd = e.target; });
+  cv.addEventListener('pointermove', e => {
+    const p = V.ptrs.get(e.pointerId); if (!p) return;
+    if (V.ptrs.size === 2) {
+      const [a, b] = Array.from(V.ptrs.values());
+      const d0 = Math.hypot(a.x - b.x, a.y - b.y);
+      p.x = e.clientX; p.y = e.clientY;
+      const [a2, b2] = Array.from(V.ptrs.values());
+      const d1 = Math.hypot(a2.x - b2.x, a2.y - b2.y);
+      if (d0 > 0) { const r = cv.getBoundingClientRect(); vZoom(d1 / d0, (a2.x + b2.x) / 2 - r.left, (a2.y + b2.y) / 2 - r.top); }
+      V.moved = 99; return;
+    }
+    const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
+    V.moved += Math.abs(dx) + Math.abs(dy); V.x += dx; V.y += dy; vApply();
+  });
+  const up = e => {
+    const had = V.ptrs.delete(e.pointerId);
+    if (had && V.moved < 5 && V.ptrs.size === 0) {
+      const g = V.pd && V.pd.closest && V.pd.closest('[data-goto]');
+      if (g) { G.opts.view = 'pages'; G.page = +g.getAttribute('data-goto'); renderView(); }
+    }
+  };
+  cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+  window.addEventListener('resize', () => { if ($('gdOverlay').classList.contains('open') && G.cur) vFit(G.opts.view === 'whole' ? 'width' : 'all'); });
+}
+
+function renderView() {
+  const an = G.an; if (!an) return;
+  const pg = G.opts.view === 'pages';
+  $('gdVPages').classList.toggle('active', pg); $('gdVWhole').classList.toggle('active', !pg);
+  $('gdPageNav').style.visibility = pg ? 'visible' : 'hidden';
+  $('gdPrev').disabled = G.page <= 0; $('gdNext').disabled = G.page >= G.pages.length - 1;
+  $('gdPageLbl').textContent = `Page ${G.page + 1} / ${G.pages.length}`;
+  if (pg) { vSet(buildPage(an, G.pages, G.page, G.name), 'all'); }
+  else if (an.plan.counts.total > BIG_LIMIT) {
+    const msg = `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="120"><rect width="640" height="120" fill="${COL.bg}"/><text x="24" y="50" fill="${COL.text}" font-size="15" font-family="${FONT}">This song has ${an.plan.counts.total} triggers — too many for one canvas.</text><text x="24" y="78" fill="${COL.muted}" font-size="12" font-family="${FONT}">Use Pages view, or export the build sheet.</text></svg>`;
+    vSet({ svg: msg, w: 640, h: 120 }, 'all');
+  } else vSet(buildWhole(an, G.name), 'width');
+}
+
+/* ── exports ─────────────────────────────────────────────── */
+function download(blob, fn) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = fn; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+}
+function svgToPng(res) {
+  return new Promise((ok, bad) => {
+    const scale = Math.max(0.1, Math.min(2, 16000 / Math.max(res.w, res.h), Math.sqrt(1.2e8 / (res.w * res.h))));
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas'); c.width = Math.round(res.w * scale); c.height = Math.round(res.h * scale);
+      const x = c.getContext('2d'); x.fillStyle = COL.bg; x.fillRect(0, 0, c.width, c.height); x.drawImage(img, 0, 0, c.width, c.height);
+      c.toBlob(b => b ? ok(b) : bad(new Error('PNG too large for this browser.')), 'image/png');
+    };
+    img.onerror = () => bad(new Error('Could not rasterise the diagram.'));
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(res.svg);
+  });
+}
+const curTag = () => G.opts.view === 'pages' ? 'page' + String(G.page + 1).padStart(2, '0') : 'full';
+async function doExport(kind) {
+  if (!G.an) return;
+  try {
+    if (kind === 'svg') download(new Blob([G.cur.svg], { type: 'image/svg+xml' }), `${safeName()}_gd_${curTag()}.svg`);
+    else if (kind === 'png') { showToast('Rendering PNG…'); download(await svgToPng(G.cur), `${safeName()}_gd_${curTag()}.png`); }
+    else if (kind === 'csv') download(new Blob(['﻿' + C.sheetCsv(G.an)], { type: 'text/csv' }), `${safeName()}_gd_buildsheet.csv`);
+    else if (kind === 'txt') download(new Blob([C.sheetText(G.an, G.name)], { type: 'text/plain' }), `${safeName()}_gd_buildsheet.txt`);
+    else if (kind === 'zipsvg' || kind === 'zippng') {
+      if (typeof JSZip === 'undefined') throw new Error('JSZip failed to load.');
+      showToast('Building zip…');
+      const zip = new JSZip();
+      for (let i = 0; i < G.pages.length; i++) {
+        const res = buildPage(G.an, G.pages, i, G.name), nm = `${safeName()}_page${String(i + 1).padStart(2, '0')}`;
+        if (kind === 'zipsvg') zip.file(nm + '.svg', res.svg); else zip.file(nm + '.png', await svgToPng(res));
+      }
+      zip.file(`${safeName()}_buildsheet.csv`, C.sheetCsv(G.an));
+      download(await zip.generateAsync({ type: 'blob' }), `${safeName()}_gd_${kind === 'zipsvg' ? 'svg' : 'png'}_pages.zip`);
+    } else if (kind === 'copy') {
+      copyText(C.sheetText(G.an, G.name), $('gdCopyBtn'));
+    }
+  } catch (e) { console.error(e); showToast('⚠ ' + (e.message || e), 'var(--pink)'); }
+}
+
+/* ── wiring ──────────────────────────────────────────────── */
+function open() { $('gdOverlay').classList.add('open'); if (G.cur) setTimeout(() => vFit(G.opts.view === 'whole' ? 'width' : 'all'), 30); }
+function close() { $('gdOverlay').classList.remove('open'); }
+function init() {
+  bindViewer();
+  $('gdFile').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) loadFile(f); });
+  const drop = $('gdOverlay');
+  drop.addEventListener('dragover', e => { e.preventDefault(); e.stopPropagation(); });
+  drop.addEventListener('drop', e => { e.preventDefault(); e.stopPropagation(); const f = e.dataTransfer && e.dataTransfer.files[0]; if (f) loadFile(f); });
+  $('gdOverlay').addEventListener('click', e => {
+    const t = e.target.closest('[data-gd]'); if (!t) return;
+    const a = t.getAttribute('data-gd');
+    if (a === 'close') close();
+    else if (a === 'pick') $('gdFile').click();
+    else if (a === 'pages') { G.opts.view = 'pages'; renderView(); }
+    else if (a === 'whole') { G.opts.view = 'whole'; renderView(); }
+    else if (a === 'prev') { if (G.page > 0) { G.page--; renderView(); } }
+    else if (a === 'next') { if (G.page < G.pages.length - 1) { G.page++; renderView(); } }
+    else if (a === 'zin') vZoom(1.25); else if (a === 'zout') vZoom(0.8);
+    else if (a === 'fit') vFit('all'); else if (a === 'fitw') vFit('width');
+    else doExport(a);
+  });
+  $('gdSide').addEventListener('change', e => {
+    const t = e.target;
+    if (t.id === 'gdStrategy') { G.opts.strategy = t.value; refresh(); }
+    else if (t.id === 'gdTrans') { G.opts.transpose = Math.max(-48, Math.min(48, parseInt(t.value) || 0)); refresh(); }
+    else if (t.id === 'gdPer') { G.opts.perPage = Math.max(0, parseInt(t.value) || 0); G.page = 0; refresh(); }
+    else if (t.dataset.gdvoice != null) {
+      const k = t.dataset.gdvoice;
+      if (t.checked) G.opts.exclude.delete(k); else G.opts.exclude.add(k);
+      if (G.opts.exclude.size >= G.parsed.voices.length) { G.opts.exclude.delete(k); showToast('Keep at least one voice.', 'var(--yellow)'); }
+      refresh();
+    }
+  });
+  document.addEventListener('keydown', e => {
+    if (!$('gdOverlay').classList.contains('open')) return;
+    e.stopPropagation();   // keep composer shortcuts (A–G, Delete …) from firing behind the overlay
+    if (e.key === 'Escape') close();
+    else if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
+      if (e.key === 'ArrowLeft' && G.opts.view === 'pages' && G.page > 0) { G.page--; renderView(); }
+      if (e.key === 'ArrowRight' && G.opts.view === 'pages' && G.page < G.pages.length - 1) { G.page++; renderView(); }
+    }
+  }, true);
+}
+return { init, open, close, loadFile, loadDoc, _G: G, buildPage, buildWhole };
+})();
+
+function openGdOverlay() { GDUI.open(); }
+GDUI.init();
 
 
 /* ═══════════════════════════════════════════════════════════
