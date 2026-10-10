@@ -3908,6 +3908,7 @@ kbd.plain{ color: var(--text); border-color: var(--border2); }
                same pan (drag) / zoom (wheel, pinch) viewer. Diagram colours match the chat example (purple/teal/grey, voice stripe on notes).
     EXPORTS:   SVG + PNG of the current view, build sheet CSV / .txt / copy, "All pages" zip (SVG or PNG + CSV). PNG scale is capped (16k px side, 120MP).
     LIMITS:    Repeats/jumps are NOT unrolled; gradual tempo changes ignored; MuseScore 2 ties not read; grace notes dropped.
+    CHANGED:   Whole-song view now binary-searches the items-per-row so the canvas is ~square (width ≈ height), then Fit-all on open.
     VERSION:   v1.6.0
 
   [2026-10-10 | SESSION:45 | Claude-Sonnet-5.5]
@@ -8294,13 +8295,24 @@ function buildPage(an, pages, pi, name) {
 function buildWhole(an, name) {
   const plan = an.plan, vc = {};
   an.voices.forEach(v => vc[v.key] = v.color);
-  return render({
+  const spec = cols => ({
     title: `${name} — full song`,
     subtitle: `${stratName(plan.strategy)}  ·  ${plan.counts.R} rhythm + ${plan.counts.N} note + 1 start = ${plan.counts.total} triggers  ·  ${C.fmtS(an.totalSec)} s`,
-    lanes: lanesWhole(plan), cols: 20, voiceColors: vc,
+    lanes: lanesWhole(plan), cols, voiceColors: vc,
     voiceLegend: an.active.map(v => ({ label: v.label, color: v.color })),
     showLaneHeader: plan.chains.length > 1,
   });
+  // Pick the row width (items per row) that makes the canvas roughly square.
+  // Width grows and height shrinks as cols grows, so binary-search for the crossover.
+  const maxItems = Math.max(1, ...plan.chains.map(c => c.events.length + 1));
+  let lo = 3, hi = Math.max(3, Math.min(maxItems, 200));
+  let best = null;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1, r = render(spec(mid)), diff = r.w - r.h;
+    if (!best || Math.abs(diff) < Math.abs(best.diff)) best = { cols: mid, diff, r };
+    if (diff < 0) lo = mid + 1; else hi = mid - 1;
+  }
+  return best.r;
 }
 
 /* ═══ overlay / state ═════════════════════════════════════ */
@@ -8451,7 +8463,7 @@ function bindViewer() {
     }
   };
   cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
-  window.addEventListener('resize', () => { if ($('gdOverlay').classList.contains('open') && G.cur) vFit(G.opts.view === 'whole' ? 'width' : 'all'); });
+  window.addEventListener('resize', () => { if ($('gdOverlay').classList.contains('open') && G.cur) vFit('all'); });
 }
 
 function renderView() {
@@ -8465,7 +8477,7 @@ function renderView() {
   else if (an.plan.counts.total > BIG_LIMIT) {
     const msg = `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="120"><rect width="640" height="120" fill="${COL.bg}"/><text x="24" y="50" fill="${COL.text}" font-size="15" font-family="${FONT}">This song has ${an.plan.counts.total} triggers — too many for one canvas.</text><text x="24" y="78" fill="${COL.muted}" font-size="12" font-family="${FONT}">Use Pages view, or export the build sheet.</text></svg>`;
     vSet({ svg: msg, w: 640, h: 120 }, 'all');
-  } else vSet(buildWhole(an, G.name), 'width');
+  } else vSet(buildWhole(an, G.name), 'all');
 }
 
 /* ── exports ─────────────────────────────────────────────── */
@@ -8512,7 +8524,7 @@ async function doExport(kind) {
 }
 
 /* ── wiring ──────────────────────────────────────────────── */
-function open() { $('gdOverlay').classList.add('open'); if (G.cur) setTimeout(() => vFit(G.opts.view === 'whole' ? 'width' : 'all'), 30); }
+function open() { $('gdOverlay').classList.add('open'); if (G.cur) setTimeout(() => vFit('all'), 30); }
 function close() { $('gdOverlay').classList.remove('open'); }
 function init() {
   bindViewer();
